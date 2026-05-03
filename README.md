@@ -8,7 +8,7 @@ src
     java
       brain (strategy con vật eg: huntingStrategy)
       core (map, simulation, nói chung là mấy cái để làm mọi thứ hoạt động)
-      model (động vât)
+      entities (động vât)
       view (UI)
     resources (ảnh, âm thanh)
   test
