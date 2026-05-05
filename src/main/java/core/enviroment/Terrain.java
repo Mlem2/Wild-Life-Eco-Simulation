@@ -3,11 +3,11 @@ package core.enviroment;
 import java.awt.Color;
 
 public enum Terrain {
-    FOREST("Forest", 0.7f, true, true, false, new Color(50, 163, 50)),
-    GRASSLAND("Grassland", 1.0f, true, true, false, new Color(59, 189, 59)),
-    ROCK("Rock", 0.0f, false, false, false, new Color(194, 194, 194)),
+    FOREST("Forest", 0.7f, true, true, false, new Color(0, 100, 0)),
+    GRASSLAND("Grassland", 1.0f, true, true, false, new Color(50, 200, 50)),
+    MOUNTAIN("Rock", 0.0f, false, false, false, new Color(100, 100, 100)),
     MUD("Mud", 0.5f, true, false, false, new Color(112, 59, 59)),
-    WATER("Water", 0.3f, true, false, true, new Color(56, 155, 255));
+    WATER("Water", 0.2f, true, false, true, new Color(0, 100, 255));
 
     private final String name;
     private final float speedMultiplier;
