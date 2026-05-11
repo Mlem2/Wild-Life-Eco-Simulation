@@ -13,3 +13,5 @@ src
     resources (ảnh, âm thanh)
   test
     java (tests)
+
+Branch này tạo ra nhằm so sánh cách suy nghĩ + báo cáo các biến / hành vi cần thêm vào code khác (ví dụ như Animal.java cần cập nhật thêm tuổi/ cd sinh sản như thế nào). Không merge branch này. Chưa hoàn thiện.
