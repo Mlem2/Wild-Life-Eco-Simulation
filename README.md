@@ -13,3 +13,5 @@ src
     resources (ảnh, âm thanh)
   test
     java (tests)
+
+Flow: Động vật scan xung quanh xem có mục tiêu lạ -> Controller điều chỉnh, lựa chọn, ưu tiên hành vi dựa theo thông tin nhận được + giá trị độ đói, khát, etc,... -> Thực hiện strategy, di chuyển tương ứng với hành vi đang có.
