@@ -3,8 +3,8 @@ package core.enviroment;
 import java.awt.*;
 
 public class WorldMap {
-    private static Terrain[][] worldMap;
-    private static final int SIZE = 500;
+    protected static Terrain[][] worldMap;
+    protected static final int SIZE = 500;
     private static float[][] heightNoiseMap;
     private static float[][] moistureNoiseMap;
 
