@@ -18,14 +18,14 @@ public abstract class Animals extends Entity {
     }
 
     public void updateCD(Entity[][] toaDoSV,List<Entity> allEntities){
-        spd2--;
+        currentMoveCD--;
         updateHT();
         if(age<=0 || hunger <=0 || thirst <=0){
             this.isAlive = false;
         }
         else{
             updateHT();
-            if(spd2==0){
+            if(currentMoveCD==0){
                
             }
             age--;
