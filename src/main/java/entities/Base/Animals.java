@@ -20,20 +20,20 @@ public abstract class Animals extends Entity {
     public void updateCD(Entity[][] toaDoSV,List<Entity> allEntities){
         currentMoveCD--;
         updateHungerThirst();
-        if(age<=0 || hunger <=0 || thirst <=0){
+        if(age <= 0 || hunger <= 0 || thirst <= 0){
             this.isAlive = false;
         }
         else{
             updateHungerThirst();
-            if(currentMoveCD==0){
+            if(currentMoveCD == 0){
                
             }
             age--;
         }
     }
     public void updateHungerThirst(){ // cập nhật đói + khát
-        hunger-= 1 * size.multiplier;
-        thirst-= 1 * size.multiplier;
+        hunger -= 1 * size.multiplier;
+        thirst -= 1 * size.multiplier;
     }
     public abstract void makeSound();
 }

@@ -7,9 +7,9 @@ public abstract class Entity {
     protected Boolean isAlive = true;
 
     public Entity(String name, int x, int y){
-        this.name=name;
-        this.x=x;
-        this.y=y;
+        this.name = name;
+        this.x = x;
+        this.y = y;
     }
 
     public Entity(){}
