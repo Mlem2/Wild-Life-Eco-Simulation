@@ -17,7 +17,7 @@ public abstract class Animals extends Entity {
         super(name,x,y);
     }
 
-    public void updatemCD(Entity[][] toaDoSV,List<Entity> allEntities){
+    public void updateCD(Entity[][] toaDoSV,List<Entity> allEntities){
         spd2--;
         updateHT();
         if(age<=0 || hunger <=0 || thirst <=0){
