@@ -26,9 +26,7 @@ public abstract class Animals extends Entity {
         else{
             updateHT();
             if(spd2==0){
-                Random rand = new Random();
-                spd2 = spd1;
-                /*move(toaDoSV,allEntities);*/
+               
             }
             age--;
         }
