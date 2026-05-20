@@ -9,8 +9,8 @@ public abstract class Animals extends Entity {
     protected double thirst = 100;
     protected Size size;
     /*protected Strategy Strat;*/
-    protected int spd1; // thời gian hồi method di chuyển (chỉ để lưu)
-    protected int spd2;// thời gian hồi method di chuyển (chỉ để tính toán sau mỗi chu kì clock)
+    protected int defaultMoveCD; // thời gian hồi method di chuyển (chỉ để lưu)
+    protected int currentMoveCD;// thời gian hồi method di chuyển (chỉ để tính toán sau mỗi chu kì clock)
     protected static Random ran = new Random();
 
     public Animals(String name, int x, int y){
