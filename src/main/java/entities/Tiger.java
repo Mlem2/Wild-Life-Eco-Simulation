@@ -1,16 +1,16 @@
 package entities;
 
-import AllEnum.Size;
-import entities.Attributes.*;
-import entities.Base.Animals;
+import allEnum.Size;
+import entities.attributes.*;
+import entities.base.Animals;
 
 public class Tiger extends Animals implements Carnivore, Apex {
     public Tiger(String name, int x, int y){
         super(name,x,y);
         this.size = Size.LARGE;
-        this.defaultMoveCD = 5;
-        this.currentMoveCD = 5;
-        this.age = (ran.nextInt(6)+7)*21600;
+        this.defaultMoveCooldown = 5;
+        this.currentMoveCooldown = 5;
+        this.age = (random.nextInt(6) + 7) * 21600;
     }
     public void makeSound(){
         System.out.println("GRAWWWWW");

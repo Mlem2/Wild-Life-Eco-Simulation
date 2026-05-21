@@ -1,9 +1,9 @@
 package brain.strategy;
 
-import Entities.Base.Animals;
-import Entities.Base.Entity;
-import Entities.Attributes.Carnivore;
-import AllEnum.Direction;
+import entities.base.Animals;
+import entities.base.Entity;
+import entities.attributes.Carnivore;
+import allEnum.Direction;
 import brain.scanner.TargetScanner;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -37,7 +37,7 @@ public class ScaredStrategy implements MoveStrategy {
 
         double dx = animal.getX() - currentThreat.getX();
         double dy = animal.getY() - currentThreat.getY();
-        double distance = Math.sqrt(dx * dx + dy * dy);
+        double distance = (dx * dx + dy * dy);
 
         if(distance == 0) {
             lastDirection = Direction.CENTER;

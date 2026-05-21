@@ -1,8 +1,8 @@
 package brain.strategy;
 
-import Entities.Base.Animals;
-import Entities.Base.Entity;import Entities.Base.Entity;import AllEnum.Direction;
-import AllEnum.Size;
+import entities.base.Animals;
+import entities.base.Entity;import allEnum.Direction;
+import allEnum.Size;
 import java.util.List;
 import java.util.Random;
 
@@ -40,7 +40,7 @@ public class PassiveStrategy implements MoveStrategy {
      * Core có thể dùng giá trị này để đồng bộ tốc độ.
      */
     public int getMovementCooldown(Animals animal) {
-        return getMovementCooldown(animal.getKichCo());
+        return getMovementCooldown(animal.getSize());
     }
 
     public int getMovementCooldown(Size size) {

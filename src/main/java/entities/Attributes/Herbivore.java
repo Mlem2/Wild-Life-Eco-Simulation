@@ -1,4 +1,4 @@
-package entities.Attributes;
+package entities.attributes;
 
 public interface Herbivore {
 }

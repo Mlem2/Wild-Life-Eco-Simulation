@@ -1,9 +1,9 @@
 package brain.strategy;
 
-import Entities.Base.Animals;
-import Entities.Base.Entity;
-import Entities.Attributes.Herbivore;
-import AllEnum.Direction;
+import entities.base.Animals;
+import entities.base.Entity;
+import entities.attributes.Herbivore;
+import allEnum.Direction;
 import brain.scanner.TargetScanner;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -38,7 +38,7 @@ public class HunterStrategy implements MoveStrategy {
 
         double dx = currentTarget.getX() - animal.getX();
         double dy = currentTarget.getY() - animal.getY();
-        double distance = Math.sqrt(dx * dx + dy * dy);
+        double distance = (dx * dx + dy * dy);
 
         if(distance == 0) {
             lastDirection = Direction.CENTER;

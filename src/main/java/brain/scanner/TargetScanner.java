@@ -1,7 +1,7 @@
 package brain.scanner;
 
-import Entities.Base.Animals;
-import Entities.Base.Entity;
+import entities.base.Animals;
+import entities.base.Entity;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -32,6 +32,6 @@ public class TargetScanner {
     private static double distanceBetween(Animals self, Entity entity) {
         double dx = self.getX() - entity.getX();
         double dy = self.getY() - entity.getY();
-        return Math.sqrt(dx * dx + dy * dy);
+        return (dx * dx + dy * dy);
     }
 }

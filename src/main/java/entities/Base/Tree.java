@@ -1,23 +1,21 @@
-package entities.Base;
+package entities.base;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 public abstract class Tree extends Entity {
     protected int age;
-    protected double seedCD1;
+    protected double defaultSeedCooldown;
     protected double growthTime;
-    protected double seedCD2;
-    protected static Random ran = new Random();
+    protected double currentSeedCooldown;
+    protected static Random random = new Random();
 
     public Tree(String name, int x, int y){
-        super(name,x,y);
+        super(name, x, y);
     }
 
     public Tree(){}
 
-    public abstract void checkCD(Entity[][] toaDoSV, List<Entity> allEntities);
+    public abstract void checkCD(Entity[][] animalCoordinates, List<Entity> allEntities);
 
 }

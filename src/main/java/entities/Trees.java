@@ -1,7 +1,7 @@
 package entities;
 
-import AllEnum.Direction;
-import entities.Base.*;
+import allEnum.Direction;
+import entities.base.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,22 +11,22 @@ public class Trees extends Tree {
 
     public Trees(String name, int x, int y) {
         super(name, x, y);
-        this.seedCD1 = (ran.nextInt(6) + 2) * 21600;
-        this.seedCD2 = seedCD1;
-        this.growthTime = (ran.nextInt(3) + 2) * 21600;
-        this.age = (ran.nextInt(3) + 6) * 21600;
+        this.defaultSeedCooldown = (random.nextInt(6) + 2) * 21600;
+        this.currentSeedCooldown = defaultSeedCooldown;
+        this.growthTime = (random.nextInt(3) + 2) * 21600;
+        this.age = (random.nextInt(3) + 6) * 21600;
     }
 
-    public void checkCD(Entity[][] toaDoSV, List<Entity> allEntities) {
+    public void checkCD(Entity[][] animalCoordinates, List<Entity> allEntities) {
         if (age <= 0) {
             this.isAlive = false;
             return;
         }
 
         if (growthTime <= 0) {
-            seedCD2--;
-            if (seedCD2 <= 0) {
-                giveBirth(toaDoSV, allEntities);
+            currentSeedCooldown--;
+            if (currentSeedCooldown <= 0) {
+                giveBirth(animalCoordinates, allEntities);
             }
         } else {
             growthTime--;
@@ -66,7 +66,7 @@ public class Trees extends Tree {
                         Trees tmp = EntityFactory.CreateEntity(Trees::new, name, nextX, nextY);
                         toaDoSV[nextX][nextY] = tmp;
                         allEntities.add(tmp);
-                        seedCD2 = seedCD1;
+                        currentSeedCooldown = defaultSeedCooldown;
                         break; // Sinh sản thành công một cây thì dừng vòng lặp
                     }
                 }

@@ -1,4 +1,4 @@
-package AllEnum;
+package allEnum;
 
 public enum Month {
     JAN(31),
@@ -15,7 +15,8 @@ public enum Month {
     DEC(31);
 
     public final int numberOfDays;
+
     Month(int Days){
-        this.numberOfDays=Days;
+        this.numberOfDays = Days;
     }
 }
