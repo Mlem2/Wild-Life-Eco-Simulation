@@ -1,5 +1,4 @@
-package entities.Base;
-import entities.*;
+package entities.base;
 
 public class EntityFactory {
     @FunctionalInterface

@@ -1,16 +1,16 @@
 package entities;
 
-import AllEnum.Size;
-import entities.Attributes.*;
-import entities.Base.Animals;
+import allEnum.Size;
+import entities.attributes.*;
+import entities.base.Animals;
 
 public class Elephant extends Animals implements Apex, Herbivore {
     public Elephant(String name, int x, int y){
         super(name,x,y);
         this.size = Size.LARGE;
-        this.defaultMoveCD = 10;
-        this.currentMoveCD = 10;
-        this.age = (ran.nextInt(15)+10)*21600;
+        this.defaultMoveCooldown = 10;
+        this.currentMoveCooldown = 10;
+        this.age = (random.nextInt(15) + 10) * 21600;
     }
 
     public void makeSound(){

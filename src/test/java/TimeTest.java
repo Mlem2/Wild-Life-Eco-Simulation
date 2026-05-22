@@ -1,8 +1,8 @@
 import core.TimeSystem;
-import entities.Base.Animals;
-import entities.Base.Entity;
-import entities.Base.EntityFactory;
-import entities.Base.Tree;
+import entities.base.Animals;
+import entities.base.Entity;
+import entities.base.EntityFactory;
+import entities.base.Tree;
 import entities.*;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class TimeTest {
                     Entity tmp = sv.get(i);
                     if(tmp instanceof Animals){
                         Animals tmp1 = (Animals)tmp;
-                        tmp1.updatemCD(toaDoSV,sv);
+                        tmp1.updateMoveCooldown(toaDoSV,sv);
                     }
                     else if(tmp instanceof Tree){
                         Tree tmp1 = (Tree)tmp;

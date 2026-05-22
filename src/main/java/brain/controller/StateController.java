@@ -1,11 +1,11 @@
 package brain.controller;
 
-import AllEnum.State;
-import Entities.Attributes.Carnivore;
-import Entities.Attributes.Herbivore;
-import Entities.Base.Animals;
-import Entities.Base.Entity;
-import Entities.Base.Tree;
+import allEnum.State;
+import entities.attributes.Carnivore;
+import entities.attributes.Herbivore;
+import entities.base.Animals;
+import entities.base.Entity;
+import entities.base.Tree;
 import brain.scanner.TargetScanner;
 import brain.strategy.AggressiveStrategy;
 import brain.strategy.HunterStrategy;

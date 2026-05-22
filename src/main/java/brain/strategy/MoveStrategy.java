@@ -1,8 +1,8 @@
 package brain.strategy;
 
-import Entities.Base.Animals;
-import Entities.Base.Entity;
-import AllEnum.Direction;
+import entities.base.Animals;
+import entities.base.Entity;
+import allEnum.Direction;
 import java.util.List;
 
 /*

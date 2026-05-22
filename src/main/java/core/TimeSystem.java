@@ -1,6 +1,6 @@
 package core;
 
-import AllEnum.Month;
+import allEnum.Month;
 
 public class TimeSystem {
     private static int year = 2000;
@@ -12,10 +12,10 @@ public class TimeSystem {
     private static String season = "Spring";
 
     public static int getLimit(){
-        Month m = Month.values()[month-1];
+        Month m = Month.values()[month - 1];
         int days = m.numberOfDays;
         if(m.equals(Month.FEB)){
-            if(year%400 == 0 || (year%4 == 0 && year%100 != 0)) return days+1;
+            if(year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)) return days + 1;
         }
         return days;
     }

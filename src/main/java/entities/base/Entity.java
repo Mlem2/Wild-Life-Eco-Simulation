@@ -1,4 +1,4 @@
-package entities.Base;
+package entities.base;
 
 public abstract class Entity {
     protected String name;
@@ -13,6 +13,14 @@ public abstract class Entity {
     }
 
     public Entity(){}
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
 
     public Boolean checkAlive(){
         return isAlive;
