@@ -97,7 +97,7 @@ public class HunterStrategy implements MoveStrategy {
 
     private int getCooldownValue(Animals animal) {
         try {
-            Field field = animal.getClass().getDeclaredField("mCD1");
+            Field field = animal.getClass().getDeclaredField("defaultMoveCooldown");
             field.setAccessible(true);
             return field.getInt(animal);
         } catch (Exception e) {

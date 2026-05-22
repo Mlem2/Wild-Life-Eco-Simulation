@@ -96,7 +96,7 @@ public class AggressiveStrategy implements MoveStrategy {
 
     private int getCooldownValue(Animals animal) {
         try {
-            java.lang.reflect.Field field = animal.getClass().getDeclaredField("spd1");
+            java.lang.reflect.Field field = animal.getClass().getDeclaredField("defaultMoveCooldown");
             field.setAccessible(true);
             return field.getInt(animal);
         } catch (Exception e) {
