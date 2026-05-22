@@ -7,7 +7,7 @@ import java.io.File;
 
 public class MapTest {
     static void main(String[] args) {
-        WorldMap worldMap = new WorldMap(94033);
+        WorldMap worldMap = new WorldMap(940331);
 
         exportToImage("my_world", worldMap);
     }
