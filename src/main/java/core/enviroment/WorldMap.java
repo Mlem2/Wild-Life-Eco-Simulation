@@ -12,7 +12,7 @@ public class WorldMap {
     protected static final int SIZE = 500;
     protected static final int CHUNK_ARRAY_SIZE = SIZE / 50;
     protected static final int CHUNK_SIZE = SIZE / CHUNK_ARRAY_SIZE;
-    private static int[][] waterHeatMap;
+    private static int[][] waterHeatMap = new int[CHUNK_ARRAY_SIZE][CHUNK_ARRAY_SIZE];
     private static float[][] heightNoiseMap;
     private static float[][] moistureNoiseMap;
 
@@ -89,7 +89,6 @@ public class WorldMap {
     }
 
     public void generateWaterHeatMap() {
-        waterHeatMap = new int[CHUNK_ARRAY_SIZE][CHUNK_ARRAY_SIZE];
         for (int[] row : waterHeatMap) Arrays.fill(row, -1);
 
         Queue<int[]> queue = new LinkedList<>();
