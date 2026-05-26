@@ -2,86 +2,118 @@ package brain.pathfinder;
 
 import allEnum.Direction;
 import core.enviroment.WorldMap;
-import org.jgrapht.Graph;
-import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
-import org.jgrapht.alg.shortestpath.AStarShortestPath;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleDirectedGraph;
-import org.jgrapht.graph.SimpleDirectedWeightedGraph;
-
-import java.awt.*;
-import java.util.List;
+import java.awt.Point;
+import java.util.*;
 
 public class Pathfinder {
     private static final int SIZE = 500;
-    Graph<Point, DefaultWeightedEdge> graph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
-    AStarShortestPath<Point, DefaultWeightedEdge> aStar;
-    Point[][] tiles = new Point[SIZE][SIZE];
+    private final WorldMap worldMap;
+
+    // Precomputed movement costs for cleaner code
+    private static final double CARDINAL_COST = 1.0;
+    private static final double DIAGONAL_COST = 1.4142;
 
     public Pathfinder(WorldMap worldMap) {
-        addWalkableVertices(worldMap);
-        connectVertices(worldMap);
+        this.worldMap = worldMap; // No heavy graph allocation at all!
+    }
 
-        double minSpeedMultiplier = 0.2;
-        aStar = new AStarShortestPath<>(
-                graph,
-                (node, target) -> minSpeedMultiplier * Math.max(Math.abs(node.x - target.x), Math.abs(node.y - target.y))
-        );
+    private static class Node implements Comparable<Node> {
+        int x, y;
+        double gCost; // Cost from start
+        double hCost; // Heuristic cost to end
+        double fCost; // Total cost (g + h)
+        Node parent;
+
+        Node(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public int compareTo(Node o) {
+            return Double.compare(this.fCost, o.fCost);
+        }
     }
 
     public List<Point> calculatePath(Point start, Point end) {
-        if (start == null || end == null) {
-            return java.util.Collections.emptyList();
-        }
+        if (start == null || end == null) return Collections.emptyList();
 
-        org.jgrapht.GraphPath<Point, DefaultWeightedEdge> path = aStar.getPath(start, end);
+        PriorityQueue<Node> openSet = new PriorityQueue<>();
+        // Tracking states via plain primitive arrays instead of complex Map lookups
+        boolean[][] closedSet = new boolean[SIZE][SIZE];
+        Node[][] nodeMap = new Node[SIZE][SIZE];
 
-        if (path == null) {
-            return java.util.Collections.emptyList();
-        }
+        Node startNode = new Node(start.x, start.y);
+        startNode.gCost = 0;
+        startNode.hCost = getHeuristic(start.x, start.y, end.x, end.y);
+        startNode.fCost = startNode.hCost;
 
-        return path.getVertexList();
-    }
+        openSet.add(startNode);
+        nodeMap[start.y][start.x] = startNode;
 
-    private void addWalkableVertices(WorldMap worldMap) {
-        for (int y = 0; y < SIZE; y++) {
-            for (int x = 0; x < SIZE; x++) {
-                if (worldMap.getTile(x, y).isPassable()) {
-                    tiles[y][x] = new Point(x, y);
-                    graph.addVertex(tiles[y][x]);
-                }
+        while (!openSet.isEmpty()) {
+            Node current = openSet.poll();
+
+            if (current.x == end.x && current.y == end.y) {
+                return retracePath(current);
             }
-        }
-    }
 
-    private void connectVertices(WorldMap worldMap) {
-        for (int y = 0; y < SIZE; y++) {
-            for (int x = 0; x < SIZE; x++) {
-                if (!worldMap.getTile(x, y).isPassable()) continue;
+            closedSet[current.y][current.x] = true;
 
-                Point current = tiles[y][x];
-                for (Direction direction : Direction.values()) {
-                    if (direction == Direction.CENTER) continue;
+            for (Direction dir : Direction.values()) {
+                if (dir == Direction.CENTER) continue;
 
-                    int newX = x + direction.x;
-                    int newY = y + direction.y;
+                int nextX = current.x + dir.x;
+                int nextY = current.y + dir.y;
 
-                    if (!(newX > SIZE - 1 || newY > SIZE - 1 || newX < 0 || newY < 0)) {
-                        Point neighbor = tiles[newY][newX];
+                // Boundary & Passable Check
+                if (nextX < 0 || nextX >= SIZE || nextY < 0 || nextY >= SIZE) continue;
+                if (!worldMap.getTile(nextX, nextY).isPassable()) continue;
+                if (closedSet[nextY][nextX]) continue;
 
-                        if (neighbor != null && !graph.containsEdge(current, neighbor)) {
-                            DefaultWeightedEdge edge = graph.addEdge(current, neighbor);
+                double moveCost = (dir.x != 0 && dir.y != 0) ? DIAGONAL_COST : CARDINAL_COST;
+                double edgeWeight = moveCost / worldMap.getTile(nextX, nextY).getSpeedMultiplier();
+                double tentativeGCost = current.gCost + edgeWeight;
 
-                            if (edge != null) {
-                                double weight = (direction.x != 0 && direction.y != 0) ? 1.4 : 1.0;
-                                weight = weight / worldMap.getTile(newX, newY).getSpeedMultiplier();
+                Node neighbor = nodeMap[nextY][nextX];
+                if (neighbor == null) {
+                    neighbor = new Node(nextX, nextY);
+                    nodeMap[nextY][nextX] = neighbor;
+                }
 
-                                graph.setEdgeWeight(edge, weight);
-                            }
-                        }
+                if (tentativeGCost < neighbor.gCost || !openSet.contains(neighbor)) {
+                    neighbor.gCost = tentativeGCost;
+                    neighbor.hCost = getHeuristic(nextX, nextY, end.x, end.y);
+                    neighbor.fCost = neighbor.gCost + neighbor.hCost;
+                    neighbor.parent = current;
+
+                    // Force priority queue update
+                    if (openSet.contains(neighbor)) {
+                        openSet.remove(neighbor);
                     }
+                    openSet.add(neighbor);
                 }
             }
         }
+        return Collections.emptyList(); // No path found
+    }
+
+    private double getHeuristic(int x, int y, int targetX, int targetY) {
+        // Diagonal distance heuristic matching standard 8-way grid movement
+        int dx = Math.abs(x - targetX);
+        int dy = Math.abs(y - targetY);
+        return (dx > dy) ? (DIAGONAL_COST * dy + CARDINAL_COST * (dx - dy))
+                : (DIAGONAL_COST * dx + CARDINAL_COST * (dy - dx));
+    }
+
+    private List<Point> retracePath(Node endNode) {
+        List<Point> path = new ArrayList<>();
+        Node current = endNode;
+        while (current != null) {
+            path.add(new Point(current.x, current.y));
+            current = current.parent;
+        }
+        Collections.reverse(path);
+        return path;
     }
 }

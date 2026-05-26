@@ -15,7 +15,7 @@ public class PathfindingTest {
 
         long startTime = System.nanoTime();
 
-        Point start = new Point(0, 0);
+        Point start = new Point(50, 455);
         Point end = new Point(155, 355);
         List<Point> path = pathfinder.calculatePath(start, end);
 
@@ -31,7 +31,6 @@ public class PathfindingTest {
         System.out.printf("Algorithm Execution Time: %.3f ms%n", durationMilli);
         System.out.println("----------------------------------------");
     }
-
 
 
     public static void exportToImage(String filename, WorldMap worldMap, List<Point> path) {
