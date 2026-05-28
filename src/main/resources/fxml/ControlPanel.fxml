@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ui.controller.ControlPanelController"
+      styleClass="control-panel"
+      spacing="0">
+
+    <Label text="🎮 Điều Khiển" styleClass="panel-section-title"/>
+
+    <!-- Pause / Reset Zoom -->
+    <VBox styleClass="panel-section" spacing="8">
+        <Button fx:id="btnPause" text="⏸ Pause"
+                onAction="#onPauseClicked"
+                styleClass="btn-primary" maxWidth="Infinity"/>
+        <Button text="🔍 Reset Zoom"
+                onAction="#onResetZoomClicked"
+                styleClass="btn-secondary" maxWidth="Infinity"/>
+    </VBox>
+
+    <Separator/>
+
+    <!-- Tốc độ -->
+    <Label text="⚡ Tốc Độ" styleClass="panel-section-title"/>
+    <VBox styleClass="panel-section" spacing="6">
+        <Label fx:id="labelSpeed" text="Tối đa" styleClass="value-label"/>
+        <Slider fx:id="sliderSpeed"/>
+    </VBox>
+
+    <Separator/>
+
+    <!-- Công cụ đặt thực thể -->
+    <Label text="🛠 Công Cụ" styleClass="panel-section-title"/>
+    <VBox styleClass="panel-section" spacing="5">
+        <fx:define>
+            <ToggleGroup fx:id="toolGroup"/>
+        </fx:define>
+
+        <RadioButton fx:id="rbNone"     text="🚫 Không chọn"   toggleGroup="$toolGroup"
+                     onAction="#onToolNone"      selected="true" styleClass="tool-radio"/>
+        <RadioButton fx:id="rbGrass"    text="🟩 Gieo cỏ"       toggleGroup="$toolGroup"
+                     onAction="#onToolGrass"     styleClass="tool-radio"/>
+        <RadioButton fx:id="rbRabbit"   text="⚪ Thêm Thỏ"      toggleGroup="$toolGroup"
+                     onAction="#onToolRabbit"    styleClass="tool-radio"/>
+        <RadioButton fx:id="rbDeer"     text="🟤 Thêm Hươu"     toggleGroup="$toolGroup"
+                     onAction="#onToolDeer"      styleClass="tool-radio"/>
+        <RadioButton fx:id="rbWolf"     text="🔘 Thêm Sói"      toggleGroup="$toolGroup"
+                     onAction="#onToolWolf"      styleClass="tool-radio"/>
+        <RadioButton fx:id="rbTiger"    text="🟠 Thêm Hổ"       toggleGroup="$toolGroup"
+                     onAction="#onToolTiger"     styleClass="tool-radio"/>
+        <RadioButton fx:id="rbElephant" text="🔵 Thêm Voi"      toggleGroup="$toolGroup"
+                     onAction="#onToolElephant"  styleClass="tool-radio"/>
+        <RadioButton fx:id="rbRock"     text="⬛ Đặt Đá"        toggleGroup="$toolGroup"
+                     onAction="#onToolRock"      styleClass="tool-radio"/>
+    </VBox>
+
+    <Separator/>
+
+    <!-- Chú thích màu sắc -->
+    <Label text="🗺 Chú Thích" styleClass="panel-section-title"/>
+    <VBox styleClass="panel-section legend-box" spacing="4">
+        <Label text="⚪ Thỏ       🟤 Hươu"   styleClass="legend-item"/>
+        <Label text="🔘 Sói       🟠 Hổ"     styleClass="legend-item"/>
+        <Label text="🔵 Voi       🩵 Người"  styleClass="legend-item"/>
+        <Label text="🟡 Vịt       🩵 Cá"     styleClass="legend-item"/>
+        <Label text="🟩 Cỏ        🟢 Cây"    styleClass="legend-item"/>
+        <Label text="⬛ Đá"                  styleClass="legend-item"/>
+        <Separator/>
+        <Label text="Chấm giữa = Trạng thái:" styleClass="legend-hint"/>
+        <Label text="🟡 Chạy  🟢 Ăn  🔴 Săn" styleClass="legend-item"/>
+        <Label text="🟠 Trốn  🩵 Ngủ  💧 Uống" styleClass="legend-item"/>
+    </VBox>
+
+    <Region VBox.vgrow="ALWAYS"/>
+
+</VBox>

@@ -3,13 +3,13 @@ package core;
 import allEnum.Month;
 
 public class TimeSystem {
-    private static int year = 2000;
-    private static int month = 1;
-    private static int day = 1;
-    private static int hour = 0;
-    private static int minute = 0;
-    private static String partOfDay = "Night";
-    private static String season = "Spring";
+    public static int year = 2000;
+    public static int month = 1;
+    public static int day = 1;
+    public static int hour = 0;
+    public static int minute = 0;
+    public static String partOfDay = "Night";
+    public static String season = "Spring";
 
     public static int getLimit(){
         Month m = Month.values()[month - 1];
