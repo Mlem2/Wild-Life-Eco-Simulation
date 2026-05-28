@@ -1,8 +1,9 @@
 package view;
 
+import javafx.application.Application;
+
 public class Launcher {
     public static void main(String[] args) {
-        // This calls your actual JavaFX class
-        MapViewer.main(args);
+        Application.launch(MapViewer.class, args);
     }
 }
