@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ui.controller.MainController"
+            stylesheets="@../css/Style.css"
+            prefWidth="950" prefHeight="680">
+
+    <!-- TOP: Thanh tiêu đề -->
+    <top>
+        <HBox styleClass="top-bar" spacing="12" alignment="CENTER_LEFT">
+            <Label text="🌿 Wild Ecosystem Simulation" styleClass="app-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="⬤ Basic Mode" styleClass="mode-badge"/>
+        </HBox>
+    </top>
+
+    <!-- CENTER: Canvas bản đồ -->
+    <center>
+        <StackPane styleClass="map-container">
+            <fx:include fx:id="map" source="MapView.fxml"/>
+        </StackPane>
+    </center>
+
+    <!-- RIGHT: Control Panel -->
+    <right>
+        <ScrollPane fitToWidth="true" styleClass="control-scroll" prefWidth="210">
+            <fx:include fx:id="controlPanel" source="ControlPanel.fxml"/>
+        </ScrollPane>
+    </right>
+
+    <!-- BOTTOM: Status bar -->
+    <bottom>
+        <HBox styleClass="status-bar" spacing="15" alignment="CENTER_LEFT">
+            <Label text="🖱 Scroll = Zoom  |  Kéo = Di chuyển  |  Chọn công cụ rồi Click = Đặt thực thể"
+                   styleClass="status-hint"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
