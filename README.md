@@ -8,7 +8,10 @@ STRATEGY UPDATE ver 0.3.0
 <Feature Update>
 - Thêm một loạt strategy mới.
 - Tìm đường và lấy tầm nhìn theo Chunk.
-- Cách vận hành: <img width="327" height="443" alt="image" src="https://github.com/user-attachments/assets/ef3ca91d-c30c-4c19-b7ef-d217f10d7a3f" />
+- Cách vận hành:
+
+<img width="327" height="443" alt="image" src="https://github.com/user-attachments/assets/ef3ca91d-c30c-4c19-b7ef-d217f10d7a3f" />
+
 ChooseTarget --> Chọn Strategy tương ứng --> Chọn mục tiêu di chuyển tới (vị trí) --> Tìm đường Pathfinder tới vị trí mục tiêu. 
 - Khi ăn sẽ hồi thanh đói và thanh khát.
 - Sửa lại tốc độ di chuyển và thời gian (nên để 1h/ tick thay vì 5 phút).
