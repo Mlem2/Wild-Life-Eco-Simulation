@@ -6,8 +6,8 @@ import entities.base.Animals;
 
 public class Fish extends Animals implements Herbivore {
 
-    public Fish(String name, int x, int y){
-        super(name,x,y);
+    public Fish(int x, int y){
+        super(x,y);
         this.size = Size.SMALL;
         this.defaultMoveCooldown = 5;
         this.currentMoveCooldown = 5;

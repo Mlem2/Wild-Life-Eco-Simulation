@@ -6,8 +6,8 @@ import entities.attributes.Herbivore;
 import entities.base.Animals;
 
 public class Elephant extends Animals implements Apex, Herbivore {
-    public Elephant(String name, int x, int y){
-        super(name,x,y);
+    public Elephant( int x, int y){
+        super(x,y);
         this.size = Size.LARGE;
         this.defaultMoveCooldown = 8;
         this.currentMoveCooldown = 8;
@@ -20,6 +20,6 @@ public class Elephant extends Animals implements Apex, Herbivore {
 
 @Override
     public void makeSound(){
-        System.out.println("HEHEHEHE");
+        System.out.println("HEE HEE");
     }
 }

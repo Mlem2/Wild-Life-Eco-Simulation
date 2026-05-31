@@ -25,8 +25,8 @@ public abstract class Animals extends Entity {
     protected Position lastLockedTargetPos = null;
     protected boolean speedUp = false;
 
-    public Animals(String name, int x, int y){
-        super(name,x,y);
+    public Animals(int x, int y){
+        super(x,y);
     }
 
     public Position getPosition() {

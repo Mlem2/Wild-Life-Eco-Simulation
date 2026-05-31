@@ -12,8 +12,8 @@ public abstract class Tree extends Food {
     protected double currentSeedCooldown;
     protected static Random random = new Random();
 
-    public Tree(String name, int x, int y){
-        super(name, x, y, 100, 1);
+    public Tree(int x, int y){
+        super(x, y, 100, 1);
         setRestoreAmount(12);
     }
 

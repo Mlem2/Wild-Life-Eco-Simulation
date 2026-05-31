@@ -10,7 +10,7 @@ public enum Terrain {
     WATER("Water", 0.2f, true, false, true, new Color(0, 100, 255));
 
     private final String name;
-    private final float speedMultiplier;
+    private final double speedMultiplier;
     private final boolean isPassable;
     private final boolean isGrass;
     private final boolean isWater;
@@ -29,7 +29,7 @@ public enum Terrain {
         return name;
     }
 
-    public float getSpeedMultiplier() {
+    public double getSpeedMultiplier() {
         return speedMultiplier;
     }
 

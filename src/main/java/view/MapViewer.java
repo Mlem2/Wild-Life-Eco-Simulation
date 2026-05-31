@@ -63,7 +63,7 @@ public class MapViewer extends Application {
     @Override
     public void start(Stage primaryStage) {
         // Khởi tạo bản đồ thế giới ngầm với Seed cố định
-        worldMap = new WorldMap(940320);
+        worldMap = new WorldMap(94033111, 500);
         // Gắn bản đồ vào bộ xử lý đồ họa chuyên trách Basic Mode
         basicRenderer = new BasicRenderer(worldMap);
 

@@ -1,17 +1,16 @@
 package brain.pathfinder;
 
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.PriorityQueue;
-
 import allEnum.Direction;
 import core.enviroment.WorldMap;
+import java.awt.Point;
+import java.util.*;
 
 public class Pathfinder {
     private static final int SIZE = 500;
     private final WorldMap worldMap;
+    int[][] visitedWithRunId = new int[SIZE][SIZE];
+    Node[][] nodeMap = new Node[SIZE][SIZE];
+    int currentRunID = 0;
 
     // Precomputed movement costs for cleaner code
     private static final double CARDINAL_COST = 1.0;
@@ -44,8 +43,7 @@ public class Pathfinder {
 
         PriorityQueue<Node> openSet = new PriorityQueue<>();
         // Tracking states via plain primitive arrays instead of complex Map lookups
-        boolean[][] closedSet = new boolean[SIZE][SIZE];
-        Node[][] nodeMap = new Node[SIZE][SIZE];
+        currentRunID++;
 
         Node startNode = new Node(start.x, start.y);
         startNode.gCost = 0;
@@ -62,7 +60,7 @@ public class Pathfinder {
                 return retracePath(current);
             }
 
-            closedSet[current.y][current.x] = true;
+            visitedWithRunId[current.y][current.x] = currentRunID;
 
             for (Direction dir : Direction.values()) {
                 if (dir == Direction.CENTER) continue;
@@ -73,7 +71,7 @@ public class Pathfinder {
                 // Boundary & Passable Check
                 if (nextX < 0 || nextX >= SIZE || nextY < 0 || nextY >= SIZE) continue;
                 if (!worldMap.getTile(nextX, nextY).isPassable()) continue;
-                if (closedSet[nextY][nextX]) continue;
+                if (visitedWithRunId[nextY][nextX] == currentRunID) continue;
 
                 double moveCost = (dir.x != 0 && dir.y != 0) ? DIAGONAL_COST : CARDINAL_COST;
                 double edgeWeight = moveCost / worldMap.getTile(nextX, nextY).getSpeedMultiplier();

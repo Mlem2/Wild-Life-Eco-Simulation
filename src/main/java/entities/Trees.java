@@ -11,8 +11,8 @@ import entities.base.Tree;
 
 public class Trees extends Tree {
 
-    public Trees(String name, int x, int y) {
-        super(name, x, y);
+    public Trees(int x, int y) {
+        super(x, y);
         setRestoreAmount(15);
         setHungerRecoveryAmount(30);
         setThirstRecoveryAmount(30);
@@ -70,7 +70,7 @@ public class Trees extends Tree {
                 // Kiểm tra điều kiện biên và ô trống
                 if (nextX >= 0 && nextX <= 499 && nextY >= 0 && nextY <= 499) {
                     if (toaDoSV[nextX][nextY] == null) {
-                        Trees tmp = EntityFactory.CreateEntity(Trees::new, name, nextX, nextY);
+                        Trees tmp = EntityFactory.CreateEntity((EntityFactory.FakeConstructor<Trees, Integer, Integer>) Trees::new, nextX, nextY);
                         toaDoSV[nextX][nextY] = tmp;
                         allEntities.add(tmp);
                         currentSeedCooldown = defaultSeedCooldown;

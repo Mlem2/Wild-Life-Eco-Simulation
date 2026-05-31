@@ -7,8 +7,8 @@ import entities.base.Animals;
 public class Wolf extends Animals implements Carnivore {
 
 
-    public Wolf(String name, int x, int y){
-        super(name,x,y);
+    public Wolf(int x, int y){
+        super(x,y);
         this.size = Size.MEDIUM;
         this.defaultMoveCooldown = 5;
         this.currentMoveCooldown = 5;
