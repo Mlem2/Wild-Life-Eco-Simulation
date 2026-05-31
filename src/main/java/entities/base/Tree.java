@@ -3,7 +3,9 @@ package entities.base;
 import java.util.List;
 import java.util.Random;
 
-public abstract class Tree extends Entity {
+import entities.Food;
+
+public abstract class Tree extends Food {
     protected int age;
     protected double defaultSeedCooldown;
     protected double growthTime;
@@ -11,7 +13,8 @@ public abstract class Tree extends Entity {
     protected static Random random = new Random();
 
     public Tree(int x, int y){
-        super(x, y);
+        super(x, y, 100, 1);
+        setRestoreAmount(12);
     }
 
     public Tree(){}

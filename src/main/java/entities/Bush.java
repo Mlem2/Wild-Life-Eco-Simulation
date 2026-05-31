@@ -1,17 +1,20 @@
 package entities;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import allEnum.Direction;
 import entities.base.Entity;
 import entities.base.EntityFactory;
 import entities.base.Tree;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 public class Bush extends Tree {
     public Bush(int x, int y){
-        super(x,y);
+        super(x, y);
+        setRestoreAmount(10);
+        setHungerRecoveryAmount(20);
+        setThirstRecoveryAmount(20);
         this.defaultSeedCooldown = (random.nextInt(2) + 5) * 10800;
         this.currentSeedCooldown = defaultSeedCooldown;
         this.growthTime = (random.nextInt(3) + 2) * 10800;
@@ -19,6 +22,8 @@ public class Bush extends Tree {
     }
 
     public void checkCD(Entity[][] animalCoordinates, List<Entity> allEntities) {
+        updateResourceState();
+
         if (age <= 0) {
             this.isAlive = false;
             return;
