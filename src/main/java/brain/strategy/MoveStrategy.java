@@ -1,26 +1,24 @@
 package brain.strategy;
 
-import entities.base.Animals;
-import entities.base.Entity;
-import allEnum.Direction;
 import java.util.List;
 
-/*
+import allEnum.Direction;
+import brain.controller.MapSystem;
+import entities.base.Animals;
+import entities.base.Entity;
+import entities.base.Position;
+
+/**
  * Interface Strategy Pattern
- * Mỗi loài sẽ có cách di chuyển khác nhau.
- * Các strategy sẽ implement interface này.
- * Ví dụ:
- * - PassiveStrategy → đi lang thang
- * - HunterStrategy → săn mồi
- * - ScaredStrategy → bỏ chạy
+ * Mỗi strategy trả về một {@link Position} mục tiêu (ô) để con vật di chuyển tới.
  */
 public interface MoveStrategy {
+    Position getTarget(Animals owner, MapSystem mapSystem);
 
-    /*
-     * Hàm xử lý logic di chuyển cho animal.
-     * @param animal Con vật đang sử dụng strategy này
-     * @param visibleEntities Danh sách thực thể xung quanh hoặc toàn bộ entity để scan
-     * @return Hướng di chuyển
+    /**
+     * Backwards-compatible move API used by older loops (returns CENTER by default).
      */
-    Direction move(Animals animal, List<Entity> visibleEntities);
+    default Direction move(Animals owner, List<Entity> allEntities) {
+        return Direction.CENTER;
+    }
 }

@@ -8,12 +8,21 @@ public class Rabbit extends Animals implements Herbivore {
     public Rabbit(String name, int x, int y){
         super(name,x,y);
         this.size = Size.SMALL;
-        this.defaultMoveCooldown = 10;
-        this.currentMoveCooldown = 10;
+        this.defaultMoveCooldown = 6;
+        this.currentMoveCooldown = 6;
         this.age = (random.nextInt(3) + 5) * 21600;
+        this.foodEfficiency = 0.6; // Rabbits are moderately efficient at using food
+        this.waterEfficiency = 0.9; // Rabbits have some water needs
+        this.hungerRecoveryAmount = 50; // Rabbits are small, so they don't provide much nutrition
+        this.thirstRecoveryAmount = 20; // Rabbits have low thirst recovery
     }
 
+    @Override
     public void makeSound(){
         System.out.println("chit chit");
+    }
+
+    public int getNutrient() {
+        return hungerRecoveryAmount;
     }
 }

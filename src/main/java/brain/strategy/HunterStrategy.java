@@ -1,12 +1,11 @@
 package brain.strategy;
 
-import entities.base.Animals;
-import entities.base.Entity;
-import entities.attributes.Herbivore;
-import allEnum.Direction;
-import brain.scanner.TargetScanner;
-import java.lang.reflect.Field;
 import java.util.List;
+
+import brain.controller.MapSystem;
+import core.enviroment.Chunk;
+import entities.base.Animals;
+import entities.base.Position;
 
 /*
  * Hunter Strategy
@@ -18,90 +17,24 @@ import java.util.List;
  * - Di chuyển tới prey
  */
 public class HunterStrategy implements MoveStrategy {
-
-    // Khoảng cách scan mục tiêu
-    private static final double SCAN_RADIUS = 40;
-
-    private Entity currentTarget;
-    private Direction lastDirection = Direction.CENTER;
-    private double lastSpeed = 0;
-
     @Override
-    public Direction move(Animals animal, List<Entity> visibleEntities) {
-        currentTarget = TargetScanner.findNearest(animal, visibleEntities, SCAN_RADIUS, entity -> entity instanceof Herbivore);
+    public Position getTarget(Animals owner, MapSystem mapSystem) {
+        List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
 
-        if(currentTarget == null) {
-            lastDirection = Direction.CENTER;
-            lastSpeed = 0;
-            return lastDirection;
+        // Nếu đói, ưu tiên tìm thức ăn/con mồi gần nhất
+        List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks);
+        if (foodSources != null && !foodSources.isEmpty()) {
+            return mapSystem.getClosestPosition(owner.getPosition(), foodSources);
         }
 
-        double dx = currentTarget.getX() - animal.getX();
-        double dy = currentTarget.getY() - animal.getY();
-        double distance = (dx * dx + dy * dy);
-
-        if(distance == 0) {
-            lastDirection = Direction.CENTER;
-            lastSpeed = 0;
-            return lastDirection;
+        List<Animals> preys = mapSystem.getPreysInChunks(visibleChunks, owner);
+        if (preys != null && !preys.isEmpty()) {
+            Animals closestPrey = mapSystem.getClosestAnimal(owner.getPosition(), preys);
+            owner.lockTargetEntity(closestPrey); // Khóa mục tiêu để ActionManager xử lý bám đuổi
+            return closestPrey.getPosition();
         }
 
-        dx /= distance;
-        dy /= distance;
-        lastDirection = directionFromVector(dx, dy);
-        lastSpeed = getSpeedFromCooldown(animal);
-        return lastDirection;
-    }
-
-    public Entity getCurrentTarget() {
-        return currentTarget;
-    }
-
-    public Direction getLastDirection() {
-        return lastDirection;
-    }
-
-    public double getLastSpeed() {
-        return lastSpeed;
-    }
-
-    private Direction directionFromVector(double dx, double dy) {
-        if(dx == 0 && dy == 0) {
-            return Direction.CENTER;
-        }
-        if(Math.abs(dx) > Math.abs(dy)) {
-            return dx > 0 ? Direction.EAST : Direction.WEST;
-        }
-        if(Math.abs(dy) > Math.abs(dx)) {
-            return dy > 0 ? Direction.NORTH : Direction.SOUTH;
-        }
-        if(dx > 0 && dy > 0) {
-            return Direction.NORTHEAST;
-        }
-        if(dx > 0 && dy < 0) {
-            return Direction.SOUTHEAST;
-        }
-        if(dx < 0 && dy > 0) {
-            return Direction.NORTHWEST;
-        }
-        if(dx < 0 && dy < 0) {
-            return Direction.SOUTHWEST;
-        }
-        return Direction.CENTER;
-    }
-
-    private double getSpeedFromCooldown(Animals animal) {
-        int cooldown = getCooldownValue(animal);
-        return Math.max(0.5, 10.0 / Math.max(1, cooldown));
-    }
-
-    private int getCooldownValue(Animals animal) {
-        try {
-            Field field = animal.getClass().getDeclaredField("defaultMoveCooldown");
-            field.setAccessible(true);
-            return field.getInt(animal);
-        } catch (Exception e) {
-            return 1;
-        }
+        // Đang đói mà xung quanh không có gì -> Di chuyển sang một chunk an toàn ngẫu nhiên để tìm tiếp
+        return mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
     }
 }

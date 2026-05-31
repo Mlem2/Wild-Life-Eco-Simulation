@@ -1,106 +1,44 @@
 package brain.strategy;
 
-import entities.base.Animals;
-import entities.base.Entity;
-import entities.attributes.Carnivore;
-import allEnum.Direction;
-import brain.scanner.TargetScanner;
-import java.lang.reflect.Field;
 import java.util.List;
 
-/*
- * Scared Strategy
- *
- * Dùng cho prey.
- *
- * Hành vi:
- * - Tìm predator gần nhất
- * - Chạy ngược hướng
- */
+import brain.controller.MapSystem;
+import core.enviroment.Chunk;
+import entities.base.Animals;
+import entities.base.Position;
+
 public class ScaredStrategy implements MoveStrategy {
-
-    private static final double SCAN_RADIUS = 30; // Bán kính quét để tìm predator
-
-    private Entity currentThreat; // Lưu predator gần nhất
-    private Direction lastDirection = Direction.CENTER; // Hướng di chuyển cuối cùng
-    private double lastSpeed = 0; // Tốc độ di chuyển cuối cùng
-
     @Override
-    public Direction move(Animals animal, List<Entity> visibleEntities) {
-        currentThreat = TargetScanner.findNearest(animal, visibleEntities, SCAN_RADIUS, entity -> entity instanceof Carnivore);
+    public Position getTarget(Animals owner, MapSystem mapSystem) {
+        Chunk currentChunk = mapSystem.getChunkAt(owner.getPosition());
+        List<Animals> enemiesInMyChunk = mapSystem.getEnemiesInChunk(currentChunk, owner);
 
-        if(currentThreat == null) { // Không có predator nào trong tầm, di chuyển ngẫu nhiên
-            lastDirection = Direction.CENTER;
-            lastSpeed = 0;
-            return lastDirection;
+        // NGUY HIỂM CAO: Kẻ địch ở cùng chunk -> Kích hoạt Speed up để chạy trốn
+        if (enemiesInMyChunk != null && !enemiesInMyChunk.isEmpty()) {
+            owner.setSpeedUp(true);
+
+            // Tìm trong 5 chunk xung quanh xem chunk nào an toàn nhất để chạy vào
+            List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
+            Chunk safestChunk = currentChunk;
+            int minEnemyCount = enemiesInMyChunk.size();
+
+            for (Chunk chunk : visibleChunks) {
+                int enemyCount = mapSystem.getEnemiesInChunk(chunk, owner).size();
+                if (enemyCount < minEnemyCount) {
+                    minEnemyCount = enemyCount;
+                    safestChunk = chunk;
+                }
+            }
+            return mapSystem.getRandomWalkablePosInChunk(safestChunk);
         }
 
-        double dx = animal.getX() - currentThreat.getX();
-        double dy = animal.getY() - currentThreat.getY();
-        double distance = (dx * dx + dy * dy);
+        // Nếu kẻ địch chỉ ở chunk lân cận (chưa vào cùng chunk) -> Tắt Speed up (Chạy vừa phải)
+        owner.setSpeedUp(false);
+        List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
+        List<Animals> allVisibleEnemies = mapSystem.getEnemiesInChunks(visibleChunks, owner);
 
-        if(distance == 0) {
-            lastDirection = Direction.CENTER;
-            lastSpeed = 0;
-            return lastDirection;
-        }
+        if (allVisibleEnemies == null || allVisibleEnemies.isEmpty()) return null;
 
-        dx /= distance;
-        dy /= distance;
-        lastDirection = directionFromVector(dx, dy);
-        lastSpeed = getSpeedFromCooldown(animal);
-        return lastDirection;
-    }
-
-    public Entity getCurrentThreat() {
-        return currentThreat;
-    }
-
-    public Direction getLastDirection() {
-        return lastDirection;
-    }
-
-    public double getLastSpeed() {
-        return lastSpeed;
-    }
-
-    private Direction directionFromVector(double dx, double dy) {
-        if(dx == 0 && dy == 0) {
-            return Direction.CENTER;
-        }
-        if(Math.abs(dx) > Math.abs(dy)) {
-            return dx > 0 ? Direction.EAST : Direction.WEST;
-        }
-        if(Math.abs(dy) > Math.abs(dx)) {
-            return dy > 0 ? Direction.NORTH : Direction.SOUTH;
-        }
-        if(dx > 0 && dy > 0) {
-            return Direction.NORTHEAST;
-        }
-        if(dx > 0 && dy < 0) {
-            return Direction.SOUTHEAST;
-        }
-        if(dx < 0 && dy > 0) {
-            return Direction.NORTHWEST;
-        }
-        if(dx < 0 && dy < 0) {
-            return Direction.SOUTHWEST;
-        }
-        return Direction.CENTER;
-    }
-
-    private double getSpeedFromCooldown(Animals animal) {
-        int cooldown = getCooldownValue(animal);
-        return Math.max(0.5, 10.0 / Math.max(1, cooldown));
-    }
-
-    private int getCooldownValue(Animals animal) {
-        try {
-            Field field = animal.getClass().getDeclaredField("defaultMoveCooldown");
-            field.setAccessible(true);
-            return field.getInt(animal);
-        } catch (Exception e) {
-            return 1;
-        }
+        return mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
     }
 }

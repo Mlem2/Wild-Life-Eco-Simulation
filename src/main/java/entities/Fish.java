@@ -9,11 +9,16 @@ public class Fish extends Animals implements Herbivore {
     public Fish(String name, int x, int y){
         super(name,x,y);
         this.size = Size.SMALL;
-        this.defaultMoveCooldown = 12;
-        this.currentMoveCooldown = 12;
+        this.defaultMoveCooldown = 5;
+        this.currentMoveCooldown = 5;
         this.age = (random.nextInt(3) + 3) * 21600;
+        this.foodEfficiency = 0.5; // Fish are quite efficient at using food
+        this.waterEfficiency = 3.0; // Fish can't live without water
+        this.hungerRecoveryAmount = 30;
+        this.thirstRecoveryAmount = 30;
     }
 
+    @Override
     public void makeSound(){
         System.out.println("GoocGooc");
     }
