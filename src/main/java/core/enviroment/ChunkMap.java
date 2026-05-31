@@ -20,6 +20,9 @@ public class ChunkMap {
         CHUNK_ARRAY_SIZE = SIZE / 50;
         CHUNK_SIZE = SIZE / CHUNK_ARRAY_SIZE;
         waterHeatMap =  new int[CHUNK_ARRAY_SIZE][CHUNK_ARRAY_SIZE];
+        
+        this.chunkMap = worldMap.getChunkMap();
+
         generateWaterHeatMap(worldMap);
         generateChunkMap();
         addEntitiesToChunks(entityMap);
@@ -45,17 +48,21 @@ public class ChunkMap {
         //Get chunks where there are water
         for (int y = 0; y < CHUNK_ARRAY_SIZE; y++) {
             for (int x = 0; x < CHUNK_ARRAY_SIZE; x++) {
-
-                chunkCheck:
+                Chunk chunk = chunkMap[y][x];
+                boolean hasWater = false;
                 for (int i = 0; i < CHUNK_SIZE; i++) {
                     for (int j = 0; j < CHUNK_SIZE; j++) {
-                        if (worldMap.getTile(CHUNK_SIZE * x + j, CHUNK_SIZE * y + i) == Terrain.WATER) {
-                            waterHeatMap[y][x] = 0;
-
-                            queue.add(new int[]{x, y});
-                            break chunkCheck;
+                        int tx = CHUNK_SIZE * x + j;
+                        int ty = CHUNK_SIZE * y + i;
+                        if (worldMap.getTile(tx, ty) == Terrain.WATER) {
+                            chunk.addWaterPosition(new entities.base.Position(tx, ty));
+                            hasWater = true;
                         }
                     }
+                }
+                if (hasWater) {
+                    waterHeatMap[y][x] = 0;
+                    queue.add(new int[]{x, y});
                 }
             }
         }
@@ -99,8 +106,8 @@ public class ChunkMap {
             for (int x = 0; x < SIZE; x++) {
                 Entity entity = entityMap.getEntity(x, y);
                 if (entity != null) {
-                    int yChunk = y / 10;
-                    int xChunk = x / 10;
+                    int yChunk = y / CHUNK_SIZE;
+                    int xChunk = x / CHUNK_SIZE;
                     chunkMap[yChunk][xChunk].addEntity(entity);
                 }
             }

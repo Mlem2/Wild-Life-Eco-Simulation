@@ -13,10 +13,10 @@ public class MapTest {
         int SIZE = 500;
 
         // 1. Initialize the terrain map
-        WorldMap worldMap = new WorldMap(9403312, SIZE);
+        WorldMap worldMap = new WorldMap(9403312, 500);
 
         // 2. Pass it to EntityMap to distribute entities based on your spawn weights
-        EntityMap entityMap = new EntityMap(worldMap, SIZE);
+        EntityMap entityMap = new EntityMap(worldMap, 500);
 
         // 3. Export the combined maps to an image
         exportToImage("my_world_with_entities", worldMap, entityMap, SIZE);

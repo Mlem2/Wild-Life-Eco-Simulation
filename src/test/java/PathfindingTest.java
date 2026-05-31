@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.List;
 
 public class PathfindingTest {
-    public static void main() {
+    public static void main(String[] args) {
         WorldMap worldMap = new WorldMap(9403312, 500);
         Pathfinder pathfinder = new Pathfinder(worldMap);
 

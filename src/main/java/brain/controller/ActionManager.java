@@ -39,7 +39,7 @@ public class ActionManager {
         } catch (Exception ignored) {}
 
         owner.setPosition(nextStep);
-        System.out.println("ActionManager.move: " + owner.getName() + " -> (" + nextStep.getX() + "," + nextStep.getY() + ")");
+        System.out.println("ActionManager.move: " + owner.getClass().getSimpleName() + " -> (" + nextStep.getX() + "," + nextStep.getY() + ")");
 
         if (oldChunk != newChunk) {
             try {

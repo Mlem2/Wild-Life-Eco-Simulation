@@ -18,13 +18,13 @@ public class ActionManagerResourceTest {
 
     @Test
     void eatingAndDrinkingShouldRestoreAnimalStats() throws Exception {
-        Rabbit rabbit = new Rabbit("rabbit", 0, 0);
+        Rabbit rabbit = new Rabbit(0, 0);
         setAnimalStat(rabbit, "hunger", 50.0);
         setAnimalStat(rabbit, "thirst", 40.0);
 
         ActionManager actionManager = new ActionManager(rabbit, new MapSystem());
-        Food food = new Food("food", 0, 0, 100, 1);
-        Water water = new Water("water", 0, 0, 100, 1);
+        Food food = new Food(0, 0, 100, 1);
+        Water water = new Water(0, 0, 100, 1);
 
         actionManager.eat(food);
         assertEquals(60.0, rabbit.getHungerPercentage(), 0.0001,
@@ -39,14 +39,14 @@ public class ActionManagerResourceTest {
 
     @Test
     void eatingPreyShouldInstantlyRemoveItAndRestorePredatorHungerAndThirst() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Wolf wolf = new Wolf("wolf", 0, 0);
+        Wolf wolf = new Wolf(0, 0);
         setAnimalStat(wolf, "hunger", 40.0);
         setAnimalStat(wolf, "thirst", 40.0);
 
-        Rabbit prey = new Rabbit("rabbit", 0, 0);
+        Rabbit prey = new Rabbit(0, 0);
 
         Chunk chunk = getChunk(worldMap, wolf);
         chunk.addEntity(wolf);

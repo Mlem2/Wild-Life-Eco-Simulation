@@ -18,10 +18,10 @@ public class MapSystemStrategyTest {
 
     @Test
     void tigerAloneShouldNotBeScared() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Tiger tiger = new Tiger("tiger", 10, 10);
+        Tiger tiger = new Tiger(10, 10);
         placeAnimal(worldMap, tiger);
 
         assertFalse(mapSystem.hasEnemyAround(tiger), "A predator alone should not flee just because it is an apex animal.");
@@ -31,11 +31,11 @@ public class MapSystemStrategyTest {
 
     @Test
     void rabbitShouldFleeFromPredator() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Rabbit rabbit = new Rabbit("rabbit", 10, 10);
-        Wolf wolf = new Wolf("wolf", 12, 12);
+        Rabbit rabbit = new Rabbit(10, 10);
+        Wolf wolf = new Wolf(12, 12);
         placeAnimal(worldMap, rabbit);
         placeAnimal(worldMap, wolf);
 
@@ -46,11 +46,11 @@ public class MapSystemStrategyTest {
 
     @Test
     void tigerShouldNotFleeFromElephantApex() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Tiger tiger = new Tiger("tiger", 10, 10);
-        Elephant elephant = new Elephant("elephant", 12, 12);
+        Tiger tiger = new Tiger(10, 10);
+        Elephant elephant = new Elephant(12, 12);
         placeAnimal(worldMap, tiger);
         placeAnimal(worldMap, elephant);
 

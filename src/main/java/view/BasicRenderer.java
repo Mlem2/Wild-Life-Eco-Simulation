@@ -61,12 +61,6 @@ public class BasicRenderer {
             }
         }
 
-        // Đổ màu vẽ sinh vật dạng ô lưới chuẩn 1 pixel tương thích
-        int startChunkX = startX / 50;
-        int startChunkY = startY / 50;
-        int endChunkX = Math.min(9, endX / 50);
-        int endChunkY = Math.min(9, endY / 50);
-
         Chunk[][] chunkMap = null;
         try {
             Field field = WorldMap.class.getDeclaredField("chunkMap");
@@ -75,6 +69,12 @@ public class BasicRenderer {
         } catch (Exception e) {}
 
         if (chunkMap == null) return;
+
+        // Đổ màu vẽ sinh vật dạng ô lưới chuẩn 1 pixel tương thích
+        int startChunkX = startX / 50;
+        int startChunkY = startY / 50;
+        int endChunkX = Math.min(chunkMap[0].length - 1, endX / 50);
+        int endChunkY = Math.min(chunkMap.length - 1, endY / 50);
 
         for (int cy = startChunkY; cy <= endChunkY; cy++) {
             for (int cx = startChunkX; cx <= endChunkX; cx++) {

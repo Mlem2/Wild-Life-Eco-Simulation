@@ -35,6 +35,12 @@ public class HunterStrategy implements MoveStrategy {
         }
 
         // Đang đói mà xung quanh không có gì -> Di chuyển sang một chunk an toàn ngẫu nhiên để tìm tiếp
+        if (owner.getThirstPercentage() < 60) {
+            Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks);
+            if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
+                return mapSystem.getRandomWalkablePosInChunk(bestChunk);
+            }
+        }
         return mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
     }
 }

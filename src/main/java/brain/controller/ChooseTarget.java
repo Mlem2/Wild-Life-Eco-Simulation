@@ -58,7 +58,7 @@ public class ChooseTarget {
     }
 
     private void evaluateStrategy() {
-        // 1. Kiểm tra thiên địch xung quanh toàn bộ tầm nhìn (5 chunks)
+        // 1. Kiểm tra thiên địch xung quanh toàn bộ tầm nhìn (3x3 chunks)
         if (owner instanceof entities.attributes.Herbivore &&
             mapSystem.hasEnemyAround(owner) && mapSystem.hasEnemyNearby(owner)) {
             // Ngẫu nhiên có phát hiện kẻ địch hay không (60%)

@@ -12,20 +12,20 @@ public class EntityMap {
 
     // Define spawn tables for each tile type using relative weights
     private final Map<String, Integer> waterSpawns = Map.of(
-            "fish", 150
+            "fish", 25
     );
 
     private final Map<String, Integer> forestSpawns = Map.of(
-            "wolf", 25,
+            "wolf", 3,
             "rabbit", 1,
             "tree", 500,
             "bush", 60
     );
 
     private final Map<String, Integer> grasslandSpawns = Map.of(
-            "rabbit", 50,
+            "rabbit", 5,
             "wolf", 1,
-            "elephant", 15,
+            "elephant", 1,
             "tree", 10,
             "bush", 20
     );
@@ -108,6 +108,6 @@ public class EntityMap {
     }
 
     public Entity getEntity(int x, int y) {
-        return this.entityMap[y][x];
+        return this.entityMap[x][y];
     }
 }

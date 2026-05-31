@@ -8,6 +8,7 @@ import java.util.Queue;
 
 public class WorldMap {
     protected static Terrain[][] worldMap;
+    protected Chunk[][] chunkMap;
     protected static int SIZE;
     private static float[][] heightNoiseMap;
     private static float[][] moistureNoiseMap;
@@ -16,6 +17,12 @@ public class WorldMap {
     public WorldMap(int seed, int SIZE) {
         WorldMap.SIZE = SIZE;
         worldMap = new Terrain[SIZE][SIZE];
+        this.chunkMap = new Chunk[SIZE / 50][SIZE / 50];
+        for (int y = 0; y < SIZE / 50; y++) {
+            for (int x = 0; x < SIZE / 50; x++) {
+                chunkMap[y][x] = new Chunk(0);
+            }
+        }
 
         heightNoiseMap = generateNoiseArray(seed);
         moistureNoiseMap = generateNoiseArray(seed + 392);
@@ -73,6 +80,10 @@ public class WorldMap {
                 }
             }
         }
+    }
+
+    public Chunk[][] getChunkMap() {
+        return chunkMap;
     }
 
 }

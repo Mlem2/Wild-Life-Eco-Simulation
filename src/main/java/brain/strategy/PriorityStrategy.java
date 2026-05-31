@@ -20,6 +20,12 @@ public class PriorityStrategy implements MoveStrategy {
                 Position water = mapSystem.getClosestPosition(owner.getPosition(), waterSources);
                 owner.lockTargetEntity(water);
                 return water;
+            } else {
+                // If no water found in visible chunks, move towards the best chunk in heat map
+                Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks);
+                if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
+                    return mapSystem.getRandomWalkablePosInChunk(bestChunk);
+                }
             }
         }
 

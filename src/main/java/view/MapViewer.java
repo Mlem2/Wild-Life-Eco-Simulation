@@ -60,10 +60,26 @@ public class MapViewer extends Application {
     private Label lblEcoStatus;
     private final java.util.Map<Animals, brain.controller.AnimalBrainUpdate> brainMap = new java.util.HashMap<>();
 
+    private static WorldMap sharedWorldMap;
+    private static brain.controller.SimulationManager sharedSimulationManager;
+
+    public static void setSharedWorldMap(WorldMap worldMap) {
+        sharedWorldMap = worldMap;
+    }
+
+    public static void setSharedSimulationManager(brain.controller.SimulationManager simulationManager) {
+        sharedSimulationManager = simulationManager;
+    }
+
     @Override
     public void start(Stage primaryStage) {
-        // Khởi tạo bản đồ thế giới ngầm với Seed cố định
-        worldMap = new WorldMap(94033111, 500);
+        if (sharedWorldMap != null) {
+            this.worldMap = sharedWorldMap;
+        } else {
+            // Khởi tạo bản đồ thế giới ngầm với Seed cố định
+            worldMap = new WorldMap(94033111, 500);
+        }
+        
         // Gắn bản đồ vào bộ xử lý đồ họa chuyên trách Basic Mode
         basicRenderer = new BasicRenderer(worldMap);
 
@@ -184,41 +200,46 @@ public class MapViewer extends Application {
 
                             if ("SPAWN_RABBIT".equals(currentInteractionMode)) {
                                 if (isWater || isStone) return;
-                                entities.Rabbit ent = new entities.Rabbit("Manual Rabbit", gridX, gridY);
+                                entities.Rabbit ent = new entities.Rabbit(gridX, gridY);
                                 targetChunk.addEntity(ent);
-                                registerBrainForEntity(ent);
+                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                                else registerBrainForEntity(ent);
                             }
                             else if ("SPAWN_TIGER".equals(currentInteractionMode)) {
                                 if (isWater || isStone) return;
-                                entities.Tiger ent = new entities.Tiger("Manual Tiger", gridX, gridY);
+                                entities.Tiger ent = new entities.Tiger(gridX, gridY);
                                 targetChunk.addEntity(ent);
-                                registerBrainForEntity(ent);
+                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                                else registerBrainForEntity(ent);
                             }
                             else if ("SPAWN_WOLF".equals(currentInteractionMode)) {
                                 if (isWater || isStone) return;
-                                entities.Wolf ent = new entities.Wolf("Manual Wolf", gridX, gridY);
+                                entities.Wolf ent = new entities.Wolf(gridX, gridY);
                                 targetChunk.addEntity(ent);
-                                registerBrainForEntity(ent);
+                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                                else registerBrainForEntity(ent);
                             }
                             else if ("SPAWN_ELEPHANT".equals(currentInteractionMode)) {
                                 if (isWater || isStone) return;
-                                entities.Elephant ent = new entities.Elephant("Manual Elephant", gridX, gridY);
+                                entities.Elephant ent = new entities.Elephant(gridX, gridY);
                                 targetChunk.addEntity(ent);
-                                registerBrainForEntity(ent);
+                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                                else registerBrainForEntity(ent);
                             }
                             else if ("SPAWN_FISH".equals(currentInteractionMode)) {
                                 if (!isWater) return;
-                                entities.Fish ent = new entities.Fish("Manual Fish", gridX, gridY);
+                                entities.Fish ent = new entities.Fish(gridX, gridY);
                                 targetChunk.addEntity(ent);
-                                registerBrainForEntity(ent);
+                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                                else registerBrainForEntity(ent);
                             }
                             else if ("SPAWN_BUSH".equals(currentInteractionMode)) {
                                 if (isWater || isStone || isMud) return;
-                                targetChunk.addEntity(new entities.Bush("Manual Bush", gridX, gridY));
+                                targetChunk.addEntity(new entities.Bush(gridX, gridY));
                             }
                             else if ("SPAWN_TREE".equals(currentInteractionMode)) {
                                 if (isWater || isStone || isMud) return;
-                                targetChunk.addEntity(new entities.Trees("Manual Tree", gridX, gridY));
+                                targetChunk.addEntity(new entities.Trees(gridX, gridY));
                             }
                         }
                     } catch (Exception ex) {
@@ -229,15 +250,20 @@ public class MapViewer extends Application {
         });
 
         // Gọi hàm kích hoạt rải đầy đủ muông thú ngẫu nhiên lúc vừa bật map
-        injectTestEntities();
+        if (sharedWorldMap == null) {
+            injectTestEntities();
+        }
 
         // Đăng ký bộ não cho tất cả các động vật đã spawn
-        try {
-            Field field = WorldMap.class.getDeclaredField("chunkMap");
-            field.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
-            registerAllBrains(chunkMap);
-        } catch (Exception e) {}
+        if (sharedSimulationManager == null) {
+            try {
+                Field field = WorldMap.class.getDeclaredField("chunkMap");
+                field.setAccessible(true);
+                Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
+                registerAllBrains(chunkMap);
+            } catch (Exception e) {
+            }
+        }
 
         Scene scene = new Scene(root, 1180, 820);
         primaryStage.setTitle("Ecosystem Monitor - Full Random Biome Mode");
@@ -246,33 +272,17 @@ public class MapViewer extends Application {
 
         // Vòng lặp đồ họa và logic thời gian thực ngầm định
         AnimationTimer viewRefresher = new AnimationTimer() {
-            private long lastTimeUpdate = 0;
             private long lastLogicUpdate = 0;
 
             @Override
             public void handle(long now) {
-                // Tăng tiến thời gian hệ thống giả lập ngầm định
-                if (now - lastTimeUpdate >= 200_000_000) {
-                    try {
-                        int m = core.TimeSystem.minute + 5;
-                        if (m >= 60) {
-                            m = 0;
-                            core.TimeSystem.hour++;
-                            if (core.TimeSystem.hour >= 24) {
-                                core.TimeSystem.hour = 0;
-                                core.TimeSystem.day++;
-                            }
-                        }
-                        core.TimeSystem.minute = m;
-                        core.TimeSystem.partOfDay = (core.TimeSystem.hour > 4 && core.TimeSystem.hour < 18) ? "Day" : "Night";
-                    } catch (Exception e) {}
-                    lastTimeUpdate = now;
-                }
-
-                // Cập nhật nhịp vòng lặp Logic của Backend định kỳ 1 giây một lần
-                if (now - lastLogicUpdate >= 1_000_000_000) {
-                    updateSimulationLogic();
-                    lastLogicUpdate = now;
+                // Nếu SimulationManager không chạy (chạy từ MapViewer trực tiếp), ta tự update logic
+                if (sharedSimulationManager == null) {
+                    // Cập nhật nhịp vòng lặp Logic của Backend định kỳ 1 giây một lần
+                    if (now - lastLogicUpdate >= 1_000_000_000) {
+                        updateSimulationLogic();
+                        lastLogicUpdate = now;
+                    }
                 }
 
                 updateTimeInformation();
@@ -502,7 +512,7 @@ public class MapViewer extends Application {
                 int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
                 String name = getTileType.apply(rx, ry);
                 if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Rabbit("Wild Rabbit " + countR, rx, ry));
+                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Rabbit(rx, ry));
                     countR++;
                 }
             }
@@ -511,7 +521,7 @@ public class MapViewer extends Application {
                 int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
                 String name = getTileType.apply(rx, ry);
                 if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Tiger("Apex Tiger " + countT, rx, ry));
+                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Tiger(rx, ry));
                     countT++;
                 }
             }
@@ -520,7 +530,7 @@ public class MapViewer extends Application {
                 int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
                 String name = getTileType.apply(rx, ry);
                 if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Wolf("Grey Wolf " + countW, rx, ry));
+                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Wolf(rx, ry));
                     countW++;
                 }
             }
@@ -529,7 +539,7 @@ public class MapViewer extends Application {
                 int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
                 String name = getTileType.apply(rx, ry);
                 if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Elephant("Wild Elephant " + countE, rx, ry));
+                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Elephant(rx, ry));
                     countE++;
                 }
             }
@@ -538,7 +548,7 @@ public class MapViewer extends Application {
                 int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
                 String name = getTileType.apply(rx, ry);
                 if (name.contains("water") || name.contains("nuoc")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Fish("Aqua Fish " + countF, rx, ry));
+                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Fish(rx, ry));
                     countF++;
                 }
             }
@@ -547,7 +557,7 @@ public class MapViewer extends Application {
                 int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
                 String name = getTileType.apply(rx, ry);
                 if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da") && !name.contains("mud") && !name.contains("bun")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Bush("Grass Bush " + countB, rx, ry));
+                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Bush(rx, ry));
                     countB++;
                 }
             }
@@ -556,7 +566,7 @@ public class MapViewer extends Application {
                 int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
                 String name = getTileType.apply(rx, ry);
                 if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da") && !name.contains("mud") && !name.contains("bun")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Trees("Ancient Tree " + countTree, rx, ry));
+                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Trees(rx, ry));
                     countTree++;
                 }
             }
@@ -606,7 +616,8 @@ public class MapViewer extends Application {
 
         selectedChunk = findChunkAt(selectedAnimal.getX(), selectedAnimal.getY());
 
-        brain.controller.AnimalBrainUpdate brain = brainMap.get(selectedAnimal);
+        brain.controller.AnimalBrainUpdate brain = (sharedSimulationManager != null) ?
+                sharedSimulationManager.getBrainMap().get(selectedAnimal) : brainMap.get(selectedAnimal);
         String strategyName = (brain != null) ? brain.getCurrentStrategyName() : selectedAnimal.getMoveStrategyName();
         Position target = (brain != null) ? brain.getCurrentAnchorTarget() : selectedAnimal.getLastLockedTargetPosition();
         java.util.List<Position> path = (brain != null) ? brain.getCurrentPath() : java.util.Collections.emptyList();
@@ -616,7 +627,6 @@ public class MapViewer extends Application {
         }
 
         StringBuilder content = new StringBuilder();
-        content.append("Name: ").append(selectedAnimal.getName()).append("\n");
         content.append("Type: ").append(selectedAnimal.getClass().getSimpleName()).append("\n");
         content.append("Position: (").append(selectedAnimal.getX()).append(", ").append(selectedAnimal.getY()).append(")\n");
         content.append("Chunk: [").append(selectedAnimal.getX() / 50).append(", ").append(selectedAnimal.getY() / 50).append("]\n");
@@ -701,7 +711,7 @@ public class MapViewer extends Application {
                 String typeName = entity.getClass().getSimpleName();
                 typeCounts.put(typeName, typeCounts.getOrDefault(typeName, 0) + 1);
                 if (sampleEntities.size() < 12) {
-                    sampleEntities.add(entity.getName() + " [" + entity.getClass().getSimpleName() + "]");
+                    sampleEntities.add(entity.getClass().getSimpleName());
                 }
             }
         }
@@ -783,8 +793,8 @@ public class MapViewer extends Application {
             // Biến đếm đầy đủ cho từng loài cụ thể để cập nhật lên Dashboard
             int rCount = 0, tCount = 0, wCount = 0, eCount = 0, fCount = 0, bushCount = 0, treeCount = 0;
 
-            for (int cy = 0; cy < 10; cy++) {
-                for (int cx = 0; cx < 10; cx++) {
+            for (int cy = 0; cy < chunkMap.length; cy++) {
+                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
                     Chunk chunk = chunkMap[cy][cx];
                     if (chunk == null) continue;
                     synchronized (chunk.getEntityList()) {
@@ -834,8 +844,8 @@ public class MapViewer extends Application {
 
             // StateController not available here; skip external state update
 
-            for (int cy = 0; cy < 10; cy++) {
-                for (int cx = 0; cx < 10; cx++) {
+            for (int cy = 0; cy < chunkMap.length; cy++) {
+                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
                     Chunk chunk = chunkMap[cy][cx];
                     if (chunk == null) continue;
 

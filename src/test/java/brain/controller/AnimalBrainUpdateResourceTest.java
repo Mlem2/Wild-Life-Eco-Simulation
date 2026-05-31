@@ -21,16 +21,16 @@ public class AnimalBrainUpdateResourceTest {
 
     @Test
     void rabbitShouldEatAdjacentFoodOnly() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Rabbit rabbit = new Rabbit("rabbit", 0, 0);
+        Rabbit rabbit = new Rabbit(0, 0);
         rabbit.setCurrentMoveCooldown(0);
         setAnimalStat(rabbit, "hunger", 40.0);
         setAnimalStat(rabbit, "thirst", 40.0);
         placeEntity(worldMap, rabbit);
 
-        Food food = new Food("grass", 1, 0, 100, 1);
+        Food food = new Food(1, 0, 100, 1);
         placeEntity(worldMap, food);
 
         ActionManager actionManager = new ActionManager(rabbit, mapSystem);
@@ -47,16 +47,16 @@ public class AnimalBrainUpdateResourceTest {
 
     @Test
     void rabbitShouldConsumeBushWhenReachingTarget() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Rabbit rabbit = new Rabbit("rabbit", 0, 0);
+        Rabbit rabbit = new Rabbit(0, 0);
         rabbit.setCurrentMoveCooldown(0);
         setAnimalStat(rabbit, "hunger", 40.0);
         setAnimalStat(rabbit, "thirst", 40.0);
         placeEntity(worldMap, rabbit);
 
-        Bush bush = new Bush("bush", 1, 0);
+        Bush bush = new Bush(1, 0);
         placeEntity(worldMap, bush);
 
         ActionManager actionManager = new ActionManager(rabbit, mapSystem);
@@ -77,15 +77,15 @@ public class AnimalBrainUpdateResourceTest {
 
     @Test
     void rabbitShouldDrinkAdjacentWaterOnly() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Rabbit rabbit = new Rabbit("rabbit", 0, 0);
+        Rabbit rabbit = new Rabbit(0, 0);
         rabbit.setCurrentMoveCooldown(0);
         setAnimalStat(rabbit, "thirst", 40.0);
         placeEntity(worldMap, rabbit);
 
-        Water water = new Water("water", 1, 0);
+        Water water = new Water(1, 0);
         placeEntity(worldMap, water);
 
         ActionManager actionManager = new ActionManager(rabbit, mapSystem);
@@ -100,16 +100,16 @@ public class AnimalBrainUpdateResourceTest {
 
     @Test
     void predatorShouldAttackAdjacentPreyOnly() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Wolf wolf = new Wolf("wolf", 0, 0);
+        Wolf wolf = new Wolf(0, 0);
         wolf.setCurrentMoveCooldown(0);
         setAnimalStat(wolf, "hunger", 40.0);
         setAnimalStat(wolf, "thirst", 40.0);
         placeEntity(worldMap, wolf);
 
-        Rabbit prey = new Rabbit("rabbit", 1, 0);
+        Rabbit prey = new Rabbit(1, 0);
         placeEntity(worldMap, prey);
 
         ActionManager actionManager = new ActionManager(wolf, mapSystem);
@@ -126,16 +126,16 @@ public class AnimalBrainUpdateResourceTest {
 
     @Test
     void predatorShouldAttackPreyOnItsOwnTileAndRecoverHungerAndThirst() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Wolf wolf = new Wolf("wolf", 0, 0);
+        Wolf wolf = new Wolf(0, 0);
         wolf.setCurrentMoveCooldown(0);
         setAnimalStat(wolf, "hunger", 40.0);
         setAnimalStat(wolf, "thirst", 40.0);
         placeEntity(worldMap, wolf);
 
-        Rabbit prey = new Rabbit("rabbit", 0, 0);
+        Rabbit prey = new Rabbit(0, 0);
         placeEntity(worldMap, prey);
 
         ActionManager actionManager = new ActionManager(wolf, mapSystem);
@@ -152,16 +152,16 @@ public class AnimalBrainUpdateResourceTest {
 
     @Test
     void rabbitShouldEatFoodOnItsOwnTile() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Rabbit rabbit = new Rabbit("rabbit", 0, 0);
+        Rabbit rabbit = new Rabbit(0, 0);
         rabbit.setCurrentMoveCooldown(0);
         setAnimalStat(rabbit, "hunger", 40.0);
         setAnimalStat(rabbit, "thirst", 40.0);
         placeEntity(worldMap, rabbit);
 
-        Food food = new Food("grass", 0, 0, 100, 1);
+        Food food = new Food(0, 0, 100, 1);
         placeEntity(worldMap, food);
 
         ActionManager actionManager = new ActionManager(rabbit, mapSystem);

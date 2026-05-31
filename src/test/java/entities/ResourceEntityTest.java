@@ -8,7 +8,7 @@ public class ResourceEntityTest {
 
     @Test
     void treeFoodShouldConsumeAndRegenerateAfterConsumption() {
-        Trees tree = new Trees("tree", 0, 0);
+        Trees tree = new Trees(0, 0);
 
         assertTrue(tree instanceof Food, "Trees should inherit the food resource behavior.");
         assertEquals(false, tree.isInfinite(), "Tree food sources should be finite and deplete after consumption.");
@@ -23,7 +23,7 @@ public class ResourceEntityTest {
 
     @Test
     void genericFoodShouldExposeBaseRecoveryAmounts() {
-        Food food = new Food("grass", 0, 0, 100, 1);
+        Food food = new Food(0, 0, 100, 1);
 
         assertEquals(10, food.getHungerRecoveryAmount(), "Generic food should provide a base hunger recovery amount.");
         assertEquals(10, food.getThirstRecoveryAmount(), "Generic food should provide a base thirst recovery amount.");
@@ -31,8 +31,8 @@ public class ResourceEntityTest {
 
     @Test
     void bushAndTreeFoodShouldExposeTheirBaseRecoveryAmounts() {
-        Bush bush = new Bush("bush", 0, 0);
-        Trees tree = new Trees("tree", 0, 0);
+        Bush bush = new Bush(0, 0);
+        Trees tree = new Trees(0, 0);
 
         assertEquals(20, bush.getHungerRecoveryAmount(), "Bushes should provide a higher base hunger recovery than generic grass.");
         assertEquals(20, bush.getThirstRecoveryAmount(), "Bushes should provide a higher base thirst recovery than generic grass.");
@@ -42,7 +42,7 @@ public class ResourceEntityTest {
 
     @Test
     void waterShouldRemainInfiniteForDrinkConsumption() {
-        Water water = new Water("water", 0, 0);
+        Water water = new Water(0, 0);
 
         assertTrue(water.isInfinite(), "Water sources should be infinite.");
 
