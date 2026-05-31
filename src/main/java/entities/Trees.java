@@ -9,8 +9,8 @@ import java.util.List;
 
 public class Trees extends Tree {
 
-    public Trees(String name, int x, int y) {
-        super(name, x, y);
+    public Trees(int x, int y) {
+        super(x, y);
         this.defaultSeedCooldown = (random.nextInt(6) + 2) * 21600;
         this.currentSeedCooldown = defaultSeedCooldown;
         this.growthTime = (random.nextInt(3) + 2) * 21600;
@@ -63,7 +63,7 @@ public class Trees extends Tree {
                 // Kiểm tra điều kiện biên và ô trống
                 if (nextX >= 0 && nextX <= 499 && nextY >= 0 && nextY <= 499) {
                     if (toaDoSV[nextX][nextY] == null) {
-                        Trees tmp = EntityFactory.CreateEntity(Trees::new, name, nextX, nextY);
+                        Trees tmp = EntityFactory.CreateEntity((EntityFactory.FakeConstructor<Trees, Integer, Integer>) Trees::new, nextX, nextY);
                         toaDoSV[nextX][nextY] = tmp;
                         allEntities.add(tmp);
                         currentSeedCooldown = defaultSeedCooldown;

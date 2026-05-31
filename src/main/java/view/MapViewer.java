@@ -22,7 +22,7 @@ public class MapViewer extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        worldMap = new WorldMap(94033111);
+        worldMap = new WorldMap(94033111, 500);
 
         // 1. Create a Resizable Canvas
         Canvas canvas = new Canvas();

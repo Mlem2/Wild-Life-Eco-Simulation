@@ -2,10 +2,10 @@ package entities.base;
 
 public class EntityFactory {
     @FunctionalInterface
-    public interface FakeConstructor<T, A, B, C>{
-        T apply(A a, B b, C c);
+    public interface FakeConstructor<T, A, B>{
+        T apply(A a, B b);
     }
-    public static <T extends Entity> T CreateEntity(FakeConstructor<T, String, Integer, Integer> constructor, String name,int x, int y){
-        return constructor.apply(name,x,y);
+    public static <T extends Entity> T CreateEntity(FakeConstructor<T, Integer, Integer> constructor,int x, int y){
+        return constructor.apply(x,y);
     }
 }

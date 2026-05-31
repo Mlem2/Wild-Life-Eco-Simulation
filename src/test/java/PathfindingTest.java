@@ -10,13 +10,13 @@ import java.util.List;
 
 public class PathfindingTest {
     public static void main() {
-        WorldMap worldMap = new WorldMap(9403312);
+        WorldMap worldMap = new WorldMap(9403312, 500);
         Pathfinder pathfinder = new Pathfinder(worldMap);
 
         long startTime = System.nanoTime();
 
-        Point start = new Point(50, 455);
-        Point end = new Point(155, 355);
+        Point start = new Point(155, 350);
+        Point end = new Point(100, 450);
         List<Point> path = pathfinder.calculatePath(start, end);
 
         long endTime = System.nanoTime();

@@ -10,8 +10,8 @@ public abstract class Tree extends Entity {
     protected double currentSeedCooldown;
     protected static Random random = new Random();
 
-    public Tree(String name, int x, int y){
-        super(name, x, y);
+    public Tree(int x, int y){
+        super(x, y);
     }
 
     public Tree(){}

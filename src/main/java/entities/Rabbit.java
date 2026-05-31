@@ -5,8 +5,8 @@ import entities.attributes.Herbivore;
 import entities.base.Animals;
 
 public class Rabbit extends Animals implements Herbivore {
-    public Rabbit(String name, int x, int y){
-        super(name,x,y);
+    public Rabbit(int x, int y){
+        super(x,y);
         this.size = Size.SMALL;
         this.defaultMoveCooldown = 10;
         this.currentMoveCooldown = 10;

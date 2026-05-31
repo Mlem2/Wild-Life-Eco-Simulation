@@ -5,8 +5,8 @@ import entities.attributes.*;
 import entities.base.Animals;
 
 public class Tiger extends Animals implements Carnivore, Apex {
-    public Tiger(String name, int x, int y){
-        super(name,x,y);
+    public Tiger(int x, int y){
+        super(x,y);
         this.size = Size.LARGE;
         this.defaultMoveCooldown = 5;
         this.currentMoveCooldown = 5;

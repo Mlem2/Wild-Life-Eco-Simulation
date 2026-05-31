@@ -15,7 +15,7 @@ public class TimeTest {
     static Entity[][] toaDoSV = new Entity[500][500]; // lưu danh sách các thực thể dựa trên tọa độ của chúng
     public static void main(String[] args){
         setTimeSpd(40);
-        AddEntity(Wolf::new,"Sói Trắng",0,0);
+        AddEntity(Wolf::new,0,0);
         Timer timer = new Timer();
         TimerTask task = new TimerTask(){
             public void run() {
@@ -49,7 +49,7 @@ public class TimeTest {
                         tmp1.checkCD(toaDoSV,sv);
                     }
                     if(!tmp.checkAlive()){
-                        System.out.println(tmp.getName() + " da chet");
+
                     }
                 }
                 sv.removeIf(e -> !e.checkAlive());
@@ -59,12 +59,12 @@ public class TimeTest {
 
     }
 
-    public static <T extends Entity> void AddEntity(EntityFactory.FakeConstructor<T,String,Integer,Integer> recipe,String ten, int x, int y){
-        if(toaDoSV[x][y] != null){
+    public static <T extends Entity> void AddEntity(EntityFactory.FakeConstructor<T,Integer,Integer> recipe, int x, int y){
+        if(toaDoSV[x][y] != null) {
             System.out.println("toa do da co thuc the");
             return;
         }
-        Entity tmp = EntityFactory.<T>CreateEntity(recipe,ten,x,y);
+        Entity tmp = EntityFactory.<T>CreateEntity(recipe,x,y);
         toaDoSV[x][y] = tmp;
         sv.add(tmp);
     }

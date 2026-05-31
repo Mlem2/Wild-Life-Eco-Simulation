@@ -17,8 +17,8 @@ public abstract class Animals extends Entity {
     protected int currentMoveCooldown;// thời gian hồi method di chuyển (chỉ để tính toán sau mỗi chu kì clock)
     protected static Random random = new Random();
 
-    public Animals(String name, int x, int y){
-        super(name,x,y);
+    public Animals(int x, int y){
+        super(x,y);
     }
 
     public void updateMoveCooldown(Entity[][] animalCoordinates, List<Entity> allEntities){

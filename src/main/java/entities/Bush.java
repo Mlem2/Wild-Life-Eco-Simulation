@@ -10,8 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class Bush extends Tree {
-    public Bush(String name, int x, int y){
-        super(name,x,y);
+    public Bush(int x, int y){
+        super(x,y);
         this.defaultSeedCooldown = (random.nextInt(2) + 5) * 10800;
         this.currentSeedCooldown = defaultSeedCooldown;
         this.growthTime = (random.nextInt(3) + 2) * 10800;
@@ -64,7 +64,7 @@ public class Bush extends Tree {
                 // Kiểm tra điều kiện biên và ô trống
                 if (nextX >= 0 && nextX <= 499 && nextY >= 0 && nextY <= 499) {
                     if (animalCoordinates[nextX][nextY] == null) {
-                        Bush tmp = EntityFactory.CreateEntity(Bush::new, name, nextX, nextY);
+                        Bush tmp = EntityFactory.CreateEntity((EntityFactory.FakeConstructor<Bush, Integer, Integer>) Bush::new, nextX, nextY);
                         animalCoordinates[nextX][nextY] = tmp;
                         allEntities.add(tmp);
 
