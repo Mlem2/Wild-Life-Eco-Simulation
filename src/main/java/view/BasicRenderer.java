@@ -36,12 +36,10 @@ public class BasicRenderer {
         this.selectedChunk = selectedChunk;
     }
 
-    public void render(Canvas canvas, double scale, double offsetX, double offsetY) {
+    public void renderTerrain(Canvas canvas, double scale, double offsetX, double offsetY) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         double canvasW = canvas.getWidth();
         double canvasH = canvas.getHeight();
-
-        gc.clearRect(0, 0, canvasW, canvasH);
 
         double tileW = 1.0 * scale;
         double tileH = 1.0 * scale;
@@ -60,14 +58,22 @@ public class BasicRenderer {
                 gc.fillRect(offsetX + (x * tileW), offsetY + (y * tileH), tileW + 0.4, tileH + 0.4);
             }
         }
+    }
 
-        Chunk[][] chunkMap = null;
-        try {
-            Field field = WorldMap.class.getDeclaredField("chunkMap");
-            field.setAccessible(true);
-            chunkMap = (Chunk[][]) field.get(worldMap);
-        } catch (Exception e) {}
+    public void renderEntities(Canvas canvas, double scale, double offsetX, double offsetY) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        double canvasW = canvas.getWidth();
+        double canvasH = canvas.getHeight();
 
+        double tileW = 1.0 * scale;
+        double tileH = 1.0 * scale;
+
+        int startX = (int) Math.max(0, -offsetX / tileW);
+        int startY = (int) Math.max(0, -offsetY / tileH);
+        int endX = (int) Math.min(MAP_SIZE, (canvasW - offsetX) / tileW + 1);
+        int endY = (int) Math.min(MAP_SIZE, (canvasH - offsetY) / tileH + 1);
+
+        Chunk[][] chunkMap = worldMap.getChunkMap();
         if (chunkMap == null) return;
 
         // Đổ màu vẽ sinh vật dạng ô lưới chuẩn 1 pixel tương thích
@@ -168,5 +174,12 @@ public class BasicRenderer {
                 }
             }
         }
+    }
+
+    public void render(Canvas canvas, double scale, double offsetX, double offsetY) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        renderTerrain(canvas, scale, offsetX, offsetY);
+        renderEntities(canvas, scale, offsetX, offsetY);
     }
 }

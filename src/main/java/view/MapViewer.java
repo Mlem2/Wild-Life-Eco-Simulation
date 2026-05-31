@@ -16,6 +16,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.BorderPane;
@@ -249,22 +250,6 @@ public class MapViewer extends Application {
             }
         });
 
-        // Gọi hàm kích hoạt rải đầy đủ muông thú ngẫu nhiên lúc vừa bật map
-        if (sharedWorldMap == null) {
-            injectTestEntities();
-        }
-
-        // Đăng ký bộ não cho tất cả các động vật đã spawn
-        if (sharedSimulationManager == null) {
-            try {
-                Field field = WorldMap.class.getDeclaredField("chunkMap");
-                field.setAccessible(true);
-                Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
-                registerAllBrains(chunkMap);
-            } catch (Exception e) {
-            }
-        }
-
         Scene scene = new Scene(root, 1180, 820);
         primaryStage.setTitle("Ecosystem Monitor - Full Random Biome Mode");
         primaryStage.setScene(scene);
@@ -272,19 +257,8 @@ public class MapViewer extends Application {
 
         // Vòng lặp đồ họa và logic thời gian thực ngầm định
         AnimationTimer viewRefresher = new AnimationTimer() {
-            private long lastLogicUpdate = 0;
-
             @Override
             public void handle(long now) {
-                // Nếu SimulationManager không chạy (chạy từ MapViewer trực tiếp), ta tự update logic
-                if (sharedSimulationManager == null) {
-                    // Cập nhật nhịp vòng lặp Logic của Backend định kỳ 1 giây một lần
-                    if (now - lastLogicUpdate >= 1_000_000_000) {
-                        updateSimulationLogic();
-                        lastLogicUpdate = now;
-                    }
-                }
-
                 updateTimeInformation();
                 refreshSelectedAnimalDebug();
                 refreshSelectedChunkDebug();
@@ -467,137 +441,92 @@ public class MapViewer extends Application {
     }
 
     private void updateTimeInformation() {
+        if (sharedSimulationManager == null) return;
         try {
-            int year = (int) TimeSystem.class.getDeclaredField("year").get(null);
-            int month = (int) TimeSystem.class.getDeclaredField("month").get(null);
-            int day = (int) TimeSystem.class.getDeclaredField("day").get(null);
-            int hour = (int) TimeSystem.class.getDeclaredField("hour").get(null);
-            int minute = (int) TimeSystem.class.getDeclaredField("minute").get(null);
-            String season = (String) TimeSystem.class.getDeclaredField("season").get(null);
-            String partOfDay = (String) TimeSystem.class.getDeclaredField("partOfDay").get(null);
+            int year = (int) core.TimeSystem.class.getDeclaredField("year").get(null);
+            int month = (int) core.TimeSystem.class.getDeclaredField("month").get(null);
+            int day = (int) core.TimeSystem.class.getDeclaredField("day").get(null);
+            int hour = (int) core.TimeSystem.class.getDeclaredField("hour").get(null);
+            int minute = (int) core.TimeSystem.class.getDeclaredField("minute").get(null);
+            String season = (String) core.TimeSystem.class.getDeclaredField("season").get(null);
+            String partOfDay = (String) core.TimeSystem.class.getDeclaredField("partOfDay").get(null);
 
             lblClock.setText(String.format("Time: %02d:%02d (Day %02d/%02d/%d)", hour, minute, day, month, year));
             lblSeason.setText("Current Season: " + season);
             lblPartOfDay.setText("Light Cycle: " + partOfDay);
+
+            updateDashboard();
         } catch (Exception e) {
             lblClock.setText("Time: Sync Error...");
         }
     }
 
-    // --- KHỞI TẠO NGẪU NHIÊN ĐẦY ĐỦ TẤT CẢ CÁC LOÀI ĐÚNG BIOME KHI MỞ GAME ---
-    private void injectTestEntities() {
-        try {
-            Field field = WorldMap.class.getDeclaredField("chunkMap");
-            field.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
-            if (chunkMap == null) return;
+    private void updateDashboard() {
+        if (worldMap == null) return;
+        Chunk[][] chunkMap = worldMap.getChunkMap();
+        if (chunkMap == null) return;
 
-            java.util.Random rand = new java.util.Random();
+        int rCount = 0, tCount = 0, wCount = 0, eCount = 0, fCount = 0, bushCount = 0, treeCount = 0;
 
-            // Cấu hình số lượng sinh ban đầu cho từng loài độc lập
-            int spawnRabbits = 150;
-            int spawnTigers = 20;
-            int spawnWolves = 35;
-            int spawnElephants = 15;
-            int spawnFishes = 80;
-            int spawnBushes = 400;
-            int spawnTrees = 300;
-
-            java.util.function.BiFunction<Integer, Integer, String> getTileType = (x, y) -> {
-                try { return worldMap.getTile(x, y).getName().toLowerCase(); } catch (Exception e) { return ""; }
-            };
-
-            // Thả Thỏ
-            for (int countR = 0; countR < spawnRabbits; ) {
-                int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
-                String name = getTileType.apply(rx, ry);
-                if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Rabbit(rx, ry));
-                    countR++;
-                }
-            }
-            // Thả Hổ
-            for (int countT = 0; countT < spawnTigers; ) {
-                int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
-                String name = getTileType.apply(rx, ry);
-                if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Tiger(rx, ry));
-                    countT++;
-                }
-            }
-            // Thả Sói
-            for (int countW = 0; countW < spawnWolves; ) {
-                int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
-                String name = getTileType.apply(rx, ry);
-                if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Wolf(rx, ry));
-                    countW++;
-                }
-            }
-            // Thả Voi
-            for (int countE = 0; countE < spawnElephants; ) {
-                int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
-                String name = getTileType.apply(rx, ry);
-                if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Elephant(rx, ry));
-                    countE++;
-                }
-            }
-            // Thả Cá (Bắt buộc dưới nước)
-            for (int countF = 0; countF < spawnFishes; ) {
-                int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
-                String name = getTileType.apply(rx, ry);
-                if (name.contains("water") || name.contains("nuoc")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Fish(rx, ry));
-                    countF++;
-                }
-            }
-            // Gieo Bụi Cỏ (Tránh Nước, Đá, Bùn)
-            for (int countB = 0; countB < spawnBushes; ) {
-                int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
-                String name = getTileType.apply(rx, ry);
-                if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da") && !name.contains("mud") && !name.contains("bun")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Bush(rx, ry));
-                    countB++;
-                }
-            }
-            // Trồng Cây (Tránh Nước, Đá, Bùn)
-            for (int countTree = 0; countTree < spawnTrees; ) {
-                int rx = rand.nextInt(GRID_SIZE), ry = rand.nextInt(GRID_SIZE);
-                String name = getTileType.apply(rx, ry);
-                if (!name.contains("water") && !name.contains("nuoc") && !name.contains("stone") && !name.contains("da") && !name.contains("mud") && !name.contains("bun")) {
-                    chunkMap[ry / 50][rx / 50].addEntity(new entities.Trees(rx, ry));
-                    countTree++;
-                }
-            }
-            System.out.println("🟢 Initial full ecosystem random setup successfully!");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Entity findEntityAt(int gridX, int gridY) {
-        try {
-            Field fieldChunk = WorldMap.class.getDeclaredField("chunkMap");
-            fieldChunk.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) fieldChunk.get(worldMap);
-            if (chunkMap == null) return null;
-
-            for (int cy = 0; cy < chunkMap.length; cy++) {
-                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
-                    Chunk chunk = chunkMap[cy][cx];
-                    if (chunk == null) continue;
-                    synchronized (chunk.getEntityList()) {
-                        for (Entity entity : chunk.getEntityList()) {
-                            if (entity != null && entity.checkAlive() && entity.getX() == gridX && entity.getY() == gridY) {
-                                return entity;
-                            }
+        for (Chunk[] row : chunkMap) {
+            for (Chunk chunk : row) {
+                if (chunk == null) continue;
+                synchronized (chunk.getEntityList()) {
+                    for (Entity entity : chunk.getEntityList()) {
+                        if (entity != null && entity.checkAlive()) {
+                            if (entity instanceof entities.Rabbit) rCount++;
+                            else if (entity instanceof entities.Tiger) tCount++;
+                            else if (entity instanceof entities.Wolf) wCount++;
+                            else if (entity instanceof entities.Elephant) eCount++;
+                            else if (entity instanceof entities.Fish) fCount++;
+                            else if (entity instanceof Bush) bushCount++;
+                            else if (entity instanceof Trees) treeCount++;
                         }
                     }
                 }
             }
-        } catch (Exception ex) {
-            System.err.println("findEntityAt error: " + ex.getMessage());
+        }
+
+        final int r = rCount, t = tCount, w = wCount, elephant = eCount, f = fCount, b = bushCount, tr = treeCount;
+        javafx.application.Platform.runLater(() -> {
+            if (lblTotalRabbits != null) lblTotalRabbits.setText("🐇 Rabbits: " + r);
+            if (lblTotalTigers != null) lblTotalTigers.setText("🐅 Tigers: " + t);
+            if (lblTotalWolves != null) lblTotalWolves.setText("🐺 Wolves: " + w);
+            if (lblTotalElephants != null) lblTotalElephants.setText("🐘 Elephants: " + elephant);
+            if (lblTotalFishes != null) lblTotalFishes.setText("🐟 Fishes: " + f);
+            if (lblTotalBushes != null) lblTotalBushes.setText("🌿 Bushes: " + b);
+            if (lblTotalTrees != null) lblTotalTrees.setText("🌳 Trees: " + tr);
+
+            if (lblEcoStatus != null) {
+                int totalAnimals = r + t + w + elephant + f;
+                if (totalAnimals == 0) {
+                    lblEcoStatus.setText("🔴 Status: Extinct"); lblEcoStatus.setTextFill(Color.RED);
+                } else if (r < 5 || (b + tr) < 10) {
+                    lblEcoStatus.setText("⚠️ Status: Imbalanced"); lblEcoStatus.setTextFill(Color.ORANGE);
+                } else {
+                    lblEcoStatus.setText("🟢 Status: Stable"); lblEcoStatus.setTextFill(Color.LIGHTGREEN);
+                }
+            }
+        });
+    }
+
+    private Entity findEntityAt(int gridX, int gridY) {
+        if (worldMap == null) return null;
+        Chunk[][] chunkMap = worldMap.getChunkMap();
+        if (chunkMap == null) return null;
+
+        for (int cy = 0; cy < chunkMap.length; cy++) {
+            for (int cx = 0; cx < chunkMap[cy].length; cx++) {
+                Chunk chunk = chunkMap[cy][cx];
+                if (chunk == null) continue;
+                synchronized (chunk.getEntityList()) {
+                    for (Entity entity : chunk.getEntityList()) {
+                        if (entity != null && entity.checkAlive() && entity.getX() == gridX && entity.getY() == gridY) {
+                            return entity;
+                        }
+                    }
+                }
+            }
         }
         return null;
     }
@@ -744,247 +673,37 @@ public class MapViewer extends Application {
     }
 
     private int selectedChunkHashX() {
-        try {
-            Field fieldChunk = WorldMap.class.getDeclaredField("chunkMap");
-            fieldChunk.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) fieldChunk.get(worldMap);
-            if (chunkMap == null || selectedChunk == null) return -1;
-            for (int cy = 0; cy < chunkMap.length; cy++) {
-                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
-                    if (chunkMap[cy][cx] == selectedChunk) return cx;
-                }
+        if (worldMap == null || selectedChunk == null) return -1;
+        Chunk[][] chunkMap = worldMap.getChunkMap();
+        if (chunkMap == null) return -1;
+        for (int cy = 0; cy < chunkMap.length; cy++) {
+            for (int cx = 0; cx < chunkMap[cy].length; cx++) {
+                if (chunkMap[cy][cx] == selectedChunk) return cx;
             }
-        } catch (Exception ex) {}
+        }
         return -1;
     }
 
     private int selectedChunkHashY() {
-        try {
-            Field fieldChunk = WorldMap.class.getDeclaredField("chunkMap");
-            fieldChunk.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) fieldChunk.get(worldMap);
-            if (chunkMap == null || selectedChunk == null) return -1;
-            for (int cy = 0; cy < chunkMap.length; cy++) {
-                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
-                    if (chunkMap[cy][cx] == selectedChunk) return cy;
-                }
+        if (worldMap == null || selectedChunk == null) return -1;
+        Chunk[][] chunkMap = worldMap.getChunkMap();
+        if (chunkMap == null) return -1;
+        for (int cy = 0; cy < chunkMap.length; cy++) {
+            for (int cx = 0; cx < chunkMap[cy].length; cx++) {
+                if (chunkMap[cy][cx] == selectedChunk) return cy;
             }
-        } catch (Exception ex) {}
+        }
         return -1;
     }
 
     private void drawMap(Canvas canvas) {
         basicRenderer.setSelectedAnimal(selectedAnimal);
         basicRenderer.setSelectedChunk(selectedChunk);
-        basicRenderer.render(canvas, scale, offsetX, offsetY);
-    }
-
-    // --- HÀM CẬP NHẬT LOGIC: ĐÃ MỞ RỘNG ĐẾM CHI TIẾT VÀ KIỂM DUYỆT ĐỊA HÌNH KHI DI CHUYỂN ---
-    private void updateSimulationLogic() {
-        try {
-            Field fieldChunk = WorldMap.class.getDeclaredField("chunkMap");
-            fieldChunk.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) fieldChunk.get(worldMap);
-            if (chunkMap == null) return;
-
-            Entity[][] animalCoordinates = new Entity[GRID_SIZE][GRID_SIZE];
-            List<Entity> allEntities = new java.util.ArrayList<>();
-
-            // Biến đếm đầy đủ cho từng loài cụ thể để cập nhật lên Dashboard
-            int rCount = 0, tCount = 0, wCount = 0, eCount = 0, fCount = 0, bushCount = 0, treeCount = 0;
-
-            for (int cy = 0; cy < chunkMap.length; cy++) {
-                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
-                    Chunk chunk = chunkMap[cy][cx];
-                    if (chunk == null) continue;
-                    synchronized (chunk.getEntityList()) {
-                        for (Entity entity : chunk.getEntityList()) {
-                            if (entity != null && entity.checkAlive()) {
-                                allEntities.add(entity);
-                                if (entity instanceof Animals) {
-                                    animalCoordinates[entity.getX()][entity.getY()] = entity;
-                                    if (entity instanceof entities.Rabbit) rCount++;
-                                    else if (entity instanceof entities.Tiger) tCount++;
-                                    else if (entity instanceof entities.Wolf) wCount++;
-                                    else if (entity instanceof entities.Elephant) eCount++;
-                                    else if (entity instanceof entities.Fish) fCount++;
-                                } else if (entity instanceof Bush) {
-                                    bushCount++;
-                                } else if (entity instanceof Trees) {
-                                    treeCount++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Đồng bộ đẩy toàn bộ số lượng thực tế lên Dashboard JavaFX bằng tiếng Anh
-            final int r = rCount, t = tCount, w = wCount, elephant = eCount, f = fCount, b = bushCount, tr = treeCount;
-            javafx.application.Platform.runLater(() -> {
-                if (lblTotalRabbits != null) lblTotalRabbits.setText("🐇 Rabbits: " + r);
-                if (lblTotalTigers != null) lblTotalTigers.setText("🐅 Tigers: " + t);
-                if (lblTotalWolves != null) lblTotalWolves.setText("🐺 Wolves: " + w);
-                if (lblTotalElephants != null) lblTotalElephants.setText("🐘 Elephants: " + elephant);
-                if (lblTotalFishes != null) lblTotalFishes.setText("🐟 Fishes: " + f);
-                if (lblTotalBushes != null) lblTotalBushes.setText("🌿 Bushes: " + b);
-                if (lblTotalTrees != null) lblTotalTrees.setText("🌳 Trees: " + tr);
-
-                if (lblEcoStatus != null) {
-                    int totalAnimals = r + t + w + elephant + f;
-                    if (totalAnimals == 0) {
-                        lblEcoStatus.setText("🔴 Status: Extinct"); lblEcoStatus.setTextFill(Color.RED);
-                    } else if (r < 5 || (b + tr) < 10) {
-                        lblEcoStatus.setText("⚠️ Status: Imbalanced"); lblEcoStatus.setTextFill(Color.ORANGE);
-                    } else {
-                        lblEcoStatus.setText("🟢 Status: Stable"); lblEcoStatus.setTextFill(Color.LIGHTGREEN);
-                    }
-                }
-            });
-
-            // StateController not available here; skip external state update
-
-            for (int cy = 0; cy < chunkMap.length; cy++) {
-                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
-                    Chunk chunk = chunkMap[cy][cx];
-                    if (chunk == null) continue;
-
-                    List<Entity> entityList = chunk.getEntityList();
-                    synchronized (entityList) {
-                        for (int i = entityList.size() - 1; i >= 0; i--) {
-                            Entity entity = entityList.get(i);
-                            if (entity == null || !entity.checkAlive()) continue;
-
-                            if (entity instanceof entities.base.Tree tree) {
-                                tree.checkCD(animalCoordinates, allEntities);
-                            }
-
-                            if (entity instanceof entities.base.ResourceEntity resource) {
-                                resource.updateResourceState();
-                            }
-
-                            if (entity instanceof Animals) {
-                                Animals animal = (Animals) entity;
-                                animal.updateMoveCooldown(animalCoordinates, allEntities);
-
-                                Field fieldCooldown = Animals.class.getDeclaredField("currentMoveCooldown");
-                                fieldCooldown.setAccessible(true);
-                                int cooldown = (int) fieldCooldown.get(animal);
-
-                                if (cooldown <= 0 && animal.checkAlive()) {
-                                    // Prefer brain-driven movement if a brain is registered for this animal
-                                    brain.controller.AnimalBrainUpdate brain = brainMap.get(animal);
-                                    if (brain != null) {
-                                        brain.update();
-                                    } else {
-                                        Field fieldStrategy = Animals.class.getDeclaredField("moveStrategy");
-                                        fieldStrategy.setAccessible(true);
-                                        brain.strategy.MoveStrategy strategy = (brain.strategy.MoveStrategy) fieldStrategy.get(animal);
-
-                                        if (strategy != null) {
-                                            allEnum.Direction dir = strategy.move(animal, allEntities);
-                                            if (dir != null && dir != allEnum.Direction.CENTER) {
-                                                Field fieldX = Entity.class.getDeclaredField("x");
-                                                Field fieldY = Entity.class.getDeclaredField("y");
-                                                fieldX.setAccessible(true);
-                                                fieldY.setAccessible(true);
-
-                                                int curX = (int) fieldX.get(animal);
-                                                int curY = (int) fieldY.get(animal);
-                                                int nextX = curX, nextY = curY;
-
-                                                switch (dir) {
-                                                    case NORTH:     nextY--; break;
-                                                    case SOUTH:     nextY++; break;
-                                                    case EAST:      nextX++; break;
-                                                    case WEST:      nextX--; break;
-                                                    case NORTHEAST: nextX++; nextY--; break;
-                                                    case NORTHWEST: nextX--; nextY--; break;
-                                                    case SOUTHEAST: nextX++; nextY++; break;
-                                                    case SOUTHWEST: nextX--; nextY++; break;
-                                                    default: break;
-                                                }
-
-                                                nextX = Math.max(0, Math.min(499, nextX));
-                                                nextY = Math.max(0, Math.min(499, nextY));
-
-                                                // CHẶN DI CHUYỂN QUA LẠI SAI BIOME ĐỊA HÌNH
-                                                try {
-                                                    var nextTile = worldMap.getTile(nextX, nextY);
-                                                    String tName = (nextTile != null && nextTile.getName() != null) ? nextTile.getName().toLowerCase() : "";
-                                                    boolean water = tName.contains("water") || tName.contains("nuoc");
-                                                    boolean stone = tName.contains("stone") || tName.contains("da") || tName.contains("mountain");
-
-                                                    if (!(animal instanceof entities.Fish)) {
-                                                        if (water || stone) { nextX = curX; nextY = curY; }
-                                                    } else {
-                                                        if (!water) { nextX = curX; nextY = curY; }
-                                                    }
-                                                } catch (Exception ex) {}
-
-                                                fieldX.set(animal, nextX);
-                                                fieldY.set(animal, nextY);
-                                            }
-                                        }
-                                        Field fieldDefault = Animals.class.getDeclaredField("defaultMoveCooldown");
-                                        fieldDefault.setAccessible(true);
-                                        int defaultCooldown = (int) fieldDefault.get(animal);
-                                        fieldCooldown.set(animal, defaultCooldown > 0 ? defaultCooldown : 3);
-                                    }
-                                }
-
-                                // Logic ăn cỏ giải đói
-                                synchronized (entityList) {
-                                    for (int j = entityList.size() - 1; j >= 0; j--) {
-                                        Entity target = entityList.get(j);
-                                        if (target != null && target != animal && target.getX() == animal.getX() && target.getY() == animal.getY()) {
-                                            if (animal instanceof entities.attributes.Herbivore && (target instanceof Bush || target instanceof Trees)) {
-                                                Field fieldHunger = Animals.class.getDeclaredField("hunger");
-                                                Field fieldThirst = Animals.class.getDeclaredField("thirst");
-                                                fieldHunger.setAccessible(true);
-                                                fieldThirst.setAccessible(true);
-
-                                                fieldHunger.set(animal, Math.min(100.0, (double) fieldHunger.get(animal) + 40.0));
-                                                fieldThirst.set(animal, Math.min(100.0, (double) fieldThirst.get(animal) + 20.0));
-
-                                                Field fieldAlive = Entity.class.getDeclaredField("isAlive");
-                                                fieldAlive.setAccessible(true);
-                                                fieldAlive.set(target, false);
-                                                entityList.remove(j);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Hồi khát khi đi qua sông lạch
-                                try {
-                                    String tileName = worldMap.getTile(animal.getX(), animal.getY()).getName().toLowerCase();
-                                    if (tileName.contains("water") || tileName.contains("nuoc")) {
-                                        Field fieldThirst = Animals.class.getDeclaredField("thirst");
-                                        fieldThirst.setAccessible(true);
-                                        fieldThirst.set(animal, 100.0);
-                                    }
-                                } catch (Exception ex) {}
-
-                                // Chuyển vùng Chunk quản lý
-                                int newChunkX = entity.getX() / 50;
-                                int newChunkY = entity.getY() / 50;
-                                if (newChunkX != cx || newChunkY != cy) {
-                                    if (newChunkX >= 0 && newChunkX < 10 && newChunkY >= 0 && newChunkY < 10) {
-                                        Chunk newChunk = chunkMap[newChunkY][newChunkX];
-                                        if (newChunk != null) {
-                                            newChunk.addEntity(entity);
-                                            entityList.remove(i);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Simulation loop error: " + e.getMessage());
-        }
+        
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        basicRenderer.renderTerrain(canvas, scale, offsetX, offsetY);
+        basicRenderer.renderEntities(canvas, scale, offsetX, offsetY);
     }
 }

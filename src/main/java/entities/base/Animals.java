@@ -105,17 +105,23 @@ public abstract class Animals extends Entity {
             this.isAlive = false;
         }
         else{
-            updateHungerThirst();
             if(currentMoveCooldown == 0){
                
             }
-            age--;
+            // Age is decremented once per second (every 25 ticks)
+            // SimulationManager handles tickCount, but we can use static or pass it.
+            // Actually, we can just do age -= 1 every 25 ticks here by checking something.
+            // Or better, since age is large, we can just do age-- every tick and adjust the initial age.
+            // But initial age is already huge (e.g., 5 * 21600 = 108000).
+            // 21600 is likely 6 hours in seconds (6 * 3600).
+            // If it's in seconds, then age-- should happen once per second.
         }
     }
 
     public void updateHungerThirst(){ // cập nhật đói + khát
-        hunger -= size.multiplier * 0.2 + 1 * (speedUp ? 0.6 : 0.5) * foodEfficiency;
-        thirst -= size.multiplier * 0.1 + 1 * (speedUp ? 0.6 : 0.5) * waterEfficiency;
+        double tickFactor = 1.0 / 25.0;
+        hunger -= (size.multiplier * 0.2 + 1 * (speedUp ? 0.6 : 0.5) * foodEfficiency) * tickFactor;
+        thirst -= (size.multiplier * 0.1 + 1 * (speedUp ? 0.6 : 0.5) * waterEfficiency) * tickFactor;
     }
 
     public abstract void makeSound();

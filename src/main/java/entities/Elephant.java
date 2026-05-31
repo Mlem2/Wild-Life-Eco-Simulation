@@ -9,8 +9,8 @@ public class Elephant extends Animals implements Apex, Herbivore {
     public Elephant( int x, int y){
         super(x,y);
         this.size = Size.LARGE;
-        this.defaultMoveCooldown = 8;
-        this.currentMoveCooldown = 8;
+        this.defaultMoveCooldown = 8 * 25;
+        this.currentMoveCooldown = 8 * 25;
         this.age = (random.nextInt(15) + 10) * 21600;
         this.foodEfficiency = 0.5; // Elephants are very efficient at using food
         this.waterEfficiency = 0.5; // Elephants are also efficient at using water
