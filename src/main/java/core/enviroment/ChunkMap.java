@@ -99,7 +99,9 @@ public class ChunkMap {
             for (int x = 0; x < SIZE; x++) {
                 Entity entity = entityMap.getEntity(x, y);
                 if (entity != null) {
-                    chunkMap[y / 10][x / 10].addEntity(entity);
+                    int yChunk = y / 10;
+                    int xChunk = x / 10;
+                    chunkMap[yChunk][xChunk].addEntity(entity);
                 }
             }
         }
