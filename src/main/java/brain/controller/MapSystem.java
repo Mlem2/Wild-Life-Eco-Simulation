@@ -102,11 +102,11 @@ public class MapSystem {
         List<Chunk> out = new ArrayList<>();
         if (worldMap == null || pos == null) return out;
 
-        Chunk[][] chunkMap = worldMap.getChunkMap();
+        Chunk[][] chunkMap = worldMap.chunkMap;
         if (chunkMap == null) return out;
 
-        int cx = pos.getX() / 50;
-        int cy = pos.getY() / 50;
+        int cx = pos.getX() / WorldMap.CHUNK_SIZE;
+        int cy = pos.getY() / WorldMap.CHUNK_SIZE;
         int radius = 1; // 3x3 area
         for (int dy = -radius; dy <= radius; dy++) {
             for (int dx = -radius; dx <= radius; dx++) {
@@ -121,9 +121,9 @@ public class MapSystem {
 
     public Chunk getChunkAt(Position pos) {
         if (worldMap == null || pos == null) return null;
-        Chunk[][] chunkMap = worldMap.getChunkMap();
-        int cx = pos.getX() / 50;
-        int cy = pos.getY() / 50;
+        Chunk[][] chunkMap = worldMap.chunkMap;
+        int cx = pos.getX() / WorldMap.CHUNK_SIZE;
+        int cy = pos.getY() / WorldMap.CHUNK_SIZE;
         if (cx >= 0 && cx < chunkMap[0].length && cy >= 0 && cy < chunkMap.length) return chunkMap[cy][cx];
         return null;
     }
@@ -190,7 +190,7 @@ public class MapSystem {
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
                     if (e instanceof Water) {
-                        out.add(new Position(e.getX(), e.getY()));
+                        out.add(Position.of(e.getX(), e.getY()));
                     }
                 }
             }
@@ -206,7 +206,7 @@ public class MapSystem {
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
                     if (e instanceof Food || e instanceof entities.base.ResourceEntity) {
-                        out.add(new Position(e.getX(), e.getY()));
+                        out.add(Position.of(e.getX(), e.getY()));
                     }
                 }
             }
@@ -229,7 +229,7 @@ public class MapSystem {
 
     public void removeEntity(Entity entity) {
         if (entity == null) return;
-        Chunk chunk = getChunkAt(new Position(entity.getX(), entity.getY()));
+        Chunk chunk = getChunkAt(Position.of(entity.getX(), entity.getY()));
         if (chunk != null) chunk.removeEntity(entity);
     }
 
@@ -287,11 +287,11 @@ public class MapSystem {
     public List<Chunk> getNearbyChunks(Position center, int radiusChunks) {
         List<Chunk> out = new ArrayList<>();
         if (worldMap == null || center == null) return out;
-        Chunk[][] chunkMap = worldMap.getChunkMap();
+        Chunk[][] chunkMap = worldMap.chunkMap;
         if (chunkMap == null) return out;
         
-        int cx = center.getX() / 50;
-        int cy = center.getY() / 50;
+        int cx = center.getX() / WorldMap.CHUNK_SIZE;
+        int cy = center.getY() / WorldMap.CHUNK_SIZE;
         
         for (int dx = -radiusChunks; dx <= radiusChunks; dx++) {
             for (int dy = -radiusChunks; dy <= radiusChunks; dy++) {
@@ -355,7 +355,7 @@ public class MapSystem {
     public List<Position> getNearbyFoodPositions(Position center, int radiusChunks) {
         List<Position> out = new ArrayList<>();
         for (Entity e : getEntitiesInNearbyChunks(center, radiusChunks)) {
-            if (e instanceof Food) out.add(new Position(e.getX(), e.getY()));
+            if (e instanceof Food) out.add(Position.of(e.getX(), e.getY()));
         }
         return out;
     }
@@ -387,12 +387,12 @@ public class MapSystem {
             f.setAccessible(true);
             Chunk[][] chunkMap = (Chunk[][]) f.get(worldMap);
             for (int cy = 0; cy < chunkMap.length; cy++) for (int cx = 0; cx < chunkMap[cy].length; cx++) if (chunkMap[cy][cx] == chunk) {
-                int startX = cx * 50, startY = cy * 50;
+                int startX = cx * WorldMap.CHUNK_SIZE, startY = cy * WorldMap.CHUNK_SIZE;
                 for (int attempt = 0; attempt < 50; attempt++) {
-                    int rx = startX + rand.nextInt(50);
-                    int ry = startY + rand.nextInt(50);
+                    int rx = startX + rand.nextInt(WorldMap.CHUNK_SIZE);
+                    int ry = startY + rand.nextInt(WorldMap.CHUNK_SIZE);
                     Terrain t = worldMap.getTile(rx, ry);
-                    if (t != null && t.isPassable()) return new Position(rx, ry);
+                    if (t != null && t.isPassable()) return Position.of(rx, ry);
                 }
             }
         } catch (Exception e) {}
@@ -402,7 +402,7 @@ public class MapSystem {
     public boolean isWalkable(Position p) {
         if (worldMap == null || p == null) return true;
         try {
-            if (p.getX() < 0 || p.getX() >= 500 || p.getY() < 0 || p.getY() >= 500) return false;
+            if (p.getX() < 0 || p.getX() >= WorldMap.SIZE || p.getY() < 0 || p.getY() >= WorldMap.SIZE) return false;
             Terrain t = worldMap.getTile(p.getX(), p.getY());
             return t != null && t.isPassable();
         } catch (Exception e) { return false; }

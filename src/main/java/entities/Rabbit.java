@@ -8,8 +8,8 @@ public class Rabbit extends Animals implements Herbivore {
     public Rabbit(int x, int y){
         super(x,y);
         this.size = Size.SMALL;
-        this.defaultMoveCooldown = 6 * 25;
-        this.currentMoveCooldown = 6 * 25;
+        this.defaultMoveCooldown = 6;
+        this.currentMoveCooldown = 6;
         this.age = (random.nextInt(3) + 5) * 21600;
         this.foodEfficiency = 0.6; // Rabbits are moderately efficient at using food
         this.waterEfficiency = 0.9; // Rabbits have some water needs

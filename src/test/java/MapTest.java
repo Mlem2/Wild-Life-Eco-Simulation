@@ -11,12 +11,13 @@ import java.io.File;
 public class MapTest {
     public static void main(String[] args) {
         int SIZE = 500;
+        entities.base.Position.initializeGrid(SIZE);
 
         // 1. Initialize the terrain map
-        WorldMap worldMap = new WorldMap(9403312, 500);
+        WorldMap worldMap = new WorldMap(9403312, SIZE);
 
         // 2. Pass it to EntityMap to distribute entities based on your spawn weights
-        EntityMap entityMap = new EntityMap(worldMap, 500);
+        EntityMap entityMap = new EntityMap(worldMap, SIZE);
 
         // 3. Export the combined maps to an image
         exportToImage("my_world_with_entities", worldMap, entityMap, SIZE);

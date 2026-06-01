@@ -65,9 +65,7 @@ public class MapSystemStrategyTest {
     }
 
     private static Chunk getChunk(WorldMap worldMap, entities.base.Animals animal) throws Exception {
-        Field field = WorldMap.class.getDeclaredField("chunkMap");
-        field.setAccessible(true);
-        Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
+        Chunk[][] chunkMap = worldMap.chunkMap;
         int cx = animal.getX() / 50;
         int cy = animal.getY() / 50;
         return chunkMap[cy][cx];

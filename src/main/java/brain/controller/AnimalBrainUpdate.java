@@ -20,6 +20,7 @@ public class AnimalBrainUpdate {
     private final Pathfinder pathFinder;
     private final ActionManager actionManager;
     private List<Position> currentPath = new ArrayList<>();
+    private List<Point> rawPath = new ArrayList<>();
     private Position lastAnchorTarget = null;
     private String lastStrategyName = null;
 
@@ -66,7 +67,7 @@ public class AnimalBrainUpdate {
             return;
         }
 
-        if (currentPath.isEmpty() || targetChanged || strategyChanged || owner.hasLockedTargetMoved()) {
+        if (targetChanged || strategyChanged || owner.hasLockedTargetMoved()) {
             currentPath.clear();
         }
 
@@ -98,9 +99,9 @@ public class AnimalBrainUpdate {
         // 4. Nếu chưa đến đích -> Cập nhật đường đi và bắt ActionManager di chuyển
         // Nếu đường đi trống hoặc thực thể đích di chuyển (đối với con mồi chạy trốn)
         if (currentPath.isEmpty() || owner.hasLockedTargetMoved()) {
-            List<Point> raw = pathFinder.calculatePath(new Point(owner.getPosition().getX(), owner.getPosition().getY()), new Point(anchorTarget.getX(), anchorTarget.getY()));
+            pathFinder.calculatePath(new Point(owner.getPosition().getX(), owner.getPosition().getY()), new Point(anchorTarget.getX(), anchorTarget.getY()), rawPath);
             currentPath.clear();
-            for (Point p : raw) currentPath.add(new Position(p.x, p.y));
+            for (Point p : rawPath) currentPath.add(Position.of(p.x, p.y));
             // If path includes current position as first element, drop it so the animal advances
             if (!currentPath.isEmpty() && currentPath.get(0).equals(owner.getPosition())) {
                 currentPath.remove(0);

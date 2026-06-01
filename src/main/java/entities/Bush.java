@@ -18,7 +18,7 @@ public class Bush extends Tree {
         this.defaultSeedCooldown = (random.nextInt(2) + 5) * 10800;
         this.currentSeedCooldown = defaultSeedCooldown;
         this.growthTime = (random.nextInt(3) + 2) * 10800;
-        this.age = (random.nextInt(5) + 3) * 21600;
+        this.age = (random.nextInt(8) + 10) * 21600;
     }
 
     public void checkCD(Entity[][] animalCoordinates, List<Entity> allEntities) {

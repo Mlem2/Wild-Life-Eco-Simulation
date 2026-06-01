@@ -30,7 +30,7 @@ public abstract class Animals extends Entity {
     }
 
     public Position getPosition() {
-        return new Position(x, y);
+        return Position.of(x, y);
     }
 
     public void setPosition(Position p) {
@@ -101,6 +101,7 @@ public abstract class Animals extends Entity {
     public void updateMoveCooldown(Entity[][] animalCoordinates, List<Entity> allEntities){
         currentMoveCooldown--;
         updateHungerThirst();
+        age--;
         if(age <= 0 || hunger <= 0 || thirst <= 0){
             this.isAlive = false;
         }
@@ -108,13 +109,6 @@ public abstract class Animals extends Entity {
             if(currentMoveCooldown == 0){
                
             }
-            // Age is decremented once per second (every 25 ticks)
-            // SimulationManager handles tickCount, but we can use static or pass it.
-            // Actually, we can just do age -= 1 every 25 ticks here by checking something.
-            // Or better, since age is large, we can just do age-- every tick and adjust the initial age.
-            // But initial age is already huge (e.g., 5 * 21600 = 108000).
-            // 21600 is likely 6 hours in seconds (6 * 3600).
-            // If it's in seconds, then age-- should happen once per second.
         }
     }
 

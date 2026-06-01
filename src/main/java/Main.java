@@ -1,6 +1,4 @@
-import core.enviroment.ChunkMap;
 import core.enviroment.WorldMap;
-import core.enviroment.EntitySpawner;
 import entities.base.EntityMap;
 import brain.controller.SimulationManager;
 import view.MapViewer;
@@ -11,12 +9,10 @@ public class Main {
     private static final int SIZE = 500;
 
     public static void main(String[] args) {
+        entities.base.Position.initializeGrid(SIZE);
         WorldMap worldMap = new WorldMap(SEED, SIZE);
         EntityMap entityMap = new EntityMap(worldMap, SIZE);
-        ChunkMap chunkMap = new ChunkMap(worldMap, entityMap, SIZE);
-
-        EntitySpawner spawner = new EntitySpawner(worldMap, SIZE);
-        spawner.spawnInitialEntities();
+        worldMap.initializeChunks(entityMap);
 
         SimulationManager simulationManager = new SimulationManager(worldMap, SIZE);
         simulationManager.start();

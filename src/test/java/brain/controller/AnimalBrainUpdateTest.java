@@ -88,9 +88,7 @@ public class AnimalBrainUpdateTest {
     }
 
     private static Chunk getChunk(WorldMap worldMap, entities.base.Entity entity) throws Exception {
-        Field field = WorldMap.class.getDeclaredField("chunkMap");
-        field.setAccessible(true);
-        Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
+        Chunk[][] chunkMap = worldMap.chunkMap;
         int cx = entity.getX() / 50;
         int cy = entity.getY() / 50;
         return chunkMap[cy][cx];

@@ -12,10 +12,7 @@ import entities.base.Tree;
 import entities.base.Position;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -83,9 +80,7 @@ public class SimulationManager {
 
     private void updateSimulationLogic() {
         try {
-            Field fieldChunk = WorldMap.class.getDeclaredField("chunkMap");
-            fieldChunk.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) fieldChunk.get(worldMap);
+            Chunk[][] chunkMap = worldMap.chunkMap;
             if (chunkMap == null) return;
 
             Entity[][] animalCoordinates = new Entity[gridSize][gridSize];
@@ -114,10 +109,12 @@ public class SimulationManager {
                     if (chunk == null) continue;
 
                     List<Entity> entityList = chunk.getEntityList();
+                    Set<Entity> entitiesToRemove = new HashSet<>();
+
                     synchronized (entityList) {
                         for (int i = entityList.size() - 1; i >= 0; i--) {
                             Entity entity = entityList.get(i);
-                            if (entity == null || !entity.checkAlive()) continue;
+                            if (entity == null || !entity.checkAlive() || entitiesToRemove.contains(entity)) continue;
 
                             if (entity instanceof Tree tree) {
                                 tree.checkCD(animalCoordinates, allEntities);
@@ -205,29 +202,28 @@ public class SimulationManager {
                                 } catch (Exception ignored) {}
 
                                 // Herbivore logic
-                                synchronized (entityList) {
-                                    for (int j = entityList.size() - 1; j >= 0; j--) {
-                                        Entity target = entityList.get(j);
-                                        if (target != null && target != animal && target.getX() == animal.getX() && target.getY() == animal.getY()) {
-                                            if (animal instanceof entities.attributes.Herbivore && (target instanceof Bush || target instanceof Trees)) {
-                                                try {
-                                                    Field fieldHunger = Animals.class.getDeclaredField("hunger");
-                                                    Field fieldThirst = Animals.class.getDeclaredField("thirst");
-                                                    fieldHunger.setAccessible(true);
-                                                    fieldThirst.setAccessible(true);
+                                for (int j = entityList.size() - 1; j >= 0; j--) {
+                                    Entity target = entityList.get(j);
+                                    if (target != null && target != animal && target.getX() == animal.getX() && target.getY() == animal.getY()) {
+                                        if (animal instanceof entities.attributes.Herbivore && (target instanceof Bush || target instanceof Trees)) {
+                                            try {
+                                                Field fieldHunger = Animals.class.getDeclaredField("hunger");
+                                                Field fieldThirst = Animals.class.getDeclaredField("thirst");
+                                                fieldHunger.setAccessible(true);
+                                                fieldThirst.setAccessible(true);
 
-                                                    fieldHunger.set(animal, Math.min(100.0, (double) fieldHunger.get(animal) + 40.0));
-                                                    fieldThirst.set(animal, Math.min(100.0, (double) fieldThirst.get(animal) + 20.0));
+                                                fieldHunger.set(animal, Math.min(100.0, (double) fieldHunger.get(animal) + 40.0));
+                                                fieldThirst.set(animal, Math.min(100.0, (double) fieldThirst.get(animal) + 20.0));
 
-                                                    Field fieldAlive = Entity.class.getDeclaredField("isAlive");
-                                                    fieldAlive.setAccessible(true);
-                                                    fieldAlive.set(target, false);
-                                                    entityList.remove(j);
-                                                } catch (Exception ignored) {}
-                                            }
+                                                Field fieldAlive = Entity.class.getDeclaredField("isAlive");
+                                                fieldAlive.setAccessible(true);
+                                                fieldAlive.set(target, false);
+                                                entitiesToRemove.add(target);
+                                            } catch (Exception ignored) {}
                                         }
                                     }
                                 }
+
 
                                 // Thirst logic
                                 try {
@@ -240,18 +236,21 @@ public class SimulationManager {
                                 } catch (Exception ignored) {}
 
                                 // Chunk management
-                                int newChunkX = entity.getX() / 50;
-                                int newChunkY = entity.getY() / 50;
+                                int newChunkX = entity.getX() / WorldMap.CHUNK_SIZE;
+                                int newChunkY = entity.getY() / WorldMap.CHUNK_SIZE;
                                 if (newChunkX != cx || newChunkY != cy) {
                                     if (newChunkX >= 0 && newChunkX < chunkMap[0].length && newChunkY >= 0 && newChunkY < chunkMap.length) {
                                         Chunk newChunk = chunkMap[newChunkY][newChunkX];
                                         if (newChunk != null) {
                                             newChunk.addEntity(entity);
-                                            entityList.remove(i);
+                                            entitiesToRemove.add(entity);
                                         }
                                     }
                                 }
                             }
+                        }
+                        synchronized (entityList) {
+                            entityList.removeAll(entitiesToRemove);
                         }
                     }
                 }
@@ -263,9 +262,7 @@ public class SimulationManager {
 
     private void registerAllBrains() {
         try {
-            Field field = WorldMap.class.getDeclaredField("chunkMap");
-            field.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
+            Chunk[][] chunkMap = worldMap.chunkMap;
             if (chunkMap == null) return;
             for (Chunk[] row : chunkMap) {
                 for (Chunk chunk : row) {

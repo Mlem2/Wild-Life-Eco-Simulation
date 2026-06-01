@@ -30,7 +30,6 @@ import javafx.stage.Stage;
 public class MapViewer extends Application {
     // Biến lưu trữ chế độ tương tác chuột hiện tại
     private String currentInteractionMode = "VIEW_MAP";
-    private static final int GRID_SIZE = 500;
     private WorldMap worldMap;
     private BasicRenderer basicRenderer;
 
@@ -78,7 +77,7 @@ public class MapViewer extends Application {
             this.worldMap = sharedWorldMap;
         } else {
             // Khởi tạo bản đồ thế giới ngầm với Seed cố định
-            worldMap = new WorldMap(94033111, 500);
+            worldMap = new WorldMap(94033111, WorldMap.SIZE);
         }
         
         // Gắn bản đồ vào bộ xử lý đồ họa chuyên trách Basic Mode
@@ -114,8 +113,8 @@ public class MapViewer extends Application {
             double oldScale = scale;
             double newScale = scale * zoomFactor;
 
-            double minScaleX = canvas.getWidth() / (GRID_SIZE * baseTileSize);
-            double minScaleY = canvas.getHeight() / (GRID_SIZE * baseTileSize);
+            double minScaleX = canvas.getWidth() / (WorldMap.SIZE * baseTileSize);
+            double minScaleY = canvas.getHeight() / (WorldMap.SIZE * baseTileSize);
             double minScale = Math.max(minScaleX, minScaleY);
             double maxScale = 50.0;
 
@@ -126,8 +125,8 @@ public class MapViewer extends Application {
             offsetX = event.getX() - (event.getX() - offsetX) * (scale / oldScale);
             offsetY = event.getY() - (event.getY() - offsetY) * (scale / oldScale);
 
-            double mapWidth = GRID_SIZE * (baseTileSize * scale);
-            double mapHeight = GRID_SIZE * (baseTileSize * scale);
+            double mapWidth = WorldMap.SIZE * (baseTileSize * scale);
+            double mapHeight = WorldMap.SIZE * (baseTileSize * scale);
             offsetX = Math.min(0, Math.max(canvas.getWidth() - mapWidth, offsetX));
             offsetY = Math.min(0, Math.max(canvas.getHeight() - mapHeight, offsetY));
 
@@ -142,8 +141,8 @@ public class MapViewer extends Application {
         canvas.setOnMouseDragged(e -> {
             double dx = e.getX() - lastMouseX;
             double dy = e.getY() - lastMouseY;
-            double mapWidth = GRID_SIZE * (baseTileSize * scale);
-            double mapHeight = GRID_SIZE * (baseTileSize * scale);
+            double mapWidth = WorldMap.SIZE * (baseTileSize * scale);
+            double mapHeight = WorldMap.SIZE * (baseTileSize * scale);
 
             offsetX = Math.min(0, Math.max(canvas.getWidth() - mapWidth, offsetX + dx));
             offsetY = Math.min(0, Math.max(canvas.getHeight() - mapHeight, offsetY + dy));
@@ -156,7 +155,7 @@ public class MapViewer extends Application {
         canvas.setOnMouseMoved(e -> {
             int gridX = (int) ((e.getX() - offsetX) / scale);
             int gridY = (int) ((e.getY() - offsetY) / scale);
-            if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+            if (gridX >= 0 && gridX < WorldMap.SIZE && gridY >= 0 && gridY < WorldMap.SIZE) {
                 lblMouseCoords.setText(String.format("Tile Coords: [%d, %d] (%s)", gridX, gridY, worldMap.getTile(gridX, gridY).getName()));
             } else {
                 lblMouseCoords.setText("Tile Coords: Out of bounds");
@@ -169,7 +168,7 @@ public class MapViewer extends Application {
                 int gridX = (int) ((e.getX() - offsetX) / scale);
                 int gridY = (int) ((e.getY() - offsetY) / scale);
 
-                if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+                if (gridX >= 0 && gridX < WorldMap.SIZE && gridY >= 0 && gridY < WorldMap.SIZE) {
                     Entity clickedEntity = findEntityAt(gridX, gridY);
                     if ("VIEW_MAP".equals(currentInteractionMode)) {
                         handleSelectionClick(gridX, gridY, clickedEntity);
@@ -179,72 +178,66 @@ public class MapViewer extends Application {
                         return;
                     }
 
-                    int chunkX = gridX / 50;
-                    int chunkY = gridY / 50;
+                    int chunkX = gridX / WorldMap.CHUNK_SIZE;
+                    int chunkY = gridY / WorldMap.CHUNK_SIZE;
 
-                    try {
-                        Field fieldChunk = WorldMap.class.getDeclaredField("chunkMap");
-                        fieldChunk.setAccessible(true);
-                        Chunk[][] chunkMap = (Chunk[][]) fieldChunk.get(worldMap);
+                    Chunk[][] chunkMap = worldMap.chunkMap;
 
-                        if (chunkMap != null && chunkMap[chunkY][chunkX] != null) {
-                            Chunk targetChunk = chunkMap[chunkY][chunkX];
+                    if (chunkMap != null && chunkMap[chunkY][chunkX] != null) {
+                        Chunk targetChunk = chunkMap[chunkY][chunkX];
 
-                            // Trích xuất tên vùng đất thực tế đang click chuột vào
-                            var currentTile = worldMap.getTile(gridX, gridY);
-                            String tileName = (currentTile != null && currentTile.getName() != null) ? currentTile.getName().toLowerCase() : "";
+                        // Trích xuất tên vùng đất thực tế đang click chuột vào
+                        var currentTile = worldMap.getTile(gridX, gridY);
+                        String tileName = (currentTile != null && currentTile.getName() != null) ? currentTile.getName().toLowerCase() : "";
 
-                            // Định vị nhanh tính chất loại địa hình từ chuỗi tên gốc của Backend
-                            boolean isWater = tileName.contains("water") || tileName.contains("lake") || tileName.contains("sea") || tileName.contains("nuoc");
-                            boolean isStone = tileName.contains("stone") || tileName.contains("rock") || tileName.contains("da") || tileName.contains("mountain");
-                            boolean isMud = tileName.contains("mud") || tileName.contains("swamp") || tileName.contains("bun");
+                        // Định vị nhanh tính chất loại địa hình từ chuỗi tên gốc của Backend
+                        boolean isWater = tileName.contains("water") || tileName.contains("lake") || tileName.contains("sea") || tileName.contains("nuoc");
+                        boolean isStone = tileName.contains("stone") || tileName.contains("rock") || tileName.contains("da") || tileName.contains("mountain");
+                        boolean isMud = tileName.contains("mud") || tileName.contains("swamp") || tileName.contains("bun");
 
-                            if ("SPAWN_RABBIT".equals(currentInteractionMode)) {
-                                if (isWater || isStone) return;
-                                entities.Rabbit ent = new entities.Rabbit(gridX, gridY);
-                                targetChunk.addEntity(ent);
-                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
-                                else registerBrainForEntity(ent);
-                            }
-                            else if ("SPAWN_TIGER".equals(currentInteractionMode)) {
-                                if (isWater || isStone) return;
-                                entities.Tiger ent = new entities.Tiger(gridX, gridY);
-                                targetChunk.addEntity(ent);
-                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
-                                else registerBrainForEntity(ent);
-                            }
-                            else if ("SPAWN_WOLF".equals(currentInteractionMode)) {
-                                if (isWater || isStone) return;
-                                entities.Wolf ent = new entities.Wolf(gridX, gridY);
-                                targetChunk.addEntity(ent);
-                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
-                                else registerBrainForEntity(ent);
-                            }
-                            else if ("SPAWN_ELEPHANT".equals(currentInteractionMode)) {
-                                if (isWater || isStone) return;
-                                entities.Elephant ent = new entities.Elephant(gridX, gridY);
-                                targetChunk.addEntity(ent);
-                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
-                                else registerBrainForEntity(ent);
-                            }
-                            else if ("SPAWN_FISH".equals(currentInteractionMode)) {
-                                if (!isWater) return;
-                                entities.Fish ent = new entities.Fish(gridX, gridY);
-                                targetChunk.addEntity(ent);
-                                if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
-                                else registerBrainForEntity(ent);
-                            }
-                            else if ("SPAWN_BUSH".equals(currentInteractionMode)) {
-                                if (isWater || isStone || isMud) return;
-                                targetChunk.addEntity(new entities.Bush(gridX, gridY));
-                            }
-                            else if ("SPAWN_TREE".equals(currentInteractionMode)) {
-                                if (isWater || isStone || isMud) return;
-                                targetChunk.addEntity(new entities.Trees(gridX, gridY));
-                            }
+                        if ("SPAWN_RABBIT".equals(currentInteractionMode)) {
+                            if (isWater || isStone) return;
+                            entities.Rabbit ent = new entities.Rabbit(gridX, gridY);
+                            targetChunk.addEntity(ent);
+                            if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                            else registerBrainForEntity(ent);
                         }
-                    } catch (Exception ex) {
-                        System.err.println("Mouse interaction error: " + ex.getMessage());
+                        else if ("SPAWN_TIGER".equals(currentInteractionMode)) {
+                            if (isWater || isStone) return;
+                            entities.Tiger ent = new entities.Tiger(gridX, gridY);
+                            targetChunk.addEntity(ent);
+                            if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                            else registerBrainForEntity(ent);
+                        }
+                        else if ("SPAWN_WOLF".equals(currentInteractionMode)) {
+                            if (isWater || isStone) return;
+                            entities.Wolf ent = new entities.Wolf(gridX, gridY);
+                            targetChunk.addEntity(ent);
+                            if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                            else registerBrainForEntity(ent);
+                        }
+                        else if ("SPAWN_ELEPHANT".equals(currentInteractionMode)) {
+                            if (isWater || isStone) return;
+                            entities.Elephant ent = new entities.Elephant(gridX, gridY);
+                            targetChunk.addEntity(ent);
+                            if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                            else registerBrainForEntity(ent);
+                        }
+                        else if ("SPAWN_FISH".equals(currentInteractionMode)) {
+                            if (!isWater) return;
+                            entities.Fish ent = new entities.Fish(gridX, gridY);
+                            targetChunk.addEntity(ent);
+                            if (sharedSimulationManager != null) sharedSimulationManager.registerBrainForEntity(ent);
+                            else registerBrainForEntity(ent);
+                        }
+                        else if ("SPAWN_BUSH".equals(currentInteractionMode)) {
+                            if (isWater || isStone || isMud) return;
+                            targetChunk.addEntity(new entities.Bush(gridX, gridY));
+                        }
+                        else if ("SPAWN_TREE".equals(currentInteractionMode)) {
+                            if (isWater || isStone || isMud) return;
+                            targetChunk.addEntity(new entities.Trees(gridX, gridY));
+                        }
                     }
                 }
             }
@@ -558,66 +551,25 @@ public class MapViewer extends Application {
         StringBuilder content = new StringBuilder();
         content.append("Type: ").append(selectedAnimal.getClass().getSimpleName()).append("\n");
         content.append("Position: (").append(selectedAnimal.getX()).append(", ").append(selectedAnimal.getY()).append(")\n");
-        content.append("Chunk: [").append(selectedAnimal.getX() / 50).append(", ").append(selectedAnimal.getY() / 50).append("]\n");
+        content.append("Chunk: [").append(selectedAnimal.getX() / WorldMap.CHUNK_SIZE).append(", ").append(selectedAnimal.getY() / WorldMap.CHUNK_SIZE).append("]\n");
         content.append("Hunger: ").append(String.format("%.1f", selectedAnimal.getHunger())).append(" / Thirst: ").append(String.format("%.1f", selectedAnimal.getThirst())).append("\n");
         content.append("Cooldown: ").append(selectedAnimal.getCurrentMoveCooldown()).append("\n");
         content.append("Strategy: ").append(strategyName).append("\n");
         content.append("Current target: ").append(target == null ? "None" : "(" + target.getX() + ", " + target.getY() + ")").append("\n");
         content.append("Path remaining: ").append(path == null ? "0" : path.size()).append("\n");
-        if (path != null && !path.isEmpty()) {
-            Position nextStep = path.get(0);
-            content.append("Next step: (").append(nextStep.getX()).append(", ").append(nextStep.getY()).append(")\n");
-        } else {
-            content.append("Next step: None\n");
-        }
-        content.append(buildVisibleChunkSummary(selectedAnimal));
+        content.append("Next step: ").append(path == null || path.isEmpty() ? "None" : "(" + path.get(0).getX() + ", " + path.get(0).getY() + ")").append("\n");
 
         lblSelectedAnimalDebug.setText(content.toString());
         if (basicRenderer != null) basicRenderer.setSelectedAnimal(selectedAnimal);
     }
 
-    private String buildVisibleChunkSummary(Animals animal) {
-        try {
-            brain.controller.MapSystem ms = new brain.controller.MapSystem(worldMap);
-            java.util.List<Chunk> visibleChunks = ms.getVisibleChunks(animal.getPosition());
-            int totalEntities = 0;
-            int rabbits = 0, tigers = 0, wolves = 0, elephants = 0, fishes = 0, bushes = 0, trees = 0;
-            for (Chunk chunk : visibleChunks) {
-                if (chunk == null) continue;
-                synchronized (chunk.getEntityList()) {
-                    for (Entity entity : chunk.getEntityList()) {
-                        if (entity == null || !entity.checkAlive()) continue;
-                        totalEntities++;
-                        if (entity instanceof entities.Rabbit) rabbits++;
-                        else if (entity instanceof entities.Tiger) tigers++;
-                        else if (entity instanceof entities.Wolf) wolves++;
-                        else if (entity instanceof entities.Elephant) elephants++;
-                        else if (entity instanceof entities.Fish) fishes++;
-                        else if (entity instanceof Bush) bushes++;
-                        else if (entity instanceof Trees) trees++;
-                    }
-                }
-            }
-            return String.format("Visible chunks: %d | Entities: %d | Rabbits: %d, Tigers: %d, Wolves: %d, Elephants: %d, Fish: %d, Bushes: %d, Trees: %d",
-                    visibleChunks.size(), totalEntities, rabbits, tigers, wolves, elephants, fishes, bushes, trees);
-        } catch (Exception e) {
-            return "Visible chunks: unavailable";
-        }
-    }
-
     private Chunk findChunkAt(int gridX, int gridY) {
-        try {
-            Field fieldChunk = WorldMap.class.getDeclaredField("chunkMap");
-            fieldChunk.setAccessible(true);
-            Chunk[][] chunkMap = (Chunk[][]) fieldChunk.get(worldMap);
-            if (chunkMap == null) return null;
-            int chunkX = gridX / 50;
-            int chunkY = gridY / 50;
-            if (chunkY >= 0 && chunkY < chunkMap.length && chunkX >= 0 && chunkX < chunkMap[chunkY].length) {
-                return chunkMap[chunkY][chunkX];
-            }
-        } catch (Exception ex) {
-            System.err.println("findChunkAt error: " + ex.getMessage());
+        Chunk[][] chunkMap = worldMap.chunkMap;
+        if (chunkMap == null) return null;
+        int chunkX = gridX / WorldMap.CHUNK_SIZE;
+        int chunkY = gridY / WorldMap.CHUNK_SIZE;
+        if (chunkY >= 0 && chunkY < chunkMap.length && chunkX >= 0 && chunkX < chunkMap[chunkY].length) {
+            return chunkMap[chunkY][chunkX];
         }
         return null;
     }
@@ -631,42 +583,10 @@ public class MapViewer extends Application {
             return;
         }
 
-        java.util.Map<String, Integer> typeCounts = new java.util.LinkedHashMap<>();
-        java.util.List<String> sampleEntities = new java.util.ArrayList<>();
-
-        synchronized (selectedChunk.getEntityList()) {
-            for (Entity entity : selectedChunk.getEntityList()) {
-                if (entity == null || !entity.checkAlive()) continue;
-                String typeName = entity.getClass().getSimpleName();
-                typeCounts.put(typeName, typeCounts.getOrDefault(typeName, 0) + 1);
-                if (sampleEntities.size() < 12) {
-                    sampleEntities.add(entity.getClass().getSimpleName());
-                }
-            }
-        }
-
         StringBuilder chunkSummary = new StringBuilder();
         chunkSummary.append("Chunk index: [").append(selectedChunkHashX()).append(", ").append(selectedChunkHashY()).append("]\n");
         chunkSummary.append("Distance to water: ").append(selectedChunk.getDistanceToWater()).append("\n");
         chunkSummary.append("Total entities: ").append(selectedChunk.getEntityList().size()).append("\n");
-        chunkSummary.append("Types: ");
-        if (typeCounts.isEmpty()) {
-            chunkSummary.append("None\n");
-        } else {
-            java.util.StringJoiner joiner = new java.util.StringJoiner(", ");
-            for (java.util.Map.Entry<String, Integer> entry : typeCounts.entrySet()) {
-                joiner.add(entry.getKey() + "=" + entry.getValue());
-            }
-            chunkSummary.append(joiner.toString()).append("\n");
-        }
-        chunkSummary.append("Sample entities:\n");
-        if (sampleEntities.isEmpty()) {
-            chunkSummary.append("- none");
-        } else {
-            for (String sample : sampleEntities) {
-                chunkSummary.append("- ").append(sample).append("\n");
-            }
-        }
 
         lblSelectedChunkDebug.setText(chunkSummary.toString().trim());
         if (basicRenderer != null) basicRenderer.setSelectedChunk(selectedChunk);
