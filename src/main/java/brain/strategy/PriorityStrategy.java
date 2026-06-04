@@ -20,16 +20,30 @@ public class PriorityStrategy implements MoveStrategy {
                 Position water = mapSystem.getClosestPosition(owner.getPosition(), waterSources);
                 owner.lockTargetEntity(water);
                 return water;
+            } else {
+                // If no water found in visible chunks, move towards the best chunk in heat map
+                Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks);
+                if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
+                    return mapSystem.getRandomWalkablePosInChunk(bestChunk);
+                }
             }
         }
 
         // ƯU TIÊN 2: Đói bụng
         if (owner.getHungerPercentage() < 60) {
-            List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks);
+            List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks, owner);
             if (foodSources != null && !foodSources.isEmpty()) {
                 Position food = mapSystem.getClosestPosition(owner.getPosition(), foodSources);
                 owner.lockTargetEntity(food);
                 return food;
+            } else if (owner instanceof entities.attributes.Herbivore) {
+                // Herbivores seek grass if no entities are found
+                List<Position> grassTiles = mapSystem.getGrassInChunks(visibleChunks);
+                if (!grassTiles.isEmpty()) {
+                    Position grass = mapSystem.getClosestPosition(owner.getPosition(), grassTiles);
+                    owner.lockTargetEntity(grass);
+                    return grass;
+                }
             }
         }
 

@@ -11,6 +11,7 @@ import java.io.File;
 public class MapTest {
     public static void main(String[] args) {
         int SIZE = 500;
+        entities.base.Position.initializeGrid(SIZE);
 
         // 1. Initialize the terrain map
         WorldMap worldMap = new WorldMap(9403312, SIZE);

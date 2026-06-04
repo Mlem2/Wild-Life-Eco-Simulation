@@ -6,116 +6,227 @@ import java.awt.Point;
 import java.util.*;
 
 public class Pathfinder {
-    private static final int SIZE = 500;
     private final WorldMap worldMap;
-    int[][] visitedWithRunId = new int[SIZE][SIZE];
-    Node[][] nodeMap = new Node[SIZE][SIZE];
-    int currentRunID = 0;
+    private final int size;
+    private final int[][] visitedWithRunId;
+    private final Node[][] nodeMap;
+    private int currentRunID = 0;
 
-    // Precomputed movement costs for cleaner code
     private static final double CARDINAL_COST = 1.0;
     private static final double DIAGONAL_COST = 1.4142;
 
+    // Cache directions to avoid .values() array allocation
+    private static final Direction[] DIRECTIONS = Arrays.stream(Direction.values())
+            .filter(d -> d != Direction.CENTER)
+            .toArray(Direction[]::new);
+
     public Pathfinder(WorldMap worldMap) {
-        this.worldMap = worldMap; // No heavy graph allocation at all!
+        this.worldMap = worldMap;
+        this.size = WorldMap.SIZE;
+        this.visitedWithRunId = new int[size][size];
+        this.nodeMap = new Node[size][size];
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                nodeMap[y][x] = new Node(x, y);
+            }
+        }
     }
 
-    private static class Node implements Comparable<Node> {
-        int x, y;
-        double gCost; // Cost from start
-        double hCost; // Heuristic cost to end
-        double fCost; // Total cost (g + h)
+    private static class Node {
+        final int x, y;
+        double gCost;
+        double hCost;
+        double fCost;
         Node parent;
+        int runId = -1;
+        int heapIndex = -1;
 
         Node(int x, int y) {
             this.x = x;
             this.y = y;
         }
 
-        @Override
-        public int compareTo(Node o) {
-            return Double.compare(this.fCost, o.fCost);
+        void reset(int runId) {
+            this.gCost = Double.MAX_VALUE;
+            this.hCost = 0;
+            this.fCost = Double.MAX_VALUE;
+            this.parent = null;
+            this.runId = runId;
+            this.heapIndex = -1;
         }
     }
 
-    public List<Point> calculatePath(Point start, Point end) {
-        if (start == null || end == null) return Collections.emptyList();
+    /**
+     * Optimized Binary Heap for Node objects.
+     */
+    private static class FastNodeHeap {
+        private Node[] heap;
+        private int size = 0;
 
-        PriorityQueue<Node> openSet = new PriorityQueue<>();
-        // Tracking states via plain primitive arrays instead of complex Map lookups
+        FastNodeHeap(int capacity) {
+            heap = new Node[capacity];
+        }
+
+        void clear() {
+            for (int i = 0; i < size; i++) {
+                heap[i].heapIndex = -1;
+            }
+            size = 0;
+        }
+
+        boolean isEmpty() {
+            return size == 0;
+        }
+
+        void add(Node node) {
+            node.heapIndex = size;
+            heap[size] = node;
+            size++;
+            bubbleUp(node.heapIndex);
+        }
+
+        Node poll() {
+            if (size == 0) return null;
+            Node root = heap[0];
+            size--;
+            if (size > 0) {
+                heap[0] = heap[size];
+                heap[0].heapIndex = 0;
+                bubbleDown(0);
+            }
+            root.heapIndex = -1;
+            return root;
+        }
+
+        void update(Node node) {
+            if (node.heapIndex != -1) {
+                bubbleUp(node.heapIndex);
+            } else {
+                add(node);
+            }
+        }
+
+        private void bubbleUp(int index) {
+            Node node = heap[index];
+            while (index > 0) {
+                int parentIndex = (index - 1) >> 1;
+                Node parent = heap[parentIndex];
+                if (node.fCost < parent.fCost || (node.fCost == parent.fCost && node.hCost < parent.hCost)) {
+                    heap[index] = parent;
+                    parent.heapIndex = index;
+                    index = parentIndex;
+                } else {
+                    break;
+                }
+            }
+            heap[index] = node;
+            node.heapIndex = index;
+        }
+
+        private void bubbleDown(int index) {
+            Node node = heap[index];
+            int half = size >> 1;
+            while (index < half) {
+                int left = (index << 1) + 1;
+                int right = left + 1;
+                int best = left;
+                if (right < size) {
+                    if (heap[right].fCost < heap[left].fCost || (heap[right].fCost == heap[left].fCost && heap[right].hCost < heap[left].hCost)) {
+                        best = right;
+                    }
+                }
+                if (heap[best].fCost < node.fCost || (heap[best].fCost == node.fCost && heap[best].hCost < node.hCost)) {
+                    heap[index] = heap[best];
+                    heap[index].heapIndex = index;
+                    index = best;
+                } else {
+                    break;
+                }
+            }
+            heap[index] = node;
+            node.heapIndex = index;
+        }
+    }
+
+    private final FastNodeHeap openSet = new FastNodeHeap(WorldMap.SIZE * WorldMap.SIZE);
+
+    public List<Point> calculatePath(Point start, Point end, List<Point> path) {
+        if (path == null) {
+            path = new ArrayList<>();
+        }
+        path.clear();
+        if (start == null || end == null) return path;
+        if (start.x == end.x && start.y == end.y) return path;
+
         currentRunID++;
+        openSet.clear();
 
-        Node startNode = new Node(start.x, start.y);
+        Node startNode = nodeMap[start.y][start.x];
+        startNode.reset(currentRunID);
         startNode.gCost = 0;
         startNode.hCost = getHeuristic(start.x, start.y, end.x, end.y);
         startNode.fCost = startNode.hCost;
 
         openSet.add(startNode);
-        nodeMap[start.y][start.x] = startNode;
 
         while (!openSet.isEmpty()) {
             Node current = openSet.poll();
 
             if (current.x == end.x && current.y == end.y) {
-                return retracePath(current);
+                retracePath(current, path);
+                return path;
             }
 
             visitedWithRunId[current.y][current.x] = currentRunID;
 
-            for (Direction dir : Direction.values()) {
-                if (dir == Direction.CENTER) continue;
-
+            for (Direction dir : DIRECTIONS) {
                 int nextX = current.x + dir.x;
                 int nextY = current.y + dir.y;
 
-                // Boundary & Passable Check
-                if (nextX < 0 || nextX >= SIZE || nextY < 0 || nextY >= SIZE) continue;
-                if (!worldMap.getTile(nextX, nextY).isPassable()) continue;
+                if (nextX < 0 || nextX >= size || nextY < 0 || nextY >= size) continue;
                 if (visitedWithRunId[nextY][nextX] == currentRunID) continue;
+                if (!worldMap.getTile(nextX, nextY).isPassable()) continue;
 
                 double moveCost = (dir.x != 0 && dir.y != 0) ? DIAGONAL_COST : CARDINAL_COST;
                 double edgeWeight = moveCost / worldMap.getTile(nextX, nextY).getSpeedMultiplier();
                 double tentativeGCost = current.gCost + edgeWeight;
 
                 Node neighbor = nodeMap[nextY][nextX];
-                if (neighbor == null) {
-                    neighbor = new Node(nextX, nextY);
-                    nodeMap[nextY][nextX] = neighbor;
+                if (neighbor.runId != currentRunID) {
+                    neighbor.reset(currentRunID);
                 }
 
-                if (tentativeGCost < neighbor.gCost || !openSet.contains(neighbor)) {
+                if (tentativeGCost < neighbor.gCost) {
                     neighbor.gCost = tentativeGCost;
                     neighbor.hCost = getHeuristic(nextX, nextY, end.x, end.y);
                     neighbor.fCost = neighbor.gCost + neighbor.hCost;
                     neighbor.parent = current;
-
-                    // Force priority queue update
-                    if (openSet.contains(neighbor)) {
-                        openSet.remove(neighbor);
-                    }
-                    openSet.add(neighbor);
+                    openSet.update(neighbor);
                 }
             }
         }
-        return Collections.emptyList(); // No path found
+        return path;
     }
 
     private double getHeuristic(int x, int y, int targetX, int targetY) {
-        // Diagonal distance heuristic matching standard 8-way grid movement
         int dx = Math.abs(x - targetX);
         int dy = Math.abs(y - targetY);
         return (dx > dy) ? (DIAGONAL_COST * dy + CARDINAL_COST * (dx - dy))
                 : (DIAGONAL_COST * dx + CARDINAL_COST * (dy - dx));
     }
 
-    private List<Point> retracePath(Node endNode) {
-        List<Point> path = new ArrayList<>();
+    private void retracePath(Node endNode, List<Point> path) {
         Node current = endNode;
+        int startIndex = path.size();
         while (current != null) {
             path.add(new Point(current.x, current.y));
             current = current.parent;
         }
-        Collections.reverse(path);
-        return path;
+        int endIndex = path.size() - 1;
+        for (int i = startIndex, j = endIndex; i < j; i++, j--) {
+            Point temp = path.get(i);
+            path.set(i, path.get(j));
+            path.set(j, temp);
+        }
     }
 }

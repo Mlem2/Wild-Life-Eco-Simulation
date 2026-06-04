@@ -18,11 +18,11 @@ public class AnimalBrainUpdateTest {
 
     @Test
     void predatorShouldConsumeAdjacentPreyEvenWhenMovementCooldownIsActive() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Wolf wolf = new Wolf("wolf", 10, 10);
-        Rabbit rabbit = new Rabbit("rabbit", 11, 10);
+        Wolf wolf = new Wolf(10, 10);
+        Rabbit rabbit = new Rabbit(11, 10);
 
         placeAnimal(worldMap, wolf);
         placeAnimal(worldMap, rabbit);
@@ -47,11 +47,11 @@ public class AnimalBrainUpdateTest {
 
     @Test
     void updateShouldRecomputePathWhenTargetChanges() throws Exception {
-        WorldMap worldMap = new WorldMap(123);
+        WorldMap worldMap = new WorldMap(123, 500);
         MapSystem mapSystem = new MapSystem(worldMap);
 
-        Wolf wolf = new Wolf("wolf", 10, 10);
-        Rabbit rabbit = new Rabbit("rabbit", 17, 17);
+        Wolf wolf = new Wolf(10, 10);
+        Rabbit rabbit = new Rabbit(17, 17);
 
         placeAnimal(worldMap, wolf);
         placeAnimal(worldMap, rabbit);
@@ -68,7 +68,7 @@ public class AnimalBrainUpdateTest {
         assertEquals(new Position(11, 11), wolf.getPosition(), "The predator should start chasing the nearby prey.");
 
         removeEntity(worldMap, rabbit);
-        Food food = new Food("food", 17, 10);
+        Food food = new Food(17, 10);
         placeAnimal(worldMap, food);
 
         wolf.setCurrentMoveCooldown(0);
@@ -88,9 +88,7 @@ public class AnimalBrainUpdateTest {
     }
 
     private static Chunk getChunk(WorldMap worldMap, entities.base.Entity entity) throws Exception {
-        Field field = WorldMap.class.getDeclaredField("chunkMap");
-        field.setAccessible(true);
-        Chunk[][] chunkMap = (Chunk[][]) field.get(worldMap);
+        Chunk[][] chunkMap = worldMap.chunkMap;
         int cx = entity.getX() / 50;
         int cy = entity.getY() / 50;
         return chunkMap[cy][cx];

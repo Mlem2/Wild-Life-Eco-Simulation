@@ -19,12 +19,18 @@ import entities.base.Position;
 public class HunterStrategy implements MoveStrategy {
     @Override
     public Position getTarget(Animals owner, MapSystem mapSystem) {
+        owner.setSpeedUp(true); // Hunters are faster
         List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
 
         // Nếu đói, ưu tiên tìm thức ăn/con mồi gần nhất
-        List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks);
+        List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks, owner);
         if (foodSources != null && !foodSources.isEmpty()) {
             return mapSystem.getClosestPosition(owner.getPosition(), foodSources);
+        } else if (owner instanceof entities.attributes.Herbivore) {
+            List<Position> grassTiles = mapSystem.getGrassInChunks(visibleChunks);
+            if (!grassTiles.isEmpty()) {
+                return mapSystem.getClosestPosition(owner.getPosition(), grassTiles);
+            }
         }
 
         List<Animals> preys = mapSystem.getPreysInChunks(visibleChunks, owner);
@@ -35,6 +41,12 @@ public class HunterStrategy implements MoveStrategy {
         }
 
         // Đang đói mà xung quanh không có gì -> Di chuyển sang một chunk an toàn ngẫu nhiên để tìm tiếp
+        if (owner.getThirstPercentage() < 60) {
+            Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks);
+            if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
+                return mapSystem.getRandomWalkablePosInChunk(bestChunk);
+            }
+        }
         return mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
     }
 }

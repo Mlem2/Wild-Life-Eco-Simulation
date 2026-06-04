@@ -30,7 +30,7 @@ public abstract class Animals extends Entity {
     }
 
     public Position getPosition() {
-        return new Position(x, y);
+        return Position.of(x, y);
     }
 
     public void setPosition(Position p) {
@@ -67,7 +67,12 @@ public abstract class Animals extends Entity {
     public boolean isSpeedUp() { return this.speedUp; }
 
     public int getOwnMaxSpeedCooldown() {
-        // Return a personal cooldown for speed-up actions; fallback to 1 tick
+        // Return a personal cooldown for speed-up actions
+        // If it's a Hunter, it should be 1.5 times faster: defaultMoveCooldown / 1.5
+        if (this.getMoveStrategyName().equals("HunterStrategy")) {
+            return Math.max(1, (int) Math.round(defaultMoveCooldown / 1.5));
+        }
+        // Fallback to 2x speed for other speed-up cases (like ScaredStrategy)
         return Math.max(1, defaultMoveCooldown / 2);
     }
 
@@ -101,21 +106,21 @@ public abstract class Animals extends Entity {
     public void updateMoveCooldown(Entity[][] animalCoordinates, List<Entity> allEntities){
         currentMoveCooldown--;
         updateHungerThirst();
+        age--;
         if(age <= 0 || hunger <= 0 || thirst <= 0){
             this.isAlive = false;
         }
         else{
-            updateHungerThirst();
             if(currentMoveCooldown == 0){
                
             }
-            age--;
         }
     }
 
     public void updateHungerThirst(){ // cập nhật đói + khát
-        hunger -= size.multiplier * 0.2 + 1 * (speedUp ? 0.6 : 0.5) * foodEfficiency;
-        thirst -= size.multiplier * 0.1 + 1 * (speedUp ? 0.6 : 0.5) * waterEfficiency;
+        double tickFactor = 1.0 / 25.0;
+        hunger -= (size.multiplier * 0.2 + 1 * (speedUp ? 0.6 : 0.5) * foodEfficiency) * tickFactor;
+        thirst -= (size.multiplier * 0.1 + 1 * (speedUp ? 0.6 : 0.5) * waterEfficiency) * tickFactor;
     }
 
     public abstract void makeSound();

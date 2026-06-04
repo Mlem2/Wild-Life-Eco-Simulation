@@ -6,7 +6,6 @@ import java.util.Random;
 import entities.Food;
 
 public abstract class Tree extends Food {
-    protected int age;
     protected double defaultSeedCooldown;
     protected double growthTime;
     protected double currentSeedCooldown;

@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.List;
 
 public class PathfindingTest {
-    public static void main() {
+    public static void main(String[] args) {
         WorldMap worldMap = new WorldMap(9403312, 500);
         Pathfinder pathfinder = new Pathfinder(worldMap);
 
@@ -17,7 +17,8 @@ public class PathfindingTest {
 
         Point start = new Point(155, 350);
         Point end = new Point(100, 450);
-        List<Point> path = pathfinder.calculatePath(start, end);
+        java.util.List<Point> path = new java.util.ArrayList<>();
+        pathfinder.calculatePath(start, end, path);
 
         long endTime = System.nanoTime();
 

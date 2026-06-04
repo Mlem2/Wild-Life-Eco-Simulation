@@ -9,8 +9,8 @@ public abstract class ResourceEntity extends Entity {
     protected int hungerRecoveryAmount = 10;
     protected int thirstRecoveryAmount = 10;
 
-    protected ResourceEntity(String name, int x, int y, int maxAmount, int regenPerTick) {
-        super(name, x, y);
+    protected ResourceEntity(int x, int y, int maxAmount, int regenPerTick) {
+        super(x, y);
         this.maxAmount = Math.max(1, maxAmount);
         this.currentAmount = this.maxAmount;
         this.regenPerTick = Math.max(0, regenPerTick);
