@@ -1,26 +1,20 @@
-STRATEGY UPDATE ver 0.3.0\
-**Found Bug**
-- Bụi (Bush) và Cây (Trees) đang là "Thức ăn".
-- Động vật ăn thịt bằng 1 cách nào đó cũng có thể ăn cỏ ??
-- Thanh đói và khát bị giảm khá nhanh.
-- Có chút giật lag khi mới tạo thế giới.
-- Khả năng chuyển đổi trạng thái chưa linh hoạt (giả sử ưu tiên uống nước nhưng tự nhiên bị dí thế là chạy mất).
+STRATEGY UPDATE ver 0.3.1\
+**Fixed Bug**
+- Bụi (Bush) và Cây (Trees) chỉ còn là "Thức ăn" cho Apex herbivores (chủ yếu Voi). Các con vật khác sẽ không ăn loại thức ăn này.
+- Tối ưu tạo map
+- Tìm đường tốt hơn cho động vật: Có thể tìm nguồn nước gần nhất nếu khát.
+- Chủ động chuyển đổi trạng thái tốt hơn: Trong bán kính quét nếu tìm được động vật ăn được sẽ tăng tốc và săn lùng, kể cả trong PriorityStrategy.
 
-**Feature Update**
-- Thêm một loạt strategy mới.
-- Tìm đường và lấy tầm nhìn theo Chunk.
-- Cách vận hành: ChooseTarget --> Chọn Strategy tương ứng --> Chọn mục tiêu di chuyển tới (vị trí) --> Tìm đường Pathfinder tới vị trí mục tiêu. 
-- Khi ăn sẽ hồi thanh đói và thanh khát.
-- Sửa lại tốc độ di chuyển và thời gian (nên để 1h/ tick thay vì 5 phút).
+**Found Bug**
+- Thỏ bị ăn quá nhanh, số lượng giảm rất nhanh chỉ sau một ngày.
+-> Nên xử lý nhanh khâu sinh sản & Tăng tốc thời gian (Ví dụ 1 ngày chỉ còn 24 * 2 = 48 tick, tương đương với 24h, 2 tick / 1h), hoặc đơn giản là cho chúng nó đói lâu hơn (1 ngày chỉ cần bị đói 1 hoặc 2 lần).
+- Một vài con cá bị kẹt gần hồ nước (nó định lên bờ nhưng code bắt nó ở dưới nước, khi này CD sẽ có thể chạy xuống âm, nói chung ảnh hưởng không đáng kể)
 
 **FLOW**\
 <img width="327" height="443" alt="image" src="https://github.com/user-attachments/assets/ef3ca91d-c30c-4c19-b7ef-d217f10d7a3f" />
   \
 **Upcoming update**
-- Sửa lại cơ chế ăn: Ăn đúng, ăn đủ. Biết ăn cỏ và uống nước khi cần thiết.
-- Sửa lại khả năng tìm đường của con vật. Ưu tiên di chuyển: Lẩn trốn kẻ thù (Khi ở gần) --> Né xa khỏi kẻ thù (Khi ở xa) --> Tìm đến thức ăn.
-- Sửa lại cơ chế bứt tốc và tiêu hao năng lượng.
-- Sửa lại bụi và cây giờ đây không còn là thức ăn nữa.
+- Sinh sản và tìm bạn đời.
 - Thêm khả năng trốn bằng bụi cây. Nếu kẻ địch quá gần thì có khả năng (nhỏ) bị phát hiện.
   (Còn nữa)
   
