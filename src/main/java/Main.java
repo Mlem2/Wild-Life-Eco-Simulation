@@ -1,8 +1,8 @@
+import brain.controller.SimulationManager;
 import core.enviroment.WorldMap;
 import entities.base.EntityMap;
-import brain.controller.SimulationManager;
-import view.MapViewer;
 import javafx.application.Application;
+import view.MapViewer;
 
 public class Main {
     private static final int SEED = 94033111;

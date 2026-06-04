@@ -1,4 +1,3 @@
 package entities.attributes;
 
-public interface Apex {
-}
+public interface Apex {}

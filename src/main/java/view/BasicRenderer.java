@@ -1,9 +1,9 @@
 package view;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
@@ -120,7 +120,8 @@ public class BasicRenderer {
                     gc.strokeRect(chunkScreenX, chunkScreenY, WorldMap.CHUNK_SIZE * tileW, WorldMap.CHUNK_SIZE * tileH);
                     gc.setLineWidth(1.0);
                 }
-
+                
+                // In ra các thực thể trong chunk này
                 List<Entity> entityList = chunk.getEntityList();
                 synchronized (entityList) {
                     for (Entity entity : entityList) {

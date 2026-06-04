@@ -1,22 +1,23 @@
 package brain.controller;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import brain.pathfinder.Pathfinder;
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
-import entities.Bush;
-import entities.Food;
-import entities.Trees;
 import entities.base.Animals;
 import entities.base.Entity;
 import entities.base.ResourceEntity;
 import entities.base.Tree;
-import entities.base.Position;
-
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class SimulationManager {
     private final WorldMap worldMap;
@@ -65,7 +66,7 @@ public class SimulationManager {
 
     private void updateTimeSystem() {
         try {
-            int m = core.TimeSystem.minute + 30;
+            int m = core.TimeSystem.minute + 5;
             if (m >= 60) {
                 m = 0;
                 core.TimeSystem.hour++;
@@ -202,67 +203,55 @@ public class SimulationManager {
                                     }
                                 } catch (Exception ignored) {}
 
-                                // Eating logic (Moved mostly to Brain, keeping minimal here for non-brain entities if any)
-                                for (int j = entityList.size() - 1; j >= 0; j--) {
-                                    Entity target = entityList.get(j);
-                                    if (target != null && target != animal && target.getX() == animal.getX() && target.getY() == animal.getY()) {
-                                        boolean canEat = false;
-                                        if (animal instanceof entities.Elephant) {
-                                            if (target instanceof Bush || target instanceof Trees) {
-                                                canEat = true;
-                                            }
-                                        } else if (animal instanceof entities.attributes.Herbivore) {
-                                            // Non-elephant herbivores no longer eat trees and bushes
-                                            if (target instanceof Food && !(target instanceof Bush || target instanceof Trees)) {
-                                                canEat = true;
-                                            }
-                                        }
-
-                                        if (canEat) {
-                                            try {
-                                                Field fieldHunger = Animals.class.getDeclaredField("hunger");
-                                                Field fieldThirst = Animals.class.getDeclaredField("thirst");
-                                                fieldHunger.setAccessible(true);
-                                                fieldThirst.setAccessible(true);
-
-                                                fieldHunger.set(animal, Math.min(100.0, (double) fieldHunger.get(animal) + 40.0));
-                                                fieldThirst.set(animal, Math.min(100.0, (double) fieldThirst.get(animal) + 20.0));
-
-                                                Field fieldAlive = Entity.class.getDeclaredField("isAlive");
-                                                fieldAlive.setAccessible(true);
-                                                fieldAlive.set(target, false);
-                                                entitiesToRemove.add(target);
-                                            } catch (Exception ignored) {}
-                                        }
-                                    }
-                                }
-
-                                // Herbivore grass eating from terrain
-                                if (animal instanceof entities.attributes.Herbivore) {
+                                // Herbivore grass eating logic (only from terrain, not from entities like Bush/Trees), also need to in Scared Strategy.
+                                // Elephants doesn't tend to eat grass, they eat Bush/Trees instead, so they are not affected by this logic.
+                                if ((animal instanceof entities.attributes.Herbivore && !(animal instanceof entities.attributes.Apex)) && (animal.getHungerPercentage() < 80.0) && (animal.getCurrentMoveCooldown() <= 1) && (animal.isSpeedUp() == false)) {
                                     try {
-                                        core.enviroment.Terrain terrain = worldMap.getTile(animal.getX(), animal.getY());
-                                        if (terrain != null && terrain.isGrass()) {
+                                        var currentTile = worldMap.getTile(animal.getX(), animal.getY());
+                                        if (currentTile != null && currentTile.isGrass()) {
                                             Field fieldHunger = Animals.class.getDeclaredField("hunger");
                                             Field fieldThirst = Animals.class.getDeclaredField("thirst");
                                             fieldHunger.setAccessible(true);
                                             fieldThirst.setAccessible(true);
 
-                                            fieldHunger.set(animal, Math.min(100.0, (double) fieldHunger.get(animal) + 10.0));
-                                            fieldThirst.set(animal, Math.min(100.0, (double) fieldThirst.get(animal) + 5.0));
+                                            fieldHunger.set(animal, Math.min(100.0, (double) fieldHunger.get(animal) + 30.0));
+                                            fieldThirst.set(animal, Math.min(100.0, (double) fieldThirst.get(animal) + 10.0));
+
+                                            ActionManager.setCooldown(animal, 20);
                                         }
                                     } catch (Exception ignored) {}
                                 }
 
 
-                                // Thirst logic
+                                // Thirst logic, also nearby-water count as well
                                 try {
-                                    String tileName = worldMap.getTile(animal.getX(), animal.getY()).getName().toLowerCase();
-                                    if (tileName.contains("water") || tileName.contains("nuoc")) {
+                                    boolean nearWater = false;
+                                    for (int dx = -1; dx <= 1; dx++) {
+                                        for (int dy = -1; dy <= 1; dy++) {
+                                            int checkX = animal.getX() + dx;
+                                            int checkY = animal.getY() + dy;
+                                            if (checkX >= 0 && checkX < gridSize && checkY >= 0 && checkY < gridSize) {
+                                                try {
+                                                    String nearbyTileName = worldMap.getTile(checkX, checkY).getName().toLowerCase();
+                                                    if (nearbyTileName.contains("water") || nearbyTileName.contains("nuoc")) {
+                                                        nearWater = true;
+                                                        break;
+                                                    }
+                                                } catch (Exception ignored) {}
+                                            }
+                                        }}
+                                        if (nearWater && animal.getThirstPercentage() < 90 && animal.getCurrentMoveCooldown() <= 1) {
                                         Field fieldThirst = Animals.class.getDeclaredField("thirst");
                                         fieldThirst.setAccessible(true);
                                         fieldThirst.set(animal, 100.0);
+                                        if (animal instanceof entities.attributes.Aquatic) {
+                                            Field fieldHunger = Animals.class.getDeclaredField("hunger");
+                                            fieldHunger.setAccessible(true);
+                                            fieldHunger.set(animal, 100.0);
+                                        }   
+                                        ActionManager.setCooldown(animal, 10);
                                     }
-                                } catch (Exception ignored) {}
+                            } catch (Exception ignored) {}
 
                                 // Chunk management
                                 int newChunkX = entity.getX() / WorldMap.CHUNK_SIZE;

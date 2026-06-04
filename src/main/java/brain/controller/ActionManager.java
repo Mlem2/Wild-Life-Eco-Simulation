@@ -26,9 +26,13 @@ public class ActionManager {
 
     /**
      * Thực hiện di chuyển sang ô kế tiếp
+     * @return true nếu di chuyển thành công, false nếu bị từ chối
      */
-    public void move(Position nextStep) {
-        if (!mapSystem.isWalkable(nextStep)) return;
+    public boolean move(Position nextStep) {
+        if (!mapSystem.isWalkable(nextStep)) return false;
+        
+        // Kiểm tra xem terrain có phù hợp với loại động vật không (cá phải ở dưới nước, v.v.)
+        if (!mapSystem.isTerrainSuitableForAnimal(nextStep, owner)) return false;
 
         // Update chunk membership: compute old/new chunks, move the entity between them if needed
         Chunk oldChunk = null;
@@ -49,19 +53,14 @@ public class ActionManager {
             } catch (Exception ignored) {}
         }
 
-        // ÁP DỤNG LOGIC COOLDOWN THEO ĐỀ BÀI:
-        double multiplier = 1.0;
-        try {
-            multiplier = mapSystem.getTerrainAt(nextStep).getSpeedMultiplier();
-        } catch (Exception ignored) {}
-
+        // ÁP DỤNG LOGIC COOLDOWN:
         if (owner.isSpeedUp()) {
             int cd = owner.getOwnMaxSpeedCooldown();
-            owner.setCurrentMoveCooldown((int) Math.round(cd / multiplier));
+            owner.setCurrentMoveCooldown(cd);
         } else {
-            owner.setCurrentMoveCooldown((int) Math.round(owner.getDefaultMoveCooldown() / multiplier));
+            owner.setCurrentMoveCooldown(owner.getDefaultMoveCooldown());
         }
-        // `owner.setCurrentMoveCooldown` already updated above.
+        return true;
     }
 
     public MapSystem getMapSystem() {
@@ -78,7 +77,7 @@ public class ActionManager {
         owner.lockTargetEntity(null);
         owner.increaseHunger(hungerGain);
         owner.increaseHydration(thirstGain);
-        owner.setCurrentMoveCooldown(1); // Ăn uống cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
+        owner.setCurrentMoveCooldown(10); // Ăn cũng tốn CD
     }
 
     public void eat(Animals prey) {
@@ -90,17 +89,15 @@ public class ActionManager {
         owner.lockTargetEntity(null);
         owner.increaseHunger(hungerGain);
         owner.increaseHydration(thirstGain);
-        owner.setCurrentMoveCooldown(1); // Ăn thỏ cũng instant kill, không dùng cơ chế HP/attack
-    }
-
-    public void eatGrass() {
-        owner.increaseHunger(10);
-        owner.increaseHydration(5);
-        owner.setCurrentMoveCooldown(1);
+        owner.setCurrentMoveCooldown(15); // Ăn thịt lâu hơn chút
     }
 
     public void drink() {
         drink(null);
+    }
+
+    public static void setCooldown(Animals animal, int ticks) {
+        animal.setCurrentMoveCooldown(ticks);
     }
 
     public void drink(Water water) {
@@ -109,10 +106,17 @@ public class ActionManager {
             water.consume(gained);
         }
         owner.increaseHydration(gained);
-        owner.setCurrentMoveCooldown(1); // Uống nước cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
+        owner.setCurrentMoveCooldown(10); // Uống nước cũng tốn CD nhưng nhanh hơn
     }
 
     public void attack(Animals prey) {
         eat(prey);
+    }
+
+    public void mating(Animals animal) {
+        owner.setCurrentMoveCooldown(owner.getMatingTimeCost()); // Cooldown cho giao phối
+        // Sau khi giao phối xong, sẽ có logic sinh con ở AnimalBrainUpdate dựa trên việc đã giao phối thành công hay chưa (có thể dựa vào một cờ hiệu hoặc kiểm tra xem bạn tình còn tồn tại không)
+        owner.recordMating();
+        owner.setCurrentMoveCooldown(owner.getDefaultMoveCooldown()); // Nghỉ tý :D
     }
 }

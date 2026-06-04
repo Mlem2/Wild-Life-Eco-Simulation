@@ -14,35 +14,59 @@ public class PriorityStrategy implements MoveStrategy {
         owner.setSpeedUp(false); // Ưu tiên sinh hoạt bình thường không tăng tốc
 
         // ƯU TIÊN 1: Khát nước nguy hiểm hơn đói (Ví dụ: Thể lực/Nước xuống dưới 60%)
-        if (owner.getThirstPercentage() < 60) {
-            List<Position> waterSources = mapSystem.getWaterInChunks(visibleChunks);
+        if (owner.getThirstPercentage() < 70) {
+            // For aquatic animals, get all water; for terrestrial, get only shore water
+            boolean isAquatic = owner instanceof entities.attributes.Aquatic;
+            List<Position> waterSources = isAquatic 
+                ? mapSystem.getWaterInChunks(visibleChunks)
+                : mapSystem.getShoreWaterPositions(visibleChunks);
+            
+            // Nếu có nguồn nước nào trong tầm nhìn, ưu tiên di chuyển tới đó
             if (waterSources != null && !waterSources.isEmpty()) {
-                Position water = mapSystem.getClosestPosition(owner.getPosition(), waterSources);
-                owner.lockTargetEntity(water);
-                return water;
-            } else {
-                // If no water found in visible chunks, move towards the best chunk in heat map
-                Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks);
-                if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
-                    return mapSystem.getRandomWalkablePosInChunk(bestChunk);
+                // Filter cho phù hợp với loại động vật (aquatic/terrestrial)
+                if (!(owner instanceof entities.attributes.Aquatic)) {
+                    return mapSystem.getClosestShoreWater(owner.getPosition(), visibleChunks);
                 }
+                else{
+                Position water = mapSystem.getClosestSuitablePosition(owner.getPosition(), waterSources, owner);
+                if (water != null) {
+                    owner.lockTargetEntity(water);
+                    return water;
+                }
+            }
+            }
+            // If no water found, move towards the best chunk in heat map (only for aquatic)
+            Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks, owner);
+            if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
+                Position suitablePos = mapSystem.getRandomSuitablePosInChunk(bestChunk, owner);
+                if (suitablePos != null) return suitablePos;
             }
         }
 
         // ƯU TIÊN 2: Đói bụng
-        if (owner.getHungerPercentage() < 60) {
-            List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks, owner);
-            if (foodSources != null && !foodSources.isEmpty()) {
-                Position food = mapSystem.getClosestPosition(owner.getPosition(), foodSources);
-                owner.lockTargetEntity(food);
-                return food;
-            } else if (owner instanceof entities.attributes.Herbivore) {
-                // Herbivores seek grass if no entities are found
-                List<Position> grassTiles = mapSystem.getGrassInChunks(visibleChunks);
-                if (!grassTiles.isEmpty()) {
-                    Position grass = mapSystem.getClosestPosition(owner.getPosition(), grassTiles);
-                    owner.lockTargetEntity(grass);
-                    return grass;
+        if (owner.getHungerPercentage() < owner.getThirstPercentage()) {
+            // Check if this is an aquatic herbivore - they eat water instead of land food
+            if (owner instanceof entities.attributes.AquaticHerbivore) {
+                // Aquatic herbivores (Fish) recover hunger from water - seek any water
+                List<Position> waterSources = mapSystem.getWaterInChunks(visibleChunks);
+                if (waterSources != null && !waterSources.isEmpty()) {
+                    // Filter to only water positions (extra safety)
+                    Position water = mapSystem.getClosestSuitablePosition(owner.getPosition(), waterSources, owner);
+                    if (water != null) {
+                        owner.lockTargetEntity(water);
+                        return water;
+                    }
+                }
+            } else {
+                // Regular terrestrial herbivores seek grass/food
+                List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks);
+                if (foodSources != null && !foodSources.isEmpty()) {
+                    // Filter to only suitable terrain for this animal
+                    Position food = mapSystem.getClosestSuitablePosition(owner.getPosition(), foodSources, owner);
+                    if (food != null) {
+                        owner.lockTargetEntity(food);
+                        return food;
+                    }
                 }
             }
         }

@@ -1,9 +1,5 @@
 package view;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
-import core.TimeSystem;
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
 import entities.Bush;
@@ -558,6 +554,9 @@ public class MapViewer extends Application {
         content.append("Current target: ").append(target == null ? "None" : "(" + target.getX() + ", " + target.getY() + ")").append("\n");
         content.append("Path remaining: ").append(path == null ? "0" : path.size()).append("\n");
         content.append("Next step: ").append(path == null || path.isEmpty() ? "None" : "(" + path.get(0).getX() + ", " + path.get(0).getY() + ")").append("\n");
+        content.append("Matable: ").append(selectedAnimal.isMatable() ? "Yes" : "No").append("\n");
+        content.append("Hunting target: ").append(selectedAnimal.getLockedTargetEntity() != null ?
+        (selectedAnimal.getLockedTargetEntity().getClass().getSimpleName() + " at (" + selectedAnimal.getLastLockedTargetPosition().getX() + ", " + selectedAnimal.getLastLockedTargetPosition().getY() + ")") : "None").append("\n");
 
         lblSelectedAnimalDebug.setText(content.toString());
         if (basicRenderer != null) basicRenderer.setSelectedAnimal(selectedAnimal);

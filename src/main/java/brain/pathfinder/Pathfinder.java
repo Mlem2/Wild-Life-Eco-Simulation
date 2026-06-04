@@ -1,9 +1,12 @@
 package brain.pathfinder;
 
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import allEnum.Direction;
 import core.enviroment.WorldMap;
-import java.awt.Point;
-import java.util.*;
 
 public class Pathfinder {
     private final WorldMap worldMap;

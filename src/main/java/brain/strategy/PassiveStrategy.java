@@ -12,7 +12,16 @@ public class PassiveStrategy implements MoveStrategy {
     public Position getTarget(Animals owner, MapSystem mapSystem) {
         // 70% đi dạo ngẫu nhiên trong chunk, 30% đứng yên
         if (random.nextDouble() < 0.7) {
-            return mapSystem.getRandomWalkablePosInChunk(owner.getPosition());
+            // Use animal-aware method to find suitable position
+            Position suitablePos = mapSystem.getRandomSuitablePosInChunk(
+                mapSystem.getChunkAt(owner.getPosition()), 
+                owner
+            );
+            if (suitablePos != null) {
+                return suitablePos;
+            }
+            // If no suitable position found, stay in place rather than going to random walkable (which might be wrong terrain)
+            return owner.getPosition();
         }
         return owner.getPosition();
     }    

@@ -1,10 +1,15 @@
 package entities.base;
 
-import core.enviroment.WorldMap;
-import entities.*;
-
 import java.util.Map;
 import java.util.Random;
+
+import core.enviroment.WorldMap;
+import entities.Bush;
+import entities.Elephant;
+import entities.Fish;
+import entities.Rabbit;
+import entities.Trees;
+import entities.Wolf;
 
 public class EntityMap {
     private final Entity[][] entityMap;
@@ -16,14 +21,14 @@ public class EntityMap {
     );
 
     private final Map<String, Integer> forestSpawns = Map.of(
-            "wolf", 2,
-            "rabbit", 10,
+            "wolf", 3,
+            "rabbit", 1,
             "tree", 200,
             "bush", 60
     );
 
     private final Map<String, Integer> grasslandSpawns = Map.of(
-            "rabbit", 50,
+            "rabbit", 5,
             "wolf", 1,
             "elephant", 1,
             "tree", 10,

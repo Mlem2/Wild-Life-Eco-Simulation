@@ -29,7 +29,14 @@ public class ScaredStrategy implements MoveStrategy {
                     safestChunk = chunk;
                 }
             }
-            return mapSystem.getRandomWalkablePosInChunk(safestChunk);
+            
+            // Use animal-aware method to find suitable escape position
+            Position suitablePos = mapSystem.getRandomSuitablePosInChunk(safestChunk, owner);
+            if (suitablePos != null) {
+                return suitablePos;
+            }
+            // If no suitable position in safest chunk, return current position to avoid wrong terrain
+            return owner.getPosition();
         }
 
         // Nếu kẻ địch chỉ ở chunk lân cận (chưa vào cùng chunk) -> Tắt Speed up (Chạy vừa phải)

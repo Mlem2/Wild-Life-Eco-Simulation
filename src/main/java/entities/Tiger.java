@@ -11,6 +11,7 @@ public class Tiger extends Animals implements Carnivore, Apex {
         this.size = Size.LARGE;
         this.defaultMoveCooldown = 5;
         this.currentMoveCooldown = 5;
+        this.matingTimeCost = 180;
         this.age = (random.nextInt(6) + 7) * 21600;
         this.foodEfficiency = 0.7; // Tigers are quite efficient at using food
         this.waterEfficiency = 0.8; // Tigers have moderate water needs

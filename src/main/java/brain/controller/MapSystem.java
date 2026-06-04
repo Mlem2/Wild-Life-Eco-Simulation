@@ -8,7 +8,9 @@ import java.util.Random;
 import core.enviroment.Chunk;
 import core.enviroment.Terrain;
 import core.enviroment.WorldMap;
+import entities.Bush;
 import entities.Food;
+import entities.Trees;
 import entities.Water;
 import entities.base.Animals;
 import entities.base.Entity;
@@ -47,19 +49,22 @@ public class MapSystem {
             for (Entity e : c.getEntityList()) {
                 if (e instanceof Animals other && isThreateningEnemy(owner, other)) {
                     int dist = Math.abs(owner.getX() - e.getX()) + Math.abs(owner.getY() - e.getY());
-                    if (dist <= 5) return true;
+                    if (dist <= 8) return true;
                 }
             }
         }
         return false;
     }
 
-    public boolean hasFoodAround(Animals owner) {
+    public boolean hasPreyNearby(Animals owner) {
         List<Chunk> chunks = getVisibleChunks(owner.getPosition());
         for (Chunk c : chunks) {
             if (c == null) continue;
             for (Entity e : c.getEntityList()) {
-                if (e instanceof Food) return true;
+                if (e instanceof Animals && e != owner && e instanceof entities.attributes.Herbivore && !(e instanceof entities.attributes.Apex)) {
+                    int dist = Math.abs(owner.getX() - e.getX()) + Math.abs(owner.getY() - e.getY());
+                    if (dist <= 10) return true;
+                }
             }
         }
         return false;
@@ -70,52 +75,21 @@ public class MapSystem {
         for (Chunk c : chunks) {
             if (c == null) continue;
             for (Entity e : c.getEntityList()) {
-                if (e instanceof Animals other && isPrey(owner, other)) return true;
+                if (e instanceof Animals && e != owner && e instanceof entities.attributes.Herbivore && !(e instanceof entities.attributes.Apex)) return true;
             }
         }
         return false;
     }
 
-    public boolean hasWaterAround(Animals owner) {
-        List<Chunk> chunks = getVisibleChunks(owner.getPosition());
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            for (Entity e : c.getEntityList()) {
-                if (e instanceof Water) return true;
-            }
-        }
-        return false;
-    }
-
-    boolean isThreateningEnemy(Animals owner, Animals other) {
+    private boolean isThreateningEnemy(Animals owner, Animals other) {
         if (other == owner) return false;
         if (!(other instanceof entities.attributes.Carnivore)) return false;
-
-        // Elephants are not threatened by anyone in this simulation context
-        if (owner instanceof entities.Elephant) return false;
 
         if (owner instanceof entities.attributes.Carnivore) {
             return other.getAttackDamage() > owner.getAttackDamage();
         }
 
         return true;
-    }
-
-    boolean isPrey(Animals owner, Animals other) {
-        if (other == owner || !other.checkAlive()) return false;
-        if (!(owner instanceof entities.attributes.Carnivore)) return false;
-
-        // Carnivore only eat entities that extend herbivore and smaller (in SIZE) carnivores except for elephants
-        if (other instanceof entities.attributes.Herbivore) return true;
-
-        if (other instanceof entities.attributes.Carnivore) {
-            if (other instanceof entities.Elephant) return false;
-            // Check if smaller in SIZE. Enum Size: SMALL(1), MEDIUM(2), LARGE(5).
-            // ordinal() can be used: SMALL is 0, MEDIUM is 1, LARGE is 2.
-            return other.getSize().ordinal() < owner.getSize().ordinal();
-        }
-
-        return false;
     }
 
     public List<Chunk> getVisibleChunks(Position pos) {
@@ -155,7 +129,7 @@ public class MapSystem {
             if (c == null) continue;
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
-                    if (e instanceof Animals other && isPrey(owner, other)) out.add(other);
+                    if (e instanceof Animals other && e != owner && other instanceof entities.attributes.Herbivore && !(other instanceof entities.attributes.Apex)) out.add(other);
                 }
             }
         }
@@ -205,7 +179,6 @@ public class MapSystem {
             if (c == null) continue;
             // Use pre-calculated water positions
             out.addAll(c.getWaterPositions());
-            
             // Also check for Water entities (e.g., spawned ones if any, though usually it's terrain)
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
@@ -218,61 +191,79 @@ public class MapSystem {
         return out;
     }
 
-    public List<Position> getFoodInChunks(List<Chunk> chunks, Animals owner) {
+    /**
+     * Get water positions that are on the shore (adjacent to land).
+     * Useful for terrestrial animals to drink from the edge without entering water.
+     */
+    public List<Position> getShoreWaterPositions(List<Chunk> chunks) {
+        List<Position> waterPositions = getWaterInChunks(chunks);
+        List<Position> shorePositions = new ArrayList<>();
+        
+        if (waterPositions == null || waterPositions.isEmpty()) return shorePositions;
+        
+        // For each water position, check if it's adjacent to land
+        for (Position waterPos : waterPositions) {
+            if (isShorePosition(waterPos)) {
+                shorePositions.add(waterPos);
+            }
+        }
+        
+        return shorePositions;
+    }
+
+    public Position getClosestShoreWater(Position from, List<Chunk> chunks) {
+        List<Position> shoreWater = getShoreWaterPositions(chunks);
+        return getClosestPosition(from, shoreWater);
+    }
+    /**
+     * Check if a position is on the shore (water adjacent to land).
+     */
+    private boolean isShorePosition(Position pos) {
+        if (pos == null || worldMap == null) return false;
+        
+        try {
+            Terrain waterTerrain = worldMap.getTile(pos.getX(), pos.getY());
+            if (waterTerrain == null || !waterTerrain.isWater()) return false;
+            
+            // Check all 8 adjacent positions for non-water land
+            int[][] directions = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1},           {0, 1},
+                {1, -1},  {1, 0},  {1, 1}
+            };
+            
+            for (int[] dir : directions) {
+                int adjX = pos.getX() + dir[0];
+                int adjY = pos.getY() + dir[1];
+                
+                // Check bounds
+                if (adjX < 0 || adjX >= WorldMap.SIZE || adjY < 0 || adjY >= WorldMap.SIZE) continue;
+                
+                Terrain adjTerrain = worldMap.getTile(adjX, adjY);
+                // If adjacent position is non-water and passable, this is shore
+                if (adjTerrain != null && adjTerrain.isPassable() && !adjTerrain.isWater()) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        
+        return false;
+    }
+
+    public List<Position> getFoodInChunks(List<Chunk> chunks) {
         List<Position> out = new ArrayList<>();
         if (chunks == null) return out;
         for (Chunk c : chunks) {
             if (c == null) continue;
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
-                    if (e instanceof Food && !(e instanceof Water)) {
-                        if (e instanceof entities.Trees || e instanceof entities.Bush) {
-                            if (owner instanceof entities.Elephant) {
-                                out.add(Position.of(e.getX(), e.getY()));
-                            }
-                        } else {
-                            out.add(Position.of(e.getX(), e.getY()));
-                        }
-                    }
-                }
-            }
-        }
-        return out;
-    }
-
-    public List<Position> getGrassInChunks(List<Chunk> chunks) {
-        List<Position> out = new ArrayList<>();
-        if (chunks == null || worldMap == null) return out;
-        
-        Chunk[][] chunkMap = worldMap.chunkMap;
-        if (chunkMap == null) return out;
-
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            
-            // Find coordinates of this chunk
-            int cx = -1, cy = -1;
-            for (int y = 0; y < chunkMap.length; y++) {
-                for (int x = 0; x < chunkMap[0].length; x++) {
-                    if (chunkMap[y][x] == c) {
-                        cx = x; cy = y;
-                        break;
-                    }
-                }
-                if (cx != -1) break;
-            }
-
-            if (cx != -1) {
-                int startX = cx * WorldMap.CHUNK_SIZE;
-                int startY = cy * WorldMap.CHUNK_SIZE;
-                for (int y = startY; y < startY + WorldMap.CHUNK_SIZE; y++) {
-                    for (int x = startX; x < startX + WorldMap.CHUNK_SIZE; x++) {
-                        if (x >= 0 && x < WorldMap.SIZE && y >= 0 && y < WorldMap.SIZE) {
-                            Terrain t = worldMap.getTile(x, y);
-                            if (t != null && t.isGrass()) {
-                                out.add(Position.of(x, y));
-                            }
-                        }
+                    // Exclude Bush and Trees - they are not food for animals anymore
+                    if ((e instanceof Food || e instanceof entities.base.ResourceEntity) 
+                        && !(e instanceof Bush) 
+                        && !(e instanceof Trees)) {
+                        out.add(Position.of(e.getX(), e.getY()));
                     }
                 }
             }
@@ -299,15 +290,6 @@ public class MapSystem {
         if (chunk != null) chunk.removeEntity(entity);
     }
 
-    public Terrain getTerrainAt(Position pos) {
-        if (worldMap == null || pos == null) return null;
-        try {
-            return worldMap.getTile(pos.getX(), pos.getY());
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public Position getClosestPosition(Position from, List<Position> list) {
         if (list == null || list.isEmpty()) return null;
         Position best = null; int bestDist = Integer.MAX_VALUE;
@@ -319,32 +301,32 @@ public class MapSystem {
     }
 
     public Position getSafeRandomChunkPosition(List<Chunk> chunks, Animals owner) {
-        if (chunks == null || chunks.isEmpty()) return owner.getPosition();
-
-        // If thirsty, try to move towards water using heat map
-        if (owner.getThirstPercentage() < 60) {
-            Chunk bestChunk = getBestWaterChunk(chunks);
-            if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
-                return getRandomWalkablePosInChunk(bestChunk);
-            }
-        }
-
-        Chunk c = chunks.get(rand.nextInt(chunks.size()));
-        if (c == null) return owner.getPosition();
-        return getRandomWalkablePosInChunk(c);
-    }
-
-    public Chunk getBestWaterChunk(List<Chunk> chunks) {
         if (chunks == null || chunks.isEmpty()) return null;
-        Chunk bestChunk = null;
-        int minDistance = Integer.MAX_VALUE;
-        for (Chunk c : chunks) {
-            if (c != null && c.getDistanceToWater() < minDistance) {
-                minDistance = c.getDistanceToWater();
-                bestChunk = c;
+        if (owner == null) return null;
+
+        boolean isAquatic = owner instanceof entities.attributes.Aquatic;
+
+        // If thirsty, try to move towards water (only for aquatic animals)
+        if (owner.getThirstPercentage() < 60 && isAquatic) {
+            Chunk bestChunk = getBestWaterChunk(chunks, owner);
+            if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
+                Position suitablePos = getRandomSuitablePosInChunk(bestChunk, owner);
+                if (suitablePos != null) return suitablePos;
             }
         }
-        return bestChunk;
+
+        // Try multiple chunks to find suitable position
+        List<Chunk> shuffledChunks = new ArrayList<>(chunks);
+        java.util.Collections.shuffle(shuffledChunks);
+        
+        for (Chunk c : shuffledChunks) {
+            if (c == null) continue;
+            Position suitablePos = getRandomSuitablePosInChunk(c, owner);
+            if (suitablePos != null) return suitablePos;
+        }
+
+        // No suitable position found - stay in place rather than risk wrong terrain
+        return owner.getPosition();
     }
 
     public Position getRandomWalkablePosInChunk(Position pos) {
@@ -427,25 +409,6 @@ public class MapSystem {
         return out;
     }
 
-    public List<Position> getNearbyFoodPositions(Position center, int radiusChunks) {
-        List<Position> out = new ArrayList<>();
-        for (Entity e : getEntitiesInNearbyChunks(center, radiusChunks)) {
-            if (e instanceof Food) out.add(Position.of(e.getX(), e.getY()));
-        }
-        return out;
-    }
-
-    public List<Animals> getNearbyEnemyAnimals(Position center, int radiusChunks, Animals owner) {
-        List<Animals> out = new ArrayList<>();
-        for (Entity e : getEntitiesInNearbyChunks(center, radiusChunks)) {
-            if (e instanceof Animals) {
-                Animals a = (Animals) e;
-                if (owner == null || a != owner) out.add(a);
-            }
-        }
-        return out;
-    }
-
     private int distance(Position center, Entity entity) {
         if (center == null || entity == null) return Integer.MAX_VALUE;
         return Math.abs(center.getX() - entity.getX()) + Math.abs(center.getY() - entity.getY());
@@ -481,5 +444,148 @@ public class MapSystem {
             Terrain t = worldMap.getTile(p.getX(), p.getY());
             return t != null && t.isPassable();
         } catch (Exception e) { return false; }
+    }
+
+    /**
+     * Check if terrain at position is suitable for the given animal.
+     * Aquatic animals ONLY work in water; terrestrial animals avoid water.
+     */
+    public boolean isTerrainSuitableForAnimal(Position p, Animals owner) {
+        if (worldMap == null || p == null || owner == null) return true;
+        try {
+            Terrain t = worldMap.getTile(p.getX(), p.getY());
+            if (t == null || !t.isPassable()) return false;
+            
+            boolean isAquatic = owner instanceof entities.attributes.Aquatic;
+            // Aquatic animals MUST be in water - grass/forest/mountain are all non-passable
+            if (isAquatic) {
+                return t.isWater();
+            }
+            // Terrestrial animals should NOT be in water
+            return !t.isWater();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Filter positions suitable for an animal based on terrain and animal type.
+     */
+    public List<Position> filterSuitablePositions(List<Position> positions, Animals owner) {
+        List<Position> suitable = new ArrayList<>();
+        if (positions == null || owner == null) return suitable;
+        
+        for (Position p : positions) {
+            if (isTerrainSuitableForAnimal(p, owner)) {
+                suitable.add(p);
+            }
+        }
+        return suitable;
+    }
+
+    /**
+     * Get closest position that is suitable for the animal.
+     */
+    public Position getClosestSuitablePosition(Position from, List<Position> list, Animals owner) {
+        List<Position> suitable = filterSuitablePositions(list, owner);
+        return getClosestPosition(from, suitable);
+    }
+
+    /**
+     * Get random walkable position in chunk that is suitable for the animal.
+     */
+    public Position getRandomSuitablePosInChunk(Chunk chunk, Animals owner) {
+        if (chunk == null || worldMap == null || owner == null) return null;
+        try {
+            Field f = WorldMap.class.getDeclaredField("chunkMap");
+            f.setAccessible(true);
+            Chunk[][] chunkMap = (Chunk[][]) f.get(worldMap);
+            boolean isAquatic = owner instanceof entities.attributes.Aquatic;
+            
+            for (int cy = 0; cy < chunkMap.length; cy++) {
+                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
+                    if (chunkMap[cy][cx] == chunk) {
+                        int startX = cx * WorldMap.CHUNK_SIZE;
+                        int startY = cy * WorldMap.CHUNK_SIZE;
+                        for (int attempt = 0; attempt < 100; attempt++) {
+                            int rx = startX + rand.nextInt(WorldMap.CHUNK_SIZE);
+                            int ry = startY + rand.nextInt(WorldMap.CHUNK_SIZE);
+                            Terrain t = worldMap.getTile(rx, ry);
+                            if (t != null && t.isPassable()) {
+                                // Check terrain suitability
+                                boolean isSuitable = isAquatic ? t.isWater() : !t.isWater();
+                                if (isSuitable) {
+                                    return Position.of(rx, ry);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {}
+        return null;
+    }
+
+    /**
+     * Get best water chunk for an animal (suitable for aquatic animals).
+     * Aquatic animals should seek water; terrestrial animals should not.
+     */
+    public Chunk getBestWaterChunk(List<Chunk> chunks, Animals owner) {
+        if (chunks == null || chunks.isEmpty() || owner == null) return null;
+        
+        boolean isAquatic = owner instanceof entities.attributes.Aquatic;
+        // Only aquatic animals should seek water
+        if (!isAquatic) return null;
+        
+        Chunk bestChunk = null;
+        int minDistance = Integer.MAX_VALUE;
+        for (Chunk c : chunks) {
+            if (c != null && c.getDistanceToWater() < minDistance) {
+                minDistance = c.getDistanceToWater();
+                bestChunk = c;
+            }
+        }
+        return bestChunk;
+    }
+
+    // Trả về danh sách tiềm năng bạn đời gần vị trí nhất: cùng loài, trong tầm nhìn
+    public List<Animals> getPotentialMatesInChunks(List<Chunk> chunks, Animals owner) {
+        List<Animals> potentialMates = new ArrayList<>();
+        if (chunks == null || owner == null) return potentialMates;
+
+        for (Chunk c : chunks) {
+            if (c == null) continue;
+            synchronized (c.getEntityList()) {
+                for (Entity e : c.getEntityList()) {
+                    if (e instanceof Animals other && other != owner && other.getClass() == owner.getClass()) {
+                        potentialMates.add(other);
+                    }
+                }
+            }
+        }
+        return potentialMates;
+    }
+    // Trả về nơi trống xung quanh để tạo ra hậu duệ
+    public Position findNearbyFreePosition(Position from, int radius) {
+        if (worldMap == null || from == null) return null;
+        for (int r = 1; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dy = -r; dy <= r; dy++) {
+                    int nx = from.getX() + dx;
+                    int ny = from.getY() + dy;
+                    Position candidate = Position.of(nx, ny);
+                    if (isWalkable(candidate) && getEntityAt(candidate) == null) {
+                        return candidate;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public void addEntity(Entity entity) {
+        if (worldMap == null || entity == null) return;
+        Chunk chunk = getChunkAt(Position.of(entity.getX(), entity.getY()));
+        if (chunk != null) chunk.addEntity(entity);
     }
 }

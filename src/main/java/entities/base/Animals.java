@@ -6,12 +6,13 @@ import java.util.Random;
 import allEnum.Size;
 import allEnum.State;
 import brain.strategy.MoveStrategy;
+import core.TimeSystem;
 
 public abstract class Animals extends Entity {
     protected double hunger = 100;
     protected double thirst = 100;
     protected Size size;
-    protected State state; // dùng để quyết định moveStrategy
+    protected State state; // hiện không dùng cho Strategy
     protected MoveStrategy moveStrategy;
     protected int defaultMoveCooldown; // thời gian hồi method di chuyển (chỉ để lưu)
     protected int currentMoveCooldown;// thời gian hồi method di chuyển (chỉ để tính toán sau mỗi chu kì clock)
@@ -20,6 +21,12 @@ public abstract class Animals extends Entity {
     protected double waterEfficiency; // hệ số hiệu quả tiêu thụ nước
     protected int hungerRecoveryAmount = 10;
     protected int thirstRecoveryAmount = 10;
+    // Cho việc giao phối
+    protected long lastMatingTime = 0; // thời điểm giao phối cuối cùng (tính bằng ticks)
+    protected long matingCooldown = 5000; // thời gian tối thiểu giữa hai lần giao phối (tính bằng ticks)
+    protected int matingMonthStart = 1; // tháng bắt đầu mùa giao phối
+    protected int matingMonthEnd = 4; // tháng kết thúc mùa giao phối
+    protected int matingTimeCost; // Thời gian cần thiết để giao phối (tính bằng ticks)
     // Brain related helpers
     protected Object lockedTargetEntity = null;
     protected Position lastLockedTargetPos = null;
@@ -67,12 +74,7 @@ public abstract class Animals extends Entity {
     public boolean isSpeedUp() { return this.speedUp; }
 
     public int getOwnMaxSpeedCooldown() {
-        // Return a personal cooldown for speed-up actions
-        // If it's a Hunter, it should be 1.5 times faster: defaultMoveCooldown / 1.5
-        if (this.getMoveStrategyName().equals("HunterStrategy")) {
-            return Math.max(1, (int) Math.round(defaultMoveCooldown / 1.5));
-        }
-        // Fallback to 2x speed for other speed-up cases (like ScaredStrategy)
+        // Return a personal cooldown for speed-up actions; fallback to 1 tick
         return Math.max(1, defaultMoveCooldown / 2);
     }
 
@@ -119,12 +121,15 @@ public abstract class Animals extends Entity {
 
     public void updateHungerThirst(){ // cập nhật đói + khát
         double tickFactor = 1.0 / 25.0;
-        hunger -= (size.multiplier * 0.2 + 1 * (speedUp ? 0.6 : 0.5) * foodEfficiency) * tickFactor;
-        thirst -= (size.multiplier * 0.1 + 1 * (speedUp ? 0.6 : 0.5) * waterEfficiency) * tickFactor;
+        hunger -= (size.multiplier * 0.1 + 1 * (speedUp ? 0.75 : 0.5) * foodEfficiency) * tickFactor;
+        thirst -= (size.multiplier * 0.2 + 1 * (speedUp ? 1 : 0.5) * waterEfficiency) * tickFactor;
     }
 
     public abstract void makeSound();
 
+    public int getMatingTimeCost(){
+        return matingTimeCost;
+    }
     public double getHunger() {
         return hunger;
     }
@@ -164,4 +169,24 @@ public abstract class Animals extends Entity {
 
     // Expose default cooldown so external controllers (ActionManager) can use it
     public int getDefaultMoveCooldown() { return this.defaultMoveCooldown; }
+
+    // Check if the animal is currently in a state that allows mating
+    public boolean isMatable() {
+        if (lastMatingTime < matingCooldown) return false;
+        if (TimeSystem.getMonths() < matingMonthStart || TimeSystem.getMonths() > matingMonthEnd) return false;
+        return true;
+    }
+
+    public void updateMatingCooldown() {
+        if (lastMatingTime < matingCooldown) {
+            lastMatingTime++;
+        }
+        if (lastMatingTime >= matingCooldown) {
+            lastMatingTime = matingCooldown + 10; // cap at cooldown (bonus 10)
+        }
+    }
+
+    public void recordMating() {
+        this.lastMatingTime = 0; // reset cooldown
+    }
 }
