@@ -50,11 +50,16 @@ public class ActionManager {
         }
 
         // ÁP DỤNG LOGIC COOLDOWN THEO ĐỀ BÀI:
+        double multiplier = 1.0;
+        try {
+            multiplier = mapSystem.getTerrainAt(nextStep).getSpeedMultiplier();
+        } catch (Exception ignored) {}
+
         if (owner.isSpeedUp()) {
             int cd = owner.getOwnMaxSpeedCooldown();
-            owner.setCurrentMoveCooldown(cd);
+            owner.setCurrentMoveCooldown((int) Math.round(cd / multiplier));
         } else {
-            owner.setCurrentMoveCooldown(owner.getDefaultMoveCooldown());
+            owner.setCurrentMoveCooldown((int) Math.round(owner.getDefaultMoveCooldown() / multiplier));
         }
         // `owner.setCurrentMoveCooldown` already updated above.
     }
@@ -86,6 +91,12 @@ public class ActionManager {
         owner.increaseHunger(hungerGain);
         owner.increaseHydration(thirstGain);
         owner.setCurrentMoveCooldown(1); // Ăn thỏ cũng instant kill, không dùng cơ chế HP/attack
+    }
+
+    public void eatGrass() {
+        owner.increaseHunger(10);
+        owner.increaseHydration(5);
+        owner.setCurrentMoveCooldown(1);
     }
 
     public void drink() {

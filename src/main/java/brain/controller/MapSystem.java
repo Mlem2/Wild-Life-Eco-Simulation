@@ -70,7 +70,7 @@ public class MapSystem {
         for (Chunk c : chunks) {
             if (c == null) continue;
             for (Entity e : c.getEntityList()) {
-                if (e instanceof Animals && e != owner && e instanceof entities.attributes.Herbivore) return true;
+                if (e instanceof Animals other && isPrey(owner, other)) return true;
             }
         }
         return false;
@@ -87,15 +87,35 @@ public class MapSystem {
         return false;
     }
 
-    private boolean isThreateningEnemy(Animals owner, Animals other) {
+    boolean isThreateningEnemy(Animals owner, Animals other) {
         if (other == owner) return false;
         if (!(other instanceof entities.attributes.Carnivore)) return false;
+
+        // Elephants are not threatened by anyone in this simulation context
+        if (owner instanceof entities.Elephant) return false;
 
         if (owner instanceof entities.attributes.Carnivore) {
             return other.getAttackDamage() > owner.getAttackDamage();
         }
 
         return true;
+    }
+
+    boolean isPrey(Animals owner, Animals other) {
+        if (other == owner || !other.checkAlive()) return false;
+        if (!(owner instanceof entities.attributes.Carnivore)) return false;
+
+        // Carnivore only eat entities that extend herbivore and smaller (in SIZE) carnivores except for elephants
+        if (other instanceof entities.attributes.Herbivore) return true;
+
+        if (other instanceof entities.attributes.Carnivore) {
+            if (other instanceof entities.Elephant) return false;
+            // Check if smaller in SIZE. Enum Size: SMALL(1), MEDIUM(2), LARGE(5).
+            // ordinal() can be used: SMALL is 0, MEDIUM is 1, LARGE is 2.
+            return other.getSize().ordinal() < owner.getSize().ordinal();
+        }
+
+        return false;
     }
 
     public List<Chunk> getVisibleChunks(Position pos) {
@@ -135,7 +155,7 @@ public class MapSystem {
             if (c == null) continue;
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
-                    if (e instanceof Animals other && e != owner && other instanceof entities.attributes.Herbivore) out.add(other);
+                    if (e instanceof Animals other && isPrey(owner, other)) out.add(other);
                 }
             }
         }
@@ -198,15 +218,61 @@ public class MapSystem {
         return out;
     }
 
-    public List<Position> getFoodInChunks(List<Chunk> chunks) {
+    public List<Position> getFoodInChunks(List<Chunk> chunks, Animals owner) {
         List<Position> out = new ArrayList<>();
         if (chunks == null) return out;
         for (Chunk c : chunks) {
             if (c == null) continue;
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
-                    if (e instanceof Food || e instanceof entities.base.ResourceEntity) {
-                        out.add(Position.of(e.getX(), e.getY()));
+                    if (e instanceof Food && !(e instanceof Water)) {
+                        if (e instanceof entities.Trees || e instanceof entities.Bush) {
+                            if (owner instanceof entities.Elephant) {
+                                out.add(Position.of(e.getX(), e.getY()));
+                            }
+                        } else {
+                            out.add(Position.of(e.getX(), e.getY()));
+                        }
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    public List<Position> getGrassInChunks(List<Chunk> chunks) {
+        List<Position> out = new ArrayList<>();
+        if (chunks == null || worldMap == null) return out;
+        
+        Chunk[][] chunkMap = worldMap.chunkMap;
+        if (chunkMap == null) return out;
+
+        for (Chunk c : chunks) {
+            if (c == null) continue;
+            
+            // Find coordinates of this chunk
+            int cx = -1, cy = -1;
+            for (int y = 0; y < chunkMap.length; y++) {
+                for (int x = 0; x < chunkMap[0].length; x++) {
+                    if (chunkMap[y][x] == c) {
+                        cx = x; cy = y;
+                        break;
+                    }
+                }
+                if (cx != -1) break;
+            }
+
+            if (cx != -1) {
+                int startX = cx * WorldMap.CHUNK_SIZE;
+                int startY = cy * WorldMap.CHUNK_SIZE;
+                for (int y = startY; y < startY + WorldMap.CHUNK_SIZE; y++) {
+                    for (int x = startX; x < startX + WorldMap.CHUNK_SIZE; x++) {
+                        if (x >= 0 && x < WorldMap.SIZE && y >= 0 && y < WorldMap.SIZE) {
+                            Terrain t = worldMap.getTile(x, y);
+                            if (t != null && t.isGrass()) {
+                                out.add(Position.of(x, y));
+                            }
+                        }
                     }
                 }
             }
@@ -231,6 +297,15 @@ public class MapSystem {
         if (entity == null) return;
         Chunk chunk = getChunkAt(Position.of(entity.getX(), entity.getY()));
         if (chunk != null) chunk.removeEntity(entity);
+    }
+
+    public Terrain getTerrainAt(Position pos) {
+        if (worldMap == null || pos == null) return null;
+        try {
+            return worldMap.getTile(pos.getX(), pos.getY());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public Position getClosestPosition(Position from, List<Position> list) {

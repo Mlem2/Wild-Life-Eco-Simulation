@@ -4,7 +4,7 @@ import allEnum.Size;
 import entities.attributes.Herbivore;
 import entities.base.Animals;
 
-public class Fish extends Animals implements Herbivore {
+public class Fish extends Animals {
 
     public Fish(int x, int y){
         super(x,y);

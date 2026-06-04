@@ -16,14 +16,14 @@ public class EntityMap {
     );
 
     private final Map<String, Integer> forestSpawns = Map.of(
-            "wolf", 3,
-            "rabbit", 1,
+            "wolf", 2,
+            "rabbit", 10,
             "tree", 200,
             "bush", 60
     );
 
     private final Map<String, Integer> grasslandSpawns = Map.of(
-            "rabbit", 5,
+            "rabbit", 50,
             "wolf", 1,
             "elephant", 1,
             "tree", 10,

@@ -4,6 +4,7 @@ import brain.pathfinder.Pathfinder;
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
 import entities.Bush;
+import entities.Food;
 import entities.Trees;
 import entities.base.Animals;
 import entities.base.Entity;
@@ -64,7 +65,7 @@ public class SimulationManager {
 
     private void updateTimeSystem() {
         try {
-            int m = core.TimeSystem.minute + 5;
+            int m = core.TimeSystem.minute + 30;
             if (m >= 60) {
                 m = 0;
                 core.TimeSystem.hour++;
@@ -201,11 +202,23 @@ public class SimulationManager {
                                     }
                                 } catch (Exception ignored) {}
 
-                                // Herbivore logic
+                                // Eating logic (Moved mostly to Brain, keeping minimal here for non-brain entities if any)
                                 for (int j = entityList.size() - 1; j >= 0; j--) {
                                     Entity target = entityList.get(j);
                                     if (target != null && target != animal && target.getX() == animal.getX() && target.getY() == animal.getY()) {
-                                        if (animal instanceof entities.attributes.Herbivore && (target instanceof Bush || target instanceof Trees)) {
+                                        boolean canEat = false;
+                                        if (animal instanceof entities.Elephant) {
+                                            if (target instanceof Bush || target instanceof Trees) {
+                                                canEat = true;
+                                            }
+                                        } else if (animal instanceof entities.attributes.Herbivore) {
+                                            // Non-elephant herbivores no longer eat trees and bushes
+                                            if (target instanceof Food && !(target instanceof Bush || target instanceof Trees)) {
+                                                canEat = true;
+                                            }
+                                        }
+
+                                        if (canEat) {
                                             try {
                                                 Field fieldHunger = Animals.class.getDeclaredField("hunger");
                                                 Field fieldThirst = Animals.class.getDeclaredField("thirst");
@@ -222,6 +235,22 @@ public class SimulationManager {
                                             } catch (Exception ignored) {}
                                         }
                                     }
+                                }
+
+                                // Herbivore grass eating from terrain
+                                if (animal instanceof entities.attributes.Herbivore) {
+                                    try {
+                                        core.enviroment.Terrain terrain = worldMap.getTile(animal.getX(), animal.getY());
+                                        if (terrain != null && terrain.isGrass()) {
+                                            Field fieldHunger = Animals.class.getDeclaredField("hunger");
+                                            Field fieldThirst = Animals.class.getDeclaredField("thirst");
+                                            fieldHunger.setAccessible(true);
+                                            fieldThirst.setAccessible(true);
+
+                                            fieldHunger.set(animal, Math.min(100.0, (double) fieldHunger.get(animal) + 10.0));
+                                            fieldThirst.set(animal, Math.min(100.0, (double) fieldThirst.get(animal) + 5.0));
+                                        }
+                                    } catch (Exception ignored) {}
                                 }
 
 

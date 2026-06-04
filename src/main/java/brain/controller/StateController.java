@@ -30,6 +30,7 @@ public class StateController {
             return;
         }
 
+        // Herbivores prioritize Scared over Priority
         if (shouldPrioritize(animal, visibleEntities)) {
             setStrategy(animal, State.PRIORITIZE, new PriorityStrategy());
             return;
@@ -61,8 +62,18 @@ public class StateController {
             return false;
         }
 
-        return TargetScanner.findNearest(animal, visibleEntities, 50, entity -> entity instanceof Tree) != null
-                && (animal.getHunger() < 70 || animal.getThirst() < 70);
+        boolean hasFoodNearby = TargetScanner.findNearest(animal, visibleEntities, 50, entity -> {
+            if (entity instanceof Tree) {
+                return animal instanceof entities.Elephant;
+            }
+            return (entity instanceof entities.Food && !(entity instanceof entities.Water));
+        }) != null;
+
+        // If no entity food, check if there's grass nearby (simplified check here as we don't have MapSystem easily accessible without changing signature)
+        // But StateController is used in AnimalBrainUpdate which has MapSystem.
+        // Actually updateState is called with visibleEntities.
+        
+        return (hasFoodNearby) && (animal.getHunger() < 70 || animal.getThirst() < 70);
     }
 
     // Logic để quyết định khi nào nên săn mồi hoặc bỏ chạy. Có thể mở rộng thêm các yếu tố như sức khỏe, tuổi tác, v.v.
@@ -74,8 +85,21 @@ public class StateController {
             return false;
         }
 
-        return TargetScanner.findNearest(animal, visibleEntities, 40, entity -> entity instanceof Herbivore) != null
-                && animal.getHunger() < 80;
+        // We need to check if any of visibleEntities is a prey according to new rules.
+        // Since we don't have MapSystem here, we'll do a simplified check matching MapSystem.isPrey
+        boolean hasPreyNearby = TargetScanner.findNearest(animal, visibleEntities, 40, entity -> {
+            if (entity instanceof Animals other) {
+                if (other == animal || !other.checkAlive()) return false;
+                if (other instanceof Herbivore) return true;
+                if (other instanceof Carnivore) {
+                    if (other instanceof entities.Elephant) return false;
+                    return other.getSize().ordinal() < animal.getSize().ordinal();
+                }
+            }
+            return false;
+        }) != null;
+
+        return hasPreyNearby && animal.getHunger() < 80;
     }
     private boolean shouldFlee(Animals animal, List<Entity> visibleEntities) {
         if (!(animal instanceof Herbivore)) {
@@ -96,7 +120,18 @@ public class StateController {
             return false;
         }
 
-        return TargetScanner.findNearest(animal, visibleEntities, 50, entity -> entity instanceof Herbivore) != null
-                && animal.getHunger() < 90;
+        boolean hasPreyNearby = TargetScanner.findNearest(animal, visibleEntities, 50, entity -> {
+            if (entity instanceof Animals other) {
+                if (other == animal || !other.checkAlive()) return false;
+                if (other instanceof Herbivore) return true;
+                if (other instanceof Carnivore) {
+                    if (other instanceof entities.Elephant) return false;
+                    return other.getSize().ordinal() < animal.getSize().ordinal();
+                }
+            }
+            return false;
+        }) != null;
+
+        return hasPreyNearby && animal.getHunger() < 90;
     }
 }

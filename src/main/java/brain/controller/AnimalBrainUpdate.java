@@ -45,10 +45,10 @@ public class AnimalBrainUpdate {
 
     public void update() {
         // 1. Ưu tiên hành động ăn/đánh ngay lập tức nếu có mục tiêu gần, kể cả khi đang trong cooldown di chuyển.
-        if (consumeNearbyTarget()) {
-            currentPath.clear();
-            return;
-        }
+//        if (consumeNearbyTarget()) {
+//            currentPath.clear();
+//            return;
+//        }
 
         // 2. Kiểm tra Cooldown di chuyển/hành động từ ActionManager
         if (!actionManager.isAvailable()) return;
@@ -91,6 +91,12 @@ public class AnimalBrainUpdate {
                 actionManager.drink((Water) targetEntity);
             } else if (targetEntity instanceof Animals) {
                 actionManager.eat((Animals) targetEntity); // Ăn mồi ngay lập tức, không dùng cơ chế HP/attack
+            } else {
+                // Check if it's grass terrain
+                core.enviroment.Terrain terrain = actionManager.getMapSystem().getTerrainAt(owner.getPosition());
+                if (terrain != null && terrain.isGrass() && owner instanceof entities.attributes.Herbivore) {
+                    actionManager.eatGrass();
+                }
             }
             currentPath.clear(); // Xóa đường đi cũ sau khi đã hành động xong
             return;
@@ -129,6 +135,14 @@ public class AnimalBrainUpdate {
         for (Entity entity : currentTileEntities) {
             if (entity == null || entity == owner) continue;
             if (entity instanceof Food && !(entity instanceof Water)) {
+                // Only elephants eat trees and bushes
+                if (entity instanceof entities.Trees || entity instanceof entities.Bush) {
+                    if (owner instanceof entities.Elephant) {
+                        foodTarget = entity;
+                        break;
+                    }
+                    continue;
+                }
                 foodTarget = entity;
                 break;
             }
@@ -136,7 +150,10 @@ public class AnimalBrainUpdate {
                 waterTarget = entity;
             }
             if (entity instanceof Animals && entity != owner) {
-                preyTarget = entity;
+                // Use MapSystem.isPrey for consistency
+                if (mapSystem.isPrey(owner, (Animals) entity)) {
+                    preyTarget = entity;
+                }
             }
         }
 
@@ -151,10 +168,28 @@ public class AnimalBrainUpdate {
 
         List<Entity> nearbyEntities = mapSystem.getEntitiesWithinRadius(owner.getPosition(), CONSUME_RADIUS);
 
-        Entity foodTarget = findNearestTarget(nearbyEntities, entity -> entity instanceof Food && !(entity instanceof Water), false);
+        Entity foodTarget = findNearestTarget(nearbyEntities, entity -> {
+            if (entity instanceof Food && !(entity instanceof Water)) {
+                if (entity instanceof entities.Trees || entity instanceof entities.Bush) {
+                    return owner instanceof entities.Elephant;
+                }
+                return true;
+            }
+            return false;
+        }, false);
+
         if (foodTarget instanceof Food food) {
             actionManager.eat(food);
             return true;
+        }
+
+        // Herbivores eat grass if on a grass tile
+        if (owner instanceof entities.attributes.Herbivore) {
+            core.enviroment.Terrain terrain = mapSystem.getTerrainAt(owner.getPosition());
+            if (terrain != null && terrain.isGrass()) {
+                actionManager.eatGrass();
+                return true;
+            }
         }
 
         Entity waterTarget = findNearestTarget(nearbyEntities, entity -> entity instanceof Water, false);
@@ -171,7 +206,12 @@ public class AnimalBrainUpdate {
         }
 
         if (owner instanceof entities.attributes.Carnivore) {
-            Entity preyTarget = findNearestTarget(nearbyEntities, entity -> entity instanceof Animals other && other != owner && other instanceof entities.attributes.Herbivore, true);
+            Entity preyTarget = findNearestTarget(nearbyEntities, entity -> {
+                if (entity instanceof Animals other) {
+                    return mapSystem.isPrey(owner, other);
+                }
+                return false;
+            }, true);
             if (preyTarget instanceof Animals prey) {
                 actionManager.eat(prey);
                 return true;
