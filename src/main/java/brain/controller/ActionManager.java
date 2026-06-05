@@ -30,6 +30,19 @@ public class ActionManager {
     public void move(Position nextStep) {
         if (!mapSystem.isWalkable(nextStep)) return;
 
+        // Fish constraint: only water. Others: everything but water (mostly)
+        // Actually, land animals CAN go to water if they want to (Hunter/Priority drink),
+        // but the previous requirement was specifically for PassiveStrategy to avoid water.
+        // However, THIS requirement says "fishes can't go on land". This sounds like a hard constraint.
+        core.enviroment.Terrain targetTerrain = mapSystem.getTerrainAt(nextStep);
+        if (owner instanceof entities.Fish) {
+            if (targetTerrain != null && !targetTerrain.isWater()) return;
+        } else {
+            // If we want to strictly prevent land animals from entering water AT ALL (not just passive), we'd put it here.
+            // But the previous task only asked for Passive strategy. 
+            // The current task is "fishes can't go on land", which I'll enforce here.
+        }
+
         // Update chunk membership: compute old/new chunks, move the entity between them if needed
         Chunk oldChunk = null;
         Chunk newChunk = null;
@@ -114,5 +127,27 @@ public class ActionManager {
 
     public void attack(Animals prey) {
         eat(prey);
+    }
+
+    public void mate(Animals partner) {
+        if (partner == null) return;
+        // Basic check, in case someone else already mated with them or they are not ready anymore
+        if (!owner.isReadyToMate() || !partner.isReadyToMate()) return;
+
+        try {
+            // New animal is born at owner's position
+            Animals offspring = owner.getClass().getConstructor(int.class, int.class)
+                    .newInstance(owner.getX(), owner.getY());
+            mapSystem.addEntity(offspring);
+
+            // Reset mating urge and set cooldown for both parents
+            owner.setMatingCooldown(owner.getDefaultMatingCooldown());
+            partner.setMatingCooldown(partner.getDefaultMatingCooldown());
+
+            owner.lockTargetEntity(null);
+            owner.setCurrentMoveCooldown(10); // Mating takes some time
+        } catch (Exception e) {
+            // Error during mating
+        }
     }
 }

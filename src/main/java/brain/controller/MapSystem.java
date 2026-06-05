@@ -87,6 +87,34 @@ public class MapSystem {
         return false;
     }
 
+    public boolean hasMateAround(Animals owner) {
+        List<Chunk> chunks = getVisibleChunks(owner.getPosition());
+        for (Chunk c : chunks) {
+            if (c == null) continue;
+            for (Entity e : c.getEntityList()) {
+                if (e instanceof Animals other && isPotentialMate(owner, other)) return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Animals> getMatesInChunks(List<Chunk> chunks, Animals owner) {
+        List<Animals> res = new ArrayList<>();
+        for (Chunk c : chunks) {
+            if (c == null) continue;
+            for (Entity e : c.getEntityList()) {
+                if (e instanceof Animals other && isPotentialMate(owner, other)) res.add(other);
+            }
+        }
+        return res;
+    }
+
+    public boolean isPotentialMate(Animals owner, Animals other) {
+        if (other == owner || !other.checkAlive()) return false;
+        if (other.getClass() != owner.getClass()) return false;
+        return other.isReadyToMate();
+    }
+
     boolean isThreateningEnemy(Animals owner, Animals other) {
         if (other == owner) return false;
         if (!(other instanceof entities.attributes.Carnivore)) return false;
@@ -297,6 +325,12 @@ public class MapSystem {
         if (entity == null) return;
         Chunk chunk = getChunkAt(Position.of(entity.getX(), entity.getY()));
         if (chunk != null) chunk.removeEntity(entity);
+    }
+
+    public void addEntity(Entity entity) {
+        if (entity == null) return;
+        Chunk chunk = getChunkAt(Position.of(entity.getX(), entity.getY()));
+        if (chunk != null) chunk.addEntity(entity);
     }
 
     public Terrain getTerrainAt(Position pos) {

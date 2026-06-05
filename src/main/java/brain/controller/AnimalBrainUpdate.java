@@ -89,8 +89,12 @@ public class AnimalBrainUpdate {
                 actionManager.eat(food);
             } else if (targetEntity instanceof Water) {
                 actionManager.drink((Water) targetEntity);
-            } else if (targetEntity instanceof Animals) {
-                actionManager.eat((Animals) targetEntity); // Ăn mồi ngay lập tức, không dùng cơ chế HP/attack
+            } else if (targetEntity instanceof Animals other) {
+                if (actionManager.getMapSystem().isPotentialMate(owner, other)) {
+                    actionManager.mate(other);
+                } else {
+                    actionManager.eat(other); // Ăn mồi ngay lập tức, không dùng cơ chế HP/attack
+                }
             } else {
                 // Check if it's grass terrain
                 core.enviroment.Terrain terrain = actionManager.getMapSystem().getTerrainAt(owner.getPosition());
@@ -105,7 +109,7 @@ public class AnimalBrainUpdate {
         // 4. Nếu chưa đến đích -> Cập nhật đường đi và bắt ActionManager di chuyển
         // Nếu đường đi trống hoặc thực thể đích di chuyển (đối với con mồi chạy trốn)
         if (currentPath.isEmpty() || owner.hasLockedTargetMoved()) {
-            pathFinder.calculatePath(new Point(owner.getPosition().getX(), owner.getPosition().getY()), new Point(anchorTarget.getX(), anchorTarget.getY()), rawPath);
+            pathFinder.calculatePath(new Point(owner.getPosition().getX(), owner.getPosition().getY()), new Point(anchorTarget.getX(), anchorTarget.getY()), rawPath, owner);
             currentPath.clear();
             for (Point p : rawPath) currentPath.add(Position.of(p.x, p.y));
             // If path includes current position as first element, drop it so the animal advances
@@ -131,6 +135,7 @@ public class AnimalBrainUpdate {
         Entity foodTarget = null;
         Entity waterTarget = null;
         Entity preyTarget = null;
+        Entity mateTarget = null;
 
         for (Entity entity : currentTileEntities) {
             if (entity == null || entity == owner) continue;
@@ -150,13 +155,15 @@ public class AnimalBrainUpdate {
                 waterTarget = entity;
             }
             if (entity instanceof Animals && entity != owner) {
-                // Use MapSystem.isPrey for consistency
-                if (mapSystem.isPrey(owner, (Animals) entity)) {
+                if (mapSystem.isPotentialMate(owner, (Animals) entity)) {
+                    mateTarget = entity;
+                } else if (mapSystem.isPrey(owner, (Animals) entity)) {
                     preyTarget = entity;
                 }
             }
         }
 
+        if (mateTarget != null) return mateTarget;
         if (foodTarget != null) return foodTarget;
         if (waterTarget != null) return waterTarget;
         return preyTarget;

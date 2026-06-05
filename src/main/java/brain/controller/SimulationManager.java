@@ -143,6 +143,11 @@ public class SimulationManager {
 
                                     if (cooldown <= 0 && animal.checkAlive()) {
                                         AnimalBrainUpdate brain = brainMap.get(animal);
+                                        if (brain == null) {
+                                            registerBrainForEntity(animal);
+                                            brain = brainMap.get(animal);
+                                        }
+
                                         if (brain != null) {
                                             brain.update();
                                         } else {

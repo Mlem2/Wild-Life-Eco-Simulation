@@ -16,7 +16,7 @@ public class EntityMap {
     );
 
     private final Map<String, Integer> forestSpawns = Map.of(
-            "wolf", 2,
+            "wolf", 5,
             "rabbit", 10,
             "tree", 200,
             "bush", 60

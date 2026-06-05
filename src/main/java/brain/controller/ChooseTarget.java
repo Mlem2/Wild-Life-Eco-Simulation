@@ -2,6 +2,7 @@ package brain.controller;
 
 import brain.strategy.AggressiveStrategy;
 import brain.strategy.HunterStrategy;
+import brain.strategy.MateStrategy;
 import brain.strategy.MoveStrategy;
 import brain.strategy.PassiveStrategy;
 import brain.strategy.PriorityStrategy;
@@ -18,6 +19,7 @@ public class ChooseTarget {
     private final MoveStrategy priorityStrategy = new PriorityStrategy();
     private final MoveStrategy passiveStrategy = new PassiveStrategy();
     private final MoveStrategy hunterStrategy = new HunterStrategy();
+    private final MoveStrategy mateStrategy = new MateStrategy();
 
     private MoveStrategy currentStrategy;
     private Position currentTargetPos = null;
@@ -96,7 +98,13 @@ public class ChooseTarget {
             return;
         }
 
-        // 4. Mọi thứ ổn định -> Thư giãn
+        // 4. Mating strategy
+        if (owner.isReadyToMate() && mapSystem.hasMateAround(owner)) {
+            changeStrategy(mateStrategy);
+            return;
+        }
+
+        // 5. Mọi thứ ổn định -> Thư giãn
         changeStrategy(passiveStrategy);
     }
 

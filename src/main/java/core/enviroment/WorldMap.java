@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class WorldMap {
-    public static final int CHUNK_SIZE = 50;
+    public static final int CHUNK_SIZE = 25;
     protected static Terrain[][] worldMap;
     public final Chunk[][] chunkMap;
     public static int SIZE;

@@ -9,6 +9,7 @@ import entities.base.Tree;
 import brain.scanner.TargetScanner;
 import brain.strategy.AggressiveStrategy;
 import brain.strategy.HunterStrategy;
+import brain.strategy.MateStrategy;
 import brain.strategy.MoveStrategy;
 import brain.strategy.PassiveStrategy;
 import brain.strategy.PriorityStrategy;
@@ -43,6 +44,11 @@ public class StateController {
 
         if (shouldAggressive(animal, visibleEntities)) {
             setStrategy(animal, State.AGGRESSIVE, new AggressiveStrategy());
+            return;
+        }
+
+        if (shouldMate(animal, visibleEntities)) {
+            setStrategy(animal, State.MATE, new MateStrategy());
             return;
         }
 
@@ -133,5 +139,17 @@ public class StateController {
         }) != null;
 
         return hasPreyNearby && animal.getHunger() < 90;
+    }
+
+    private boolean shouldMate(Animals animal, List<Entity> visibleEntities) {
+        if (!animal.isReadyToMate()) return false;
+        if (visibleEntities == null) return false;
+
+        return TargetScanner.findNearest(animal, visibleEntities, 50, entity -> {
+            if (entity instanceof Animals other) {
+                return other.getClass() == animal.getClass() && other.isReadyToMate();
+            }
+            return false;
+        }) != null;
     }
 }
