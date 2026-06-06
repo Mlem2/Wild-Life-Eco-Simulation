@@ -150,13 +150,15 @@ public class Pathfinder {
 
     private final FastNodeHeap openSet = new FastNodeHeap(WorldMap.SIZE * WorldMap.SIZE);
 
-    public List<Point> calculatePath(Point start, Point end, List<Point> path) {
+    public List<Point> calculatePath(Point start, Point end, List<Point> path, entities.base.Animals owner) {
         if (path == null) {
             path = new ArrayList<>();
         }
         path.clear();
         if (start == null || end == null) return path;
         if (start.x == end.x && start.y == end.y) return path;
+
+        boolean isFish = (owner instanceof entities.Fish);
 
         currentRunID++;
         openSet.clear();
@@ -185,10 +187,15 @@ public class Pathfinder {
 
                 if (nextX < 0 || nextX >= size || nextY < 0 || nextY >= size) continue;
                 if (visitedWithRunId[nextY][nextX] == currentRunID) continue;
-                if (!worldMap.getTile(nextX, nextY).isPassable()) continue;
+                
+                core.enviroment.Terrain tile = worldMap.getTile(nextX, nextY);
+                if (!tile.isPassable()) continue;
+                
+                // Constraint: Fish must stay in water.
+                if (isFish && !tile.isWater()) continue;
 
                 double moveCost = (dir.x != 0 && dir.y != 0) ? DIAGONAL_COST : CARDINAL_COST;
-                double edgeWeight = moveCost / worldMap.getTile(nextX, nextY).getSpeedMultiplier();
+                double edgeWeight = moveCost / tile.getSpeedMultiplier();
                 double tentativeGCost = current.gCost + edgeWeight;
 
                 Node neighbor = nodeMap[nextY][nextX];

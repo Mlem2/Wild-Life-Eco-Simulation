@@ -15,11 +15,13 @@ public abstract class Animals extends Entity {
     protected MoveStrategy moveStrategy;
     protected int defaultMoveCooldown; // thời gian hồi method di chuyển (chỉ để lưu)
     protected int currentMoveCooldown;// thời gian hồi method di chuyển (chỉ để tính toán sau mỗi chu kì clock)
+    protected int defaultMatingCooldown; // default mating cooldown
     protected static Random random = new Random();
     protected double foodEfficiency; // hệ số hiệu quả tiêu thụ thức ăn
     protected double waterEfficiency; // hệ số hiệu quả tiêu thụ nước
     protected int hungerRecoveryAmount = 10;
     protected int thirstRecoveryAmount = 10;
+    protected int matingCooldown = 1000;
     // Brain related helpers
     protected Object lockedTargetEntity = null;
     protected Position lastLockedTargetPos = null;
@@ -107,6 +109,7 @@ public abstract class Animals extends Entity {
         currentMoveCooldown--;
         updateHungerThirst();
         age--;
+        if (matingCooldown > 0) matingCooldown--;
         if(age <= 0 || hunger <= 0 || thirst <= 0){
             this.isAlive = false;
         }
@@ -164,4 +167,9 @@ public abstract class Animals extends Entity {
 
     // Expose default cooldown so external controllers (ActionManager) can use it
     public int getDefaultMoveCooldown() { return this.defaultMoveCooldown; }
+    public int getDefaultMatingCooldown() { return this.defaultMatingCooldown; }
+
+    public int getMatingCooldown() { return matingCooldown; }
+    public void setMatingCooldown(int matingCooldown) { this.matingCooldown = matingCooldown; }
+    public boolean isReadyToMate() { return matingCooldown <= 0 && age > 1000; }
 }

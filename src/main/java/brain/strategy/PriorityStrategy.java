@@ -48,6 +48,13 @@ public class PriorityStrategy implements MoveStrategy {
         }
 
         // Nếu không tìm thấy tài nguyên cụ thể nào dù đang có nhu cầu -> Đi lang thang tìm kiếm
-        return mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
+        Position safePos = mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
+        if (owner instanceof entities.Fish) {
+            core.enviroment.Terrain t = mapSystem.getTerrainAt(safePos);
+            if (t != null && !t.isWater()) {
+                return owner.getPosition();
+            }
+        }
+        return safePos;
     }
 }
