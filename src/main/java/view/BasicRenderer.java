@@ -25,17 +25,14 @@ public class BasicRenderer {
     private Animals selectedAnimal;
     private Chunk selectedChunk;
 
-    // Cache to prevent recreating JavaFX Color objects from AWT colors
     private final Map<java.awt.Color, Color> colorCache = new HashMap<>();
 
-    // Cache the reflection fields once so we don't look them up inside loops
     private Field fieldHunger;
     private Field fieldThirst;
 
     public BasicRenderer(WorldMap worldMap) {
         this.worldMap = worldMap;
 
-        // Pre-initialize and cache your reflection lookup fields
         try {
             fieldHunger = Animals.class.getDeclaredField("hunger");
             fieldThirst = Animals.class.getDeclaredField("thirst");
@@ -56,7 +53,6 @@ public class BasicRenderer {
 
     private Color getCachedFxColor(java.awt.Color awtColor) {
         if (awtColor == null) return Color.BLACK;
-        // Compute if absent avoids object allocation if the color key already exists
         return colorCache.computeIfAbsent(awtColor, c -> Color.rgb(c.getRed(), c.getGreen(), c.getBlue()));
     }
 
@@ -76,8 +72,6 @@ public class BasicRenderer {
         for (int y = startY; y < endY; y++) {
             for (int x = startX; x < endX; x++) {
                 java.awt.Color awtColor = worldMap.getTile(x, y).getTerrainColor();
-
-                // CRITICAL FIX: Pull a reusable reference instead of allocating a 'new Color()'
                 Color fxColor = getCachedFxColor(awtColor);
 
                 gc.setFill(fxColor);
@@ -169,11 +163,9 @@ public class BasicRenderer {
                             gc.setLineWidth(1.0);
                         }
 
-                        // Optimized status bar render
                         if (entity instanceof Animals && scale >= 4.0 && fieldHunger != null && fieldThirst != null) {
                             Animals animal = (Animals) entity;
                             try {
-                                // CRITICAL FIX: Reusing pre-cached field lookups
                                 double h = (double) fieldHunger.get(animal);
                                 double t = (double) fieldThirst.get(animal);
                                 double bH = Math.max(1.5, scale * 0.15);
