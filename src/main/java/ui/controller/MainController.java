@@ -1,7 +1,6 @@
 package ui.controller;
 
 import javafx.fxml.FXML;
-import core.enviroment.WorldMap;
 import brain.controller.SimulationManager;
 
 public class MainController {
