@@ -81,6 +81,10 @@ public class ActionManager {
         return mapSystem;
     }
 
+    public static void setCooldown(Animals animal, int cooldown) {
+        animal.setCurrentMoveCooldown(cooldown);
+    }
+
     public void eat(Food food) {
         if (food == null) return;
 
