@@ -1,10 +1,10 @@
 package entities;
 
 import allEnum.Size;
-import entities.attributes.Herbivore;
+import entities.attributes.Aquatic;
 import entities.base.Animals;
 
-public class Fish extends Animals {
+public class Fish extends Animals implements Aquatic {
 
     public Fish(int x, int y){
         super(x,y);

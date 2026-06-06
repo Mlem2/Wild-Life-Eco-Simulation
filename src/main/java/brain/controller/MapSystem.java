@@ -389,6 +389,13 @@ public class MapSystem {
         return out != null ? out : pos;
     }
 
+    public Position getRandomWalkablePosInVisibleChunk(Position pos) {
+        List<Chunk> chunks = getVisibleChunks(pos);
+        if (chunks.isEmpty()) return pos;
+        Chunk c = chunks.get(rand.nextInt(chunks.size()));
+        Position out = getRandomWalkablePosInChunk(c);
+        return out != null ? out : pos;
+    }
 
     /**
      * Return all chunks within a Manhattan radius (in chunks) around a center position.

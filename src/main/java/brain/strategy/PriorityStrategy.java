@@ -14,7 +14,7 @@ public class PriorityStrategy implements MoveStrategy {
         owner.setSpeedUp(false); // Ưu tiên sinh hoạt bình thường không tăng tốc
 
         // ƯU TIÊN 1: Khát nước nguy hiểm hơn đói (Ví dụ: Thể lực/Nước xuống dưới 60%)
-        if (owner.getThirstPercentage() < 60) {
+        if (owner.getThirstPercentage() < 80) {
             List<Position> waterSources = mapSystem.getWaterInChunks(visibleChunks);
             if (waterSources != null && !waterSources.isEmpty()) {
                 Position water = mapSystem.getClosestPosition(owner.getPosition(), waterSources);
@@ -30,7 +30,7 @@ public class PriorityStrategy implements MoveStrategy {
         }
 
         // ƯU TIÊN 2: Đói bụng
-        if (owner.getHungerPercentage() < 60) {
+        if (owner.getHungerPercentage() < owner.getThirstPercentage()) {
             List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks, owner);
             if (foodSources != null && !foodSources.isEmpty()) {
                 Position food = mapSystem.getClosestPosition(owner.getPosition(), foodSources);

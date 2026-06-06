@@ -10,9 +10,9 @@ public class PassiveStrategy implements MoveStrategy {
     private final Random random = new Random();
     @Override
     public Position getTarget(Animals owner, MapSystem mapSystem) {
-        // 70% đi dạo ngẫu nhiên trong chunk, 30% đứng yên
+        // 70% đi dạo ngẫu nhiên trong chunk hoặc chunk khác, 30% đứng yên
         if (random.nextDouble() < 0.7) {
-            Position pos = mapSystem.getRandomWalkablePosInChunk(owner.getPosition());
+            Position pos = mapSystem.getRandomWalkablePosInVisibleChunk(owner.getPosition());
             
             // Nếu là động vật trên cạn (không phải Fish), không đi vào nước khi ở Passive strategy
             if (!(owner instanceof entities.Fish)) {
