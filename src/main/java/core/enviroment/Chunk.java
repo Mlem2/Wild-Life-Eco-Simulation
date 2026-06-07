@@ -54,4 +54,17 @@ public class Chunk {
     }
 
     public boolean contains(Entity entity) { return entityList.contains(entity); }
+
+    public <T> int getEntitiesCountByType(Class<T> type) {
+        if (type == null) return 0;
+        int count = 0;
+        synchronized (entityList) {
+            for (Entity entity : entityList) {
+                if (type.isInstance(entity)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
 }

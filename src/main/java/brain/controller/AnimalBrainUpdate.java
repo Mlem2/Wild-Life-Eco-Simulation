@@ -93,7 +93,7 @@ public class AnimalBrainUpdate {
                 if (actionManager.getMapSystem().isPotentialMate(owner, other)) {
                     actionManager.mate(other);
                 } else {
-                    actionManager.eat(other); // Ăn mồi ngay lập tức, không dùng cơ chế HP/attack
+                    actionManager.attack(other); // CẬP NHẬT: Sử dụng attack() thay vì eat() để có tỉ lệ thành công
                 }
             } else {
                 // Check if it's grass terrain
@@ -220,7 +220,7 @@ public class AnimalBrainUpdate {
                 return false;
             }, true);
             if (preyTarget instanceof Animals prey) {
-                actionManager.eat(prey);
+                actionManager.attack(prey);
                 return true;
             }
         }

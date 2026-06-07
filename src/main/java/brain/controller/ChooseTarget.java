@@ -78,7 +78,7 @@ public class ChooseTarget {
         }
 
         // 2. Nếu đói hoặc khát nhưng không có mục tiêu săn đuổi ngay lập tức -> Dùng Priority để mò đồ ăn/nước
-        if (owner.getHungerPercentage() < 60 || owner.getThirstPercentage() < 80) {
+        if (owner.getHungerPercentage() < 60 || owner.getThirstPercentage() < 50) {
             changeStrategy(priorityStrategy);
             return;
         }
