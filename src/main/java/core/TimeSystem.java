@@ -47,7 +47,7 @@ public class TimeSystem {
         }
     }
     public static void updateMinute(){
-        minute++;
+        minute+=30;
     }
     public static int getHours(){
         return hour;

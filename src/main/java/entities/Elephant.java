@@ -17,6 +17,9 @@ public class Elephant extends Animals implements Apex, Herbivore {
         this.defaultMatingCooldown = 43200;
         this.hungerRecoveryAmount = 200; // Elephants are huge!
         this.thirstRecoveryAmount = 100; // I wonder who can eat them...
+        this.breedingSeason.add("Winter");
+        this.breedingSeason.add("Spring");
+        this.matingCooldown = this.getDefaultMatingCooldown();
     }
 
 @Override
