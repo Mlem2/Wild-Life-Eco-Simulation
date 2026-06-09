@@ -17,6 +17,8 @@ public class Tiger extends Animals implements Carnivore, Apex {
         this.defaultMatingCooldown = 21600;
         this.hungerRecoveryAmount = 100; // Tigers are very big!
         this.thirstRecoveryAmount = 40; // Eat meat can also help with thirst, but not as much as water.
+        this.breedingSeason.add("Summer");
+        this.matingCooldown = this.getDefaultMatingCooldown();
     }
 
     

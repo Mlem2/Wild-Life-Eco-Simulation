@@ -18,6 +18,9 @@ public class Wolf extends Animals implements Carnivore {
         this.defaultMatingCooldown = 9000;
         this.hungerRecoveryAmount = 85; // Wolves can be nutrious!
         this.thirstRecoveryAmount = 40; // Eat meat can also help with thirst, but not as much as water.
+        this.breedingSeason.add("Summer");
+        this.breedingSeason.add("Winter");
+        this.matingCooldown = this.getDefaultMatingCooldown();
     }
 
     @Override
