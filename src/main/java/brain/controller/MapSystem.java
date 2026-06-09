@@ -116,7 +116,8 @@ public class MapSystem {
     }
 
     boolean isThreateningEnemy(Animals owner, Animals other) {
-        if (other == owner) return false;
+        if (other == owner || !other.checkAlive()) return false;
+        if (other.getState() == allEnum.State.HIDING) return false;
         if (!(other instanceof entities.attributes.Carnivore)) return false;
 
         // Elephants are not threatened by anyone in this simulation context
@@ -131,13 +132,13 @@ public class MapSystem {
 
     boolean isPrey(Animals owner, Animals other) {
         if (other == owner || !other.checkAlive()) return false;
+        if (other.getState() == allEnum.State.HIDING) return false;
         if (!(owner instanceof entities.attributes.Carnivore)) return false;
+        if (other instanceof entities.Elephant) return false;
 
         // Carnivore only eat entities that extend herbivore and smaller (in SIZE) carnivores except for elephants
         if (other instanceof entities.attributes.Herbivore) return true;
-
         if (other instanceof entities.attributes.Carnivore) {
-            if (other instanceof entities.Elephant) return false;
             // Check if smaller in SIZE. Enum Size: SMALL(1), MEDIUM(2), LARGE(5).
             // ordinal() can be used: SMALL is 0, MEDIUM is 1, LARGE is 2.
             return other.getSize().ordinal() < owner.getSize().ordinal();
@@ -260,6 +261,56 @@ public class MapSystem {
                             }
                         } else {
                             out.add(Position.of(e.getX(), e.getY()));
+                        }
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    public List<Position> getBushesInChunks(List<Chunk> chunks) {
+        List<Position> out = new ArrayList<>();
+        if (chunks == null) return out;
+        for (Chunk c : chunks) {
+            if (c == null) continue;
+            synchronized (c.getEntityList()) {
+                for (Entity e : c.getEntityList()) {
+                    if (e instanceof entities.Bush) {
+                        out.add(Position.of(e.getX(), e.getY()));
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    public boolean isBushOccupied(Position pos) {
+        Chunk chunk = getChunkAt(pos);
+        if (chunk == null) return false;
+        synchronized (chunk.getEntityList()) {
+            for (Entity e : chunk.getEntityList()) {
+                if (e instanceof Animals animal) {
+                    if (animal.getPosition().equals(pos) && animal.getState() == allEnum.State.HIDING) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public List<Position> getAvailableBushesInChunks(List<Chunk> chunks) {
+        List<Position> out = new ArrayList<>();
+        if (chunks == null) return out;
+        for (Chunk c : chunks) {
+            if (c == null) continue;
+            synchronized (c.getEntityList()) {
+                for (Entity e : c.getEntityList()) {
+                    if (e instanceof entities.Bush) {
+                        Position pos = Position.of(e.getX(), e.getY());
+                        if (!isBushOccupied(pos)) {
+                            out.add(pos);
                         }
                     }
                 }

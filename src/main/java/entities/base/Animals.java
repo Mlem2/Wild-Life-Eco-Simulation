@@ -140,6 +140,10 @@ public abstract class Animals extends Entity {
         return size;
     }
 
+    public State getState() {
+        return state;
+    }
+
     public void setState(State state) {
         this.state = state;
     }

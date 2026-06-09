@@ -26,11 +26,6 @@ public class HunterStrategy implements MoveStrategy {
         List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks, owner);
         if (foodSources != null && !foodSources.isEmpty()) {
             return mapSystem.getClosestPosition(owner.getPosition(), foodSources);
-        } else if (owner instanceof entities.attributes.Herbivore) {
-            List<Position> grassTiles = mapSystem.getGrassInChunks(visibleChunks);
-            if (!grassTiles.isEmpty()) {
-                return mapSystem.getClosestPosition(owner.getPosition(), grassTiles);
-            }
         }
 
         List<Animals> preys = mapSystem.getPreysInChunks(visibleChunks, owner);
@@ -40,13 +35,6 @@ public class HunterStrategy implements MoveStrategy {
             return closestPrey.getPosition();
         }
 
-        // Đang đói mà xung quanh không có gì -> Di chuyển sang một chunk an toàn ngẫu nhiên để tìm tiếp
-        if (owner.getThirstPercentage() < 60) {
-            Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks);
-            if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
-                return mapSystem.getRandomWalkablePosInChunk(bestChunk);
-            }
-        }
         return mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
     }
 }

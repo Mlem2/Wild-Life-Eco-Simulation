@@ -107,12 +107,12 @@ public class ActionManager {
         owner.lockTargetEntity(null);
         owner.increaseHunger(hungerGain);
         owner.increaseHydration(thirstGain);
-        owner.setCurrentMoveCooldown(hungerGain * 2); // Ăn thỏ cũng instant kill, không dùng cơ chế HP/attack
+        owner.setCurrentMoveCooldown(1); // Ăn thỏ cũng instant kill, không dùng cơ chế HP/attack
     }
 
     public void eatGrass() {
         int hungerGain = 10;
-        int thirstGain = 5;
+        int thirstGain = 2;
 
         try {
             Position pos = owner.getPosition();
@@ -125,9 +125,9 @@ public class ActionManager {
                     // We use (herbivores-1) because the owner is also a herbivore and should be counted,
                     // but 1 herbivore should get full nutrition.
                     if (herbivoresInChunk > 1) {
-                        double divisor = 1 + (herbivoresInChunk - 1) * 0.1;
-                        hungerGain = (int) Math.round(hungerGain / divisor);
-                        thirstGain = (int) Math.round(thirstGain / divisor);
+                        double population = (herbivoresInChunk - 1) * 0.5;
+                        hungerGain = (int) Math.round(hungerGain - population);
+                        thirstGain = (int) Math.round(thirstGain - population);
                     }
                 }
             }
@@ -148,7 +148,7 @@ public class ActionManager {
             water.consume(gained);
         }
         owner.increaseHydration(gained);
-        owner.setCurrentMoveCooldown(gained * 2); // Uống nước cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
+        owner.setCurrentMoveCooldown(1); // Uống nước cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
     }
 
     public void attack(Animals prey) {
@@ -159,11 +159,9 @@ public class ActionManager {
             // Success: act normally (eat the prey)
             eat(prey);
         } else {
-            // Failure: prey slips away, predator is stunned for 50 ticks
+            // Failure: prey slips away, predator is stunned for 40 ticks
             owner.lockTargetEntity(null);
-            owner.setCurrentMoveCooldown(50);
-            // Optionally: print some info for verification
-            // System.out.println(owner.getClass().getSimpleName() + " failed to catch " + prey.getClass().getSimpleName() + " and is stunned!");
+            owner.setCurrentMoveCooldown(40);
         }
     }
 

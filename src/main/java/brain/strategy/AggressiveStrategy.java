@@ -11,19 +11,52 @@ import entities.base.Position;
 public class AggressiveStrategy implements MoveStrategy {
     @Override
     public Position getTarget(Animals owner, MapSystem mapSystem) {
-        // Chỉ thú săn mồi (Carnivore) mới sử dụng chiến thuật này
-        if (!(owner instanceof Carnivore)) return null;
 
         List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
-        List<Animals> preys = mapSystem.getPreysInChunks(visibleChunks, owner);
+        owner.setSpeedUp(true);
 
-        if (preys == null || preys.isEmpty()) return null;
+        // ƯU TIÊN 1: Khát nước nguy hiểm hơn đói (Ví dụ: Thể lực/Nước xuống dưới 60%)
+        if (owner.getThirstPercentage() < 50) {
+            List<Position> waterSources = mapSystem.getWaterInChunks(visibleChunks);
+            if (waterSources != null && !waterSources.isEmpty()) {
+                Position water = mapSystem.getClosestPosition(owner.getPosition(), waterSources);
+                owner.lockTargetEntity(water);
+                return water;
+            } else {
+                // If no water found in visible chunks, move towards the best chunk in heat map
+                Chunk bestChunk = mapSystem.getBestWaterChunk(visibleChunks);
+                if (bestChunk != null && bestChunk.getDistanceToWater() < Integer.MAX_VALUE) {
+                    return mapSystem.getRandomWalkablePosInChunk(bestChunk);
+                }
+            }
+        }
 
-        // Khóa con mồi gần nhất và đưa con vật vào trạng thái Speed up
-        Animals closestPrey = mapSystem.getClosestAnimal(owner.getPosition(), preys);
-        owner.lockTargetEntity(closestPrey);
-        owner.setSpeedUp(true); // Bật trạng thái tăng tốc tối đa
+        // ƯU TIÊN 2: Đói bụng
+        if (owner.getHungerPercentage() < 50) {
+            List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks, owner);
+            if (foodSources != null && !foodSources.isEmpty()) {
+                Position food = mapSystem.getClosestPosition(owner.getPosition(), foodSources);
+                owner.lockTargetEntity(food);
+                return food;
+            } else if (owner instanceof entities.attributes.Herbivore) {
+                // Herbivores seek grass if no entities are found
+                List<Position> grassTiles = mapSystem.getGrassInChunks(visibleChunks);
+                if (!grassTiles.isEmpty()) {
+                    Position grass = mapSystem.getClosestPosition(owner.getPosition(), grassTiles);
+                    owner.lockTargetEntity(grass);
+                    return grass;
+                }
+            }
+        }
 
-        return closestPrey.getPosition();
+        // Nếu không tìm thấy tài nguyên cụ thể nào dù đang có nhu cầu -> Đi lang thang tìm kiếm
+        Position safePos = mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
+        if (owner instanceof entities.Fish) {
+            core.enviroment.Terrain t = mapSystem.getTerrainAt(safePos);
+            if (t != null && !t.isWater()) {
+                return owner.getPosition();
+            }
+        }
+        return safePos;
     }
 }
