@@ -70,9 +70,9 @@ public abstract class Animals extends Entity {
 
     public int getOwnMaxSpeedCooldown() {
         // Return a personal cooldown for speed-up actions
-        // If it's a Hunter, it should be 1.5 times faster: defaultMoveCooldown / 1.5
+        // If it's a Hunter, it should be 1.2 times faster: defaultMoveCooldown / 1.2
         if (this.getMoveStrategyName().equals("HunterStrategy")) {
-            return Math.max(1, (int) Math.round(defaultMoveCooldown / 1.5));
+            return Math.max(1, (int) Math.round(defaultMoveCooldown / 1.2));
         }
         // Fallback to 2x speed for other speed-up cases (like ScaredStrategy)
         return Math.max(1, defaultMoveCooldown / 2);
@@ -138,6 +138,10 @@ public abstract class Animals extends Entity {
 
     public Size getSize() {
         return size;
+    }
+
+    public State getState() {
+        return state;
     }
 
     public void setState(State state) {

@@ -6,6 +6,8 @@ public enum State {
     SCARED,
     AGGRESSIVE,
     PRIORITIZE,
+    DRINKING,
+    EATING,
     MATE,
-    MANUAL;
+    HIDING;
 }

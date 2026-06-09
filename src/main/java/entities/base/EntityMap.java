@@ -16,18 +16,18 @@ public class EntityMap {
     );
 
     private final Map<String, Integer> forestSpawns = Map.of(
-            "wolf", 5,
-            "rabbit", 10,
+            "wolf", 1,
+            "rabbit", 5,
             "tree", 200,
-            "bush", 60
+            "bush", 30
     );
 
     private final Map<String, Integer> grasslandSpawns = Map.of(
-            "rabbit", 50,
-            "wolf", 1,
+            "rabbit", 25,
+            "wolf", 0,
             "elephant", 1,
             "tree", 10,
-            "bush", 20
+            "bush", 10
     );
 
     public EntityMap(WorldMap worldMap, int SIZE) {

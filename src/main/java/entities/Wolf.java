@@ -12,10 +12,10 @@ public class Wolf extends Animals implements Carnivore {
         this.size = Size.MEDIUM;
         this.defaultMoveCooldown = 5;
         this.currentMoveCooldown = 5;
-        this.age = (random.nextInt(4) + 6) * 21600;
-        this.foodEfficiency = 0.8; // Wolves are efficient at using food
+        this.age = (random.nextInt(4) + 8) * 21600;
+        this.foodEfficiency = 0.6; // Wolves are efficient at using food
         this.waterEfficiency = 0.9; // Wolves have slightly below average water needs
-        this.defaultMatingCooldown = 4000;
+        this.defaultMatingCooldown = 9000;
         this.hungerRecoveryAmount = 85; // Wolves can be nutrious!
         this.thirstRecoveryAmount = 40; // Eat meat can also help with thirst, but not as much as water.
     }
