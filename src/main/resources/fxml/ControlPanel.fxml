@@ -5,13 +5,12 @@
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ui.controller.ControlPanelController"
+      fx:controller="view.graphic.ui.controller.ControlPanel"
       styleClass="control-panel"
       spacing="0">
 
     <Label text="🎮 Điều Khiển" styleClass="panel-section-title"/>
 
-    <!-- Pause / Reset Zoom -->
     <VBox styleClass="panel-section" spacing="8">
         <Button fx:id="btnPause" text="⏸ Pause"
                 onAction="#onPauseClicked"
@@ -23,7 +22,6 @@
 
     <Separator/>
 
-    <!-- Tốc độ -->
     <Label text="⚡ Tốc Độ" styleClass="panel-section-title"/>
     <VBox styleClass="panel-section" spacing="6">
         <Label fx:id="labelSpeed" text="Tối đa" styleClass="value-label"/>
@@ -32,7 +30,6 @@
 
     <Separator/>
 
-    <!-- Công cụ đặt thực thể -->
     <Label text="🛠 Công Cụ" styleClass="panel-section-title"/>
     <VBox styleClass="panel-section" spacing="5">
         <fx:define>
@@ -59,7 +56,6 @@
 
     <Separator/>
 
-    <!-- Chú thích màu sắc -->
     <Label text="🗺 Chú Thích" styleClass="panel-section-title"/>
     <VBox styleClass="panel-section legend-box" spacing="4">
         <Label text="⚪ Thỏ       🟤 Hươu"   styleClass="legend-item"/>

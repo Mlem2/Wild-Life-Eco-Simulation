@@ -5,14 +5,9 @@
 
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
-           fx:controller="ui.controller.MapController"
+           fx:controller="view.graphic.ui.controller.MapController"
            styleClass="map-pane">
 
-    <!--
-        Canvas 500x500 - khớp đúng kích thước bản đồ.
-        Zoom/pan được xử lý bằng ZoomManager trong MapController,
-        KHÔNG dùng transform của JavaFX để giữ kiểm soát tọa độ.
-    -->
     <Canvas fx:id="mapCanvas" width="500" height="500"/>
 
 </StackPane>

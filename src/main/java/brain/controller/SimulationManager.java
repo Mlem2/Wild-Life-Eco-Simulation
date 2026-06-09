@@ -315,6 +315,11 @@ public class SimulationManager {
         brainMap.put(a, abu);
     }
 
+    public void stopSimulation() {
+        this.running = false;
+        System.out.println(" Simulation thread has been requested to STOP.");
+    }
+
     public Map<Animals, AnimalBrainUpdate> getBrainMap() {
         return brainMap;
     }
