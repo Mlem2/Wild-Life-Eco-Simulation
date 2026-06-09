@@ -111,8 +111,30 @@ public class ActionManager {
     }
 
     public void eatGrass() {
-        owner.increaseHunger(10);
-        owner.increaseHydration(5);
+        int hungerGain = 10;
+        int thirstGain = 2;
+
+        try {
+            Position pos = owner.getPosition();
+            if (pos != null) {
+                Chunk currentChunk = mapSystem.getChunkAt(pos);
+                if (currentChunk != null) {
+                    int herbivoresInChunk = currentChunk.getEntitiesCountByType(entities.attributes.Herbivore.class);
+                    // Each herbivore in the chunk reduces the grass nutrition available
+                    // Formula: gain = base / (1 + (herbivores-1) * 0.1)
+                    // We use (herbivores-1) because the owner is also a herbivore and should be counted,
+                    // but 1 herbivore should get full nutrition.
+                    if (herbivoresInChunk > 1) {
+                        double population = (herbivoresInChunk - 1) * 0.5;
+                        hungerGain = (int) Math.round(hungerGain - population);
+                        thirstGain = (int) Math.round(thirstGain - population);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        owner.increaseHunger(hungerGain);
+        owner.increaseHydration(thirstGain);
         owner.setCurrentMoveCooldown(1);
     }
 
@@ -130,7 +152,17 @@ public class ActionManager {
     }
 
     public void attack(Animals prey) {
-        eat(prey);
+        if (prey == null) return;
+
+        // Implement hunting success chance: 50%
+        if (new java.util.Random().nextBoolean()) {
+            // Success: act normally (eat the prey)
+            eat(prey);
+        } else {
+            // Failure: prey slips away, predator is stunned for 40 ticks
+            owner.lockTargetEntity(null);
+            owner.setCurrentMoveCooldown(40);
+        }
     }
 
     public void mate(Animals partner) {

@@ -10,6 +10,16 @@ import entities.base.Position;
 public class ScaredStrategy implements MoveStrategy {
     @Override
     public Position getTarget(Animals owner, MapSystem mapSystem) {
+        // Small animals can hide in available bushes
+        if (owner.getSize() == allEnum.Size.SMALL) {
+            List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
+            List<Position> bushes = mapSystem.getAvailableBushesInChunks(visibleChunks);
+            if (!bushes.isEmpty()) {
+                owner.setSpeedUp(true);
+                return mapSystem.getClosestPosition(owner.getPosition(), bushes);
+            }
+        }
+
         Chunk currentChunk = mapSystem.getChunkAt(owner.getPosition());
         List<Animals> enemiesInMyChunk = mapSystem.getEnemiesInChunk(currentChunk, owner);
 

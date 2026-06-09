@@ -8,11 +8,12 @@ import entities.base.Entity;
 import entities.base.Tree;
 import brain.scanner.TargetScanner;
 import brain.strategy.AggressiveStrategy;
+import brain.strategy.DrinkingStrategy;
+import brain.strategy.EatingStrategy;
 import brain.strategy.HunterStrategy;
 import brain.strategy.MateStrategy;
 import brain.strategy.MoveStrategy;
 import brain.strategy.PassiveStrategy;
-import brain.strategy.PriorityStrategy;
 import brain.strategy.ScaredStrategy;
 
 import java.util.List;
@@ -32,8 +33,13 @@ public class StateController {
         }
 
         // Herbivores prioritize Scared over Priority
-        if (shouldPrioritize(animal, visibleEntities)) {
-            setStrategy(animal, State.PRIORITIZE, new PriorityStrategy());
+        if (shouldDrink(animal, visibleEntities)) {
+            setStrategy(animal, State.DRINKING, new DrinkingStrategy());
+            return;
+        }
+
+        if (shouldEat(animal, visibleEntities)) {
+            setStrategy(animal, State.EATING, new EatingStrategy());
             return;
         }
 
@@ -60,7 +66,20 @@ public class StateController {
         animal.setMoveStrategy(strategy);
     }
     
-    private boolean shouldPrioritize(Animals animal, List<Entity> visibleEntities) {
+    private boolean shouldDrink(Animals animal, List<Entity> visibleEntities) {
+        if (!(animal instanceof Herbivore)) {
+            return false;
+        }
+        if (visibleEntities == null) {
+            return false;
+        }
+
+        boolean hasWaterNearby = TargetScanner.findNearest(animal, visibleEntities, 50, entity -> entity instanceof entities.Water) != null;
+
+        return (hasWaterNearby) && (animal.getThirst() < 70);
+    }
+
+    private boolean shouldEat(Animals animal, List<Entity> visibleEntities) {
         if (!(animal instanceof Herbivore)) {
             return false;
         }
@@ -75,11 +94,7 @@ public class StateController {
             return (entity instanceof entities.Food && !(entity instanceof entities.Water));
         }) != null;
 
-        // If no entity food, check if there's grass nearby (simplified check here as we don't have MapSystem easily accessible without changing signature)
-        // But StateController is used in AnimalBrainUpdate which has MapSystem.
-        // Actually updateState is called with visibleEntities.
-        
-        return (hasFoodNearby) && (animal.getHunger() < 70 || animal.getThirst() < 70);
+        return (hasFoodNearby) && (animal.getHunger() < 70);
     }
 
     // Logic để quyết định khi nào nên săn mồi hoặc bỏ chạy. Có thể mở rộng thêm các yếu tố như sức khỏe, tuổi tác, v.v.
