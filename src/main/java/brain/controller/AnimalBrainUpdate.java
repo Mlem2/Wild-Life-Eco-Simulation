@@ -103,7 +103,7 @@ public class AnimalBrainUpdate {
                 if (actionManager.getMapSystem().isPotentialMate(owner, other)) {
                     actionManager.mate(other);
                 } else {
-                    actionManager.eat(other); // CẬP NHẬT: Sử dụng attack() thay vì eat() để có tỉ lệ thành công
+                    actionManager.attack(other); // CẬP NHẬT: Sử dụng attack() thay vì eat() để có tỉ lệ thành công
                 }
             } else {
                 // Check if it's grass terrain
