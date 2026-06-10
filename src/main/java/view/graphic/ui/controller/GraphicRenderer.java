@@ -1,4 +1,4 @@
-package view;
+package view.graphic.ui.controller;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -20,17 +20,19 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class BasicRenderer {
+public class GraphicRenderer {
     private final WorldMap worldMap;
     private Animals selectedAnimal;
     private Chunk selectedChunk;
 
     private final Map<java.awt.Color, Color> colorCache = new HashMap<>();
 
+    private javafx.scene.image.Image rabbitImg; //thêm dòng
+    
     private Field fieldHunger;
     private Field fieldThirst;
 
-    public BasicRenderer(WorldMap worldMap) {
+    public GraphicRenderer(WorldMap worldMap) {
         this.worldMap = worldMap;
 
         try {
@@ -133,8 +135,7 @@ public class BasicRenderer {
                             gc.fillRect(screenX, screenY, finalSize, finalSize);
                         }
                         else if (entity instanceof Rabbit) {
-                            gc.setFill(Color.WHITE);
-                            gc.fillOval(screenX, screenY, finalSize, finalSize);
+                        	gc.drawImage(rabbitImg, screenX, screenY, finalSize, finalSize);
                         }
                         else if (entity instanceof Fish) {
                             gc.setFill(Color.AQUAMARINE);

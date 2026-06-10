@@ -1,79 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ui.controller.ControlPanelController"
-      styleClass="control-panel"
-      spacing="0">
+<VBox spacing="0" styleClass="control-panel" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.graphic.ui.controller.ControlPanel">
 
-    <Label text="🎮 Điều Khiển" styleClass="panel-section-title"/>
+    <Label styleClass="panel-section-title" text="🎮 Điều Khiển" />
 
-    <!-- Pause / Reset Zoom -->
-    <VBox styleClass="panel-section" spacing="8">
-        <Button fx:id="btnPause" text="⏸ Pause"
-                onAction="#onPauseClicked"
-                styleClass="btn-primary" maxWidth="Infinity"/>
-        <Button text="🔍 Reset Zoom"
-                onAction="#onResetZoomClicked"
-                styleClass="btn-secondary" maxWidth="Infinity"/>
+    <VBox spacing="8" styleClass="panel-section">
+        <Button fx:id="btnPause" maxWidth="Infinity" onAction="#onPauseClicked" styleClass="btn-primary" text="⏸ Pause" />
+        <Button maxWidth="Infinity" onAction="#onResetZoomClicked" styleClass="btn-secondary" text="🔍 Reset Zoom" />
     </VBox>
 
-    <Separator/>
+    <Separator />
 
-    <!-- Tốc độ -->
-    <Label text="⚡ Tốc Độ" styleClass="panel-section-title"/>
-    <VBox styleClass="panel-section" spacing="6">
-        <Label fx:id="labelSpeed" text="Tối đa" styleClass="value-label"/>
-        <Slider fx:id="sliderSpeed"/>
+    <Label styleClass="panel-section-title" text="⚡ Tốc Độ" />
+    <VBox spacing="6" styleClass="panel-section">
+        <Label fx:id="labelSpeed" styleClass="value-label" text="Tối đa" />
+        <Slider fx:id="sliderSpeed" />
     </VBox>
 
-    <Separator/>
+    <Separator />
 
-    <!-- Công cụ đặt thực thể -->
-    <Label text="🛠 Công Cụ" styleClass="panel-section-title"/>
-    <VBox styleClass="panel-section" spacing="5">
+    <Label styleClass="panel-section-title" text="🛠 Công Cụ" />
+    <VBox spacing="5" styleClass="panel-section">
         <fx:define>
-            <ToggleGroup fx:id="toolGroup"/>
+            <ToggleGroup fx:id="toolGroup" />
         </fx:define>
 
-        <RadioButton fx:id="rbNone"     text="🚫 Không chọn"   toggleGroup="$toolGroup"
-                     onAction="#onToolNone"      selected="true" styleClass="tool-radio"/>
-        <RadioButton fx:id="rbGrass"    text="🟩 Gieo cỏ"       toggleGroup="$toolGroup"
-                     onAction="#onToolGrass"     styleClass="tool-radio"/>
-        <RadioButton fx:id="rbRabbit"   text="⚪ Thêm Thỏ"      toggleGroup="$toolGroup"
-                     onAction="#onToolRabbit"    styleClass="tool-radio"/>
-        <RadioButton fx:id="rbDeer"     text="🟤 Thêm Hươu"     toggleGroup="$toolGroup"
-                     onAction="#onToolDeer"      styleClass="tool-radio"/>
-        <RadioButton fx:id="rbWolf"     text="🔘 Thêm Sói"      toggleGroup="$toolGroup"
-                     onAction="#onToolWolf"      styleClass="tool-radio"/>
-        <RadioButton fx:id="rbTiger"    text="🟠 Thêm Hổ"       toggleGroup="$toolGroup"
-                     onAction="#onToolTiger"     styleClass="tool-radio"/>
-        <RadioButton fx:id="rbElephant" text="🔵 Thêm Voi"      toggleGroup="$toolGroup"
-                     onAction="#onToolElephant"  styleClass="tool-radio"/>
-        <RadioButton fx:id="rbRock"     text="⬛ Đặt Đá"        toggleGroup="$toolGroup"
-                     onAction="#onToolRock"      styleClass="tool-radio"/>
+        <RadioButton fx:id="rbNone" onAction="#onToolNone" selected="true" styleClass="tool-radio" text="🚫 Không chọn">
+         <toggleGroup>
+            <ToggleGroup fx:id="toolGroup" />
+         </toggleGroup></RadioButton>
+        <RadioButton fx:id="rbGrass" onAction="#onToolGrass" styleClass="tool-radio" text="🟩 Gieo cỏ" toggleGroup="$toolGroup" />
+        <RadioButton fx:id="rbRabbit" onAction="#onToolRabbit" onMouseClicked="#onMapClicked" styleClass="tool-radio" text="⚪ Thêm Thỏ" toggleGroup="$toolGroup" />
+        <RadioButton fx:id="rbDeer" onAction="#onToolDeer" styleClass="tool-radio" text="🟤 Thêm Hươu" toggleGroup="$toolGroup" />
+        <RadioButton fx:id="rbWolf" onAction="#onToolWolf" styleClass="tool-radio" text="🔘 Thêm Sói" toggleGroup="$toolGroup" />
+        <RadioButton fx:id="rbTiger" onAction="#onToolTiger" styleClass="tool-radio" text="🟠 Thêm Hổ" toggleGroup="$toolGroup" />
+        <RadioButton fx:id="rbElephant" onAction="#onToolElephant" styleClass="tool-radio" text="🔵 Thêm Voi" toggleGroup="$toolGroup" />
+        <RadioButton fx:id="rbRock" onAction="#onToolRock" styleClass="tool-radio" text="⬛ Đặt Đá" toggleGroup="$toolGroup" />
     </VBox>
 
-    <Separator/>
+    <Separator />
 
-    <!-- Chú thích màu sắc -->
-    <Label text="🗺 Chú Thích" styleClass="panel-section-title"/>
-    <VBox styleClass="panel-section legend-box" spacing="4">
-        <Label text="⚪ Thỏ       🟤 Hươu"   styleClass="legend-item"/>
-        <Label text="🔘 Sói       🟠 Hổ"     styleClass="legend-item"/>
-        <Label text="🔵 Voi       🩵 Người"  styleClass="legend-item"/>
-        <Label text="🟡 Vịt       🩵 Cá"     styleClass="legend-item"/>
-        <Label text="🟩 Cỏ        🟢 Cây"    styleClass="legend-item"/>
-        <Label text="⬛ Đá"                  styleClass="legend-item"/>
-        <Separator/>
-        <Label text="Chấm giữa = Trạng thái:" styleClass="legend-hint"/>
-        <Label text="🟡 Chạy  🟢 Ăn  🔴 Săn" styleClass="legend-item"/>
-        <Label text="🟠 Trốn  🩵 Ngủ  💧 Uống" styleClass="legend-item"/>
+    <Label styleClass="panel-section-title" text="🗺 Chú Thích" />
+    <VBox spacing="4" styleClass="panel-section legend-box">
+        <Label styleClass="legend-item" text="⚪ Thỏ       🟤 Hươu" />
+        <Label styleClass="legend-item" text="🔘 Sói       🟠 Hổ" />
+        <Label styleClass="legend-item" text="🔵 Voi       🩵 Người" />
+        <Label styleClass="legend-item" text="🟡 Vịt       🩵 Cá" />
+        <Label styleClass="legend-item" text="🟩 Cỏ        🟢 Cây" />
+        <Label styleClass="legend-item" text="⬛ Đá" />
+        <Separator />
+        <Label styleClass="legend-hint" text="Chấm giữa = Trạng thái:" />
+        <Label styleClass="legend-item" text="🟡 Chạy  🟢 Ăn  🔴 Săn" />
+        <Label styleClass="legend-item" text="🟠 Trốn  🩵 Ngủ  💧 Uống" />
     </VBox>
 
-    <Region VBox.vgrow="ALWAYS"/>
+    <Region VBox.vgrow="ALWAYS" />
 
 </VBox>
