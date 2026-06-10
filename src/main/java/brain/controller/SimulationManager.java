@@ -1,6 +1,7 @@
 package brain.controller;
 
 import brain.pathfinder.Pathfinder;
+import core.TimeSystem;
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
 import entities.Bush;
@@ -65,17 +66,19 @@ public class SimulationManager {
 
     private void updateTimeSystem() {
         try {
-            int m = core.TimeSystem.minute + 30;
-            if (m >= 60) {
-                m = 0;
-                core.TimeSystem.hour++;
-                if (core.TimeSystem.hour >= 24) {
-                    core.TimeSystem.hour = 0;
-                    core.TimeSystem.day++;
+            TimeSystem.updateMinute();
+            if(TimeSystem.getMinute() >= 60){
+                TimeSystem.updateHours();
+                if(TimeSystem.getHours() >= 24){
+                    TimeSystem.updateDays();
+                    if(TimeSystem.getDays() >= TimeSystem.getLimit()){
+                        TimeSystem.updateMonths();
+                        if(TimeSystem.getMonths() > 12){
+                            TimeSystem.updateYears();
+                        }
+                    }
                 }
             }
-            core.TimeSystem.minute = m;
-            core.TimeSystem.partOfDay = (core.TimeSystem.hour > 4 && core.TimeSystem.hour < 18) ? "Day" : "Night";
         } catch (Exception ignored) {}
     }
 

@@ -1,11 +1,13 @@
 package entities.base;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import allEnum.Size;
 import allEnum.State;
 import brain.strategy.MoveStrategy;
+import core.TimeSystem;
 
 public abstract class Animals extends Entity {
     protected double hunger = 100;
@@ -21,11 +23,12 @@ public abstract class Animals extends Entity {
     protected double waterEfficiency; // hệ số hiệu quả tiêu thụ nước
     protected int hungerRecoveryAmount = 10;
     protected int thirstRecoveryAmount = 10;
-    protected int matingCooldown = 1000;
+    protected int matingCooldown;
     // Brain related helpers
     protected Object lockedTargetEntity = null;
     protected Position lastLockedTargetPos = null;
     protected boolean speedUp = false;
+    protected ArrayList<String> breedingSeason = new ArrayList<>();
 
     public Animals(int x, int y){
         super(x,y);
@@ -171,7 +174,12 @@ public abstract class Animals extends Entity {
 
     // Expose default cooldown so external controllers (ActionManager) can use it
     public int getDefaultMoveCooldown() { return this.defaultMoveCooldown; }
-    public int getDefaultMatingCooldown() { return this.defaultMatingCooldown; }
+    public int getDefaultMatingCooldown() {
+        if(breedingSeason.contains(TimeSystem.season)){
+            return this.defaultMatingCooldown;
+        }
+        return this.defaultMatingCooldown * 3;
+    }
 
     public int getMatingCooldown() { return matingCooldown; }
     public void setMatingCooldown(int matingCooldown) { this.matingCooldown = matingCooldown; }

@@ -16,6 +16,10 @@ public class Rabbit extends Animals implements Herbivore {
         this.defaultMatingCooldown = 3000;
         this.hungerRecoveryAmount = 50; // Rabbits are small, so they don't provide much nutrition
         this.thirstRecoveryAmount = 0; // Rabbits have low thirst recovery
+        this.breedingSeason.add("Spring"); // mùa sinh sản
+        this.breedingSeason.add("Summer");
+        this.breedingSeason.add("Autumn");
+        this.breedingSeason.add("Winter");
     }
 
     @Override
