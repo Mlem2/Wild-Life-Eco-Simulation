@@ -6,44 +6,87 @@ import java.util.HashMap;
 
 public class AssetManager {
     private static final HashMap<String, Image> sprites = new HashMap<>();
+    private static boolean isLoaded = false;
 
     public static void loadAssets() {
+        if (isLoaded) return;
+
         try {
-            // 1. Nạp ảnh Sinh vật (Animals)
-            Image animalsImg = new Image(AssetManager.class.getResourceAsStream("/assets/animals/Basic_Sprites_1x.png"));
+            System.out.println("🎨 [AssetManager] Bắt đầu nạp tài nguyên và cắt ảnh cỏ theo kích thước 112x48...");
 
-            // 2. Nạp ảnh Địa hình (Terrains)
-            Image waterTileImg = new Image(AssetManager.class.getResourceAsStream("/assets/terrains/water/free_water_tile.png"));
-            Image pathTileImg = new Image(AssetManager.class.getResourceAsStream("/assets/terrains/ground/free_path_tile.png"));
-            Image mineralImg = new Image(AssetManager.class.getResourceAsStream("/assets/terrains/rock/free_minerals.png"));
+            // =========================================================
+            // 1. XỬ LÝ CẮT ẢNH NỀN CỎ CHUẨN KÍCH THƯỚC 112x48
+            // =========================================================
+            try {
+                // Nạp file ảnh gốc Grass.png (112x48 pixel)
+                Image fullGrassImg = new Image(AssetManager.class.getResourceAsStream("/image/terrains/grass/Grass.png"));
 
-            // 3. Nạp ảnh Cây tĩnh (Trees)
-            sprites.put("tree_small", new Image(AssetManager.class.getResourceAsStream("/assets/terrains/tree/small_oak_tree_static.png")));
-            sprites.put("tree_medium", new Image(AssetManager.class.getResourceAsStream("/assets/terrains/tree/medium_oak_tree_static.png")));
-            sprites.put("tree_big", new Image(AssetManager.class.getResourceAsStream("/assets/terrains/tree/big_oak_tree_static.png")));
+                // Thuật toán cắt ảnh chính xác:
+                // - Toà độ bắt đầu cắt: X = 48, Y = 0 (Bỏ phần ô trống bên trái)
+                // - Kích thước lấy: Rộng = 48, Cao = 48 pixel (Lấy trọn vẹn cụm cỏ xanh thuần ở giữa)
+                WritableImage croppedGrass = new WritableImage(
+                        fullGrassImg.getPixelReader(),
+                        48, 0,   // Góc trên bên trái vùng cỏ thuần
+                        48, 48   // Kích thước vuông vắn 48x48 pixel
+                );
 
-            // --- TRÍCH XUẤT ĐỊA HÌNH (Cắt ô 16x16 pixel từ ảnh lớn) ---
-            // Ô cỏ xanh thuần (Góc trên cùng bên trái của file water tile)
-            sprites.put("tile_grass", new WritableImage(waterTileImg.getPixelReader(), 0, 0, 16, 16));
-            // Ô nước thuần (Hàng thứ 3, cột 1 trong file water tile)
-            sprites.put("tile_water", new WritableImage(waterTileImg.getPixelReader(), 0, 32, 16, 16));
-            // Ô đất cày/lối đi màu cam (Hàng thứ 3, cột 1 trong file path tile)
-            sprites.put("tile_dirt", new WritableImage(pathTileImg.getPixelReader(), 0, 32, 16, 16));
-            // Ô khoáng sản thạch anh (Góc trên bên trái file minerals)
-            sprites.put("tile_stone", new WritableImage(mineralImg.getPixelReader(), 0, 0, 16, 16));
+                // Đưa ảnh cỏ đã cắt sạch sẽ vào quản lý
+                sprites.put("tile_grass", croppedGrass);
+                System.out.println("✂️ [AssetManager] Đã cắt thành công bãi cỏ xanh thuần (48x48)!");
 
-            // --- TRÍCH XUẤT ĐỘNG VẬT TỪ SPRITESHEET (Mỗi ô 16x16) ---
-            sprites.put("animal_duck", new WritableImage(animalsImg.getPixelReader(), 16 * 2, 0, 16, 16));      // Hàng 1, Cột 3
-            sprites.put("animal_rabbit", new WritableImage(animalsImg.getPixelReader(), 16 * 1, 16, 16, 16));   // Hàng 2, Cột 2
-            sprites.put("animal_deer", new WritableImage(animalsImg.getPixelReader(), 16 * 2, 16, 16, 16));     // Hàng 2, Cột 3 (Dùng gấu làm hươu)
-            sprites.put("animal_wolf", new WritableImage(animalsImg.getPixelReader(), 16 * 3, 16, 16, 16));     // Hàng 2, Cột 4
-            sprites.put("animal_tiger", new WritableImage(animalsImg.getPixelReader(), 16 * 4, 16, 16, 16));    // Hàng 2, Cột 5
-            sprites.put("animal_elephant", new WritableImage(animalsImg.getPixelReader(), 16 * 4, 0, 16, 16)); // Hàng 1, Cột 5 (Dùng cừu làm voi)
+            } catch (Exception e) {
+                System.err.println("❌ LỖI: Không thể tìm thấy hoặc cắt ảnh Grass.png!");
+                e.printStackTrace();
+            }
 
-            System.out.println("🎨 All Stardew Valley Pixel assets loaded successfully!");
+            // =========================================================
+            // 2. NẠP CÁC THÀNH PHẦN ĐỊA HÌNH KHÁC
+            // =========================================================
+            loadSingleAsset("tree_medium", "/image/terrains/tree/tree.png", "tile_grass");
+            loadSingleAsset("tree_small", "/image/terrains/bush/bush.png", "tile_grass");
+            loadSingleAsset("tree_big", "/image/terrains/tree/tree.png", "tile_grass");
+
+            // Nạp ảnh nước thật
+            loadSingleAsset("tile_water", "/image/terrains/water/water.png", "tile_grass");
+
+            // Các asset sơ cua chống sập
+            loadSingleAsset("stone", "/image/terrains/rock/rock.png", "tree_small");
+            loadSingleAsset("tile_stone", "/image/terrains/rock/rock.png", "tree_small");
+            loadSingleAsset("tile_dirt", "/image/terrains/grass/Grass.png", "tile_grass");
+
+            // =========================================================
+            // 3. NẠP SINH VẬT ĐƠN LẺ
+            // =========================================================
+            loadSingleAsset("animal_rabbit", "/image/animals/rabbit/rabbit1.png", null);
+            loadSingleAsset("animal_elephant", "/image/animals/elephant/elephant.png", "animal_rabbit");
+            loadSingleAsset("animal_tiger", "/image/animals/tiger/tiger.png", "animal_rabbit");
+            loadSingleAsset("animal_wolf", "/image/animals/wolf/wolf.png", "animal_rabbit");
+            loadSingleAsset("animal_fish", "/image/animals/fish/fish.png", "animal_rabbit");
+            loadSingleAsset("animal_bear", "/image/animals/bear/bear.png", "animal_tiger");
+
+            sprites.put("animal_deer", sprites.get("animal_rabbit"));
+            sprites.put("animal_duck", sprites.get("animal_fish"));
+
+            System.out.println("✅ [AssetManager] Bộ asset mượt mà đã sẵn sàng!");
+            isLoaded = true;
         } catch (Exception e) {
-            System.err.println("LỖI NẠP ASSETS: Hãy kiểm tra lại cấu trúc thư mục hoặc tên file!");
+            System.err.println("❌ LỖI NGHIÊM TRỌNG: Thiết lập AssetManager thất bại!");
             e.printStackTrace();
+        }
+    }
+
+    private static void loadSingleAsset(String key, String path, String backupKey) {
+        try {
+            java.io.InputStream is = AssetManager.class.getResourceAsStream(path);
+            if (is != null) {
+                sprites.put(key, new Image(is));
+            } else {
+                throw new Exception("File không tồn tại: " + path);
+            }
+        } catch (Exception e) {
+            if (backupKey != null && sprites.containsKey(backupKey)) {
+                sprites.put(key, sprites.get(backupKey));
+            }
         }
     }
 

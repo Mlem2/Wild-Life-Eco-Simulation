@@ -21,8 +21,7 @@ public class MapController {
     private int gridSize = 100;
     private boolean isContextSet = false;
 
-    // --- HỆ THỐNG ZOOM & DI CHUYỂN TOÀN DIỆN ---
-    private double scale = 2.5; // Đặt mặc định phóng to 2.5 lần để nhìn rõ ngay từ đầu
+    private double scale = 2.5;
     private double offsetX = 0.0;
     private double offsetY = 0.0;
 
@@ -32,9 +31,8 @@ public class MapController {
     private final double MIN_SCALE = 0.2;
     private final double MAX_SCALE = 10.0;
 
-    // Kiểm soát thời gian vẽ: Giới hạn khung hình vẽ giúp Core ngầm chạy mượt 100%
     private long lastUpdateTime = 0;
-    private final long RENDER_DELAY_NS = 66_666_666L; // ~15 FPS cực nhẹ máy
+    private final long RENDER_DELAY_NS = 66_666_666L;
 
     private AnimationTimer renderLoop;
 
@@ -42,19 +40,15 @@ public class MapController {
     public void initialize() {
         if (mapCanvas != null) {
             gc = mapCanvas.getGraphicsContext2D();
-
             mapCanvas.setOnScroll(this::handleScroll);
             mapCanvas.setOnMousePressed(this::handleMousePressed);
             mapCanvas.setOnMouseDragged(this::handleMouseDragged);
         }
 
-        // Khởi tạo vòng lặp render độc nhất
         renderLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (!isContextSet || worldMap == null) {
-                    return;
-                }
+                if (!isContextSet || worldMap == null) return;
                 if (now - lastUpdateTime >= RENDER_DELAY_NS) {
                     renderMap();
                     lastUpdateTime = now;
@@ -67,8 +61,6 @@ public class MapController {
     private void handleScroll(ScrollEvent event) {
         double zoomFactor = (event.getDeltaY() > 0) ? 1.1 : 0.9;
         double oldScale = scale;
-
-        // SỬA ĐỔI AN TOÀN: Tính toán clamp thủ công để tránh lỗi trên một số bản JDK cũ
         scale = scale * zoomFactor;
         if (scale < MIN_SCALE) scale = MIN_SCALE;
         if (scale > MAX_SCALE) scale = MAX_SCALE;
@@ -95,7 +87,6 @@ public class MapController {
 
     public void setWorldContext(core.enviroment.WorldMap worldMap, int gridSize) {
         if (worldMap == null) return;
-
         this.worldMap = worldMap;
         this.gridSize = (gridSize > 0) ? gridSize : 100;
 
@@ -103,34 +94,22 @@ public class MapController {
             this.gc = mapCanvas.getGraphicsContext2D();
         }
 
-        // Tải tài nguyên hình ảnh (Cỏ, Nước, Sinh vật) lên RAM
         AssetManager.loadAssets();
-
-        // Reset vị trí camera về chuẩn trung tâm khi mới mở
         this.scale = 2.5;
         this.offsetX = 0.0;
         this.offsetY = 0.0;
-
-        // Phất cờ hiệu cho phép render luồng giao diện
         this.isContextSet = true;
     }
 
-    /**
-     * HÀM GIẢI PHÓNG TOÀN DIỆN: Khi về Basic Mode, bắt buộc phải tắt hẳn luồng vẽ
-     * để trả lại 100% tài nguyên cho Core backend xử lý di chuyển!
-     */
     public void shutdownTimeline() {
         this.isContextSet = false;
         this.worldMap = null;
-
         if (gc != null && mapCanvas != null) {
-            // Xóa sạch canvas để không chiếm dụng RAM của card đồ họa
             gc.save();
-            gc.setTransform(1, 0, 0, 1, 0, 0); // Reset ma trận về gốc
+            gc.setTransform(1, 0, 0, 1, 0, 0);
             gc.clearRect(0, 0, mapCanvas.getWidth(), mapCanvas.getHeight());
             gc.restore();
         }
-        System.out.println("📺 [MapController] Đã tắt và giải phóng toàn bộ khóa luồng đồ họa.");
     }
 
     private void renderMap() {
@@ -141,7 +120,6 @@ public class MapController {
 
         gc.clearRect(0, 0, canvasWidth, canvasHeight);
         gc.save();
-
         gc.translate(offsetX, offsetY);
         gc.scale(scale, scale);
 
@@ -149,15 +127,14 @@ public class MapController {
 
         Image grassImg = AssetManager.get("tile_grass");
         Image waterImg = AssetManager.get("tile_water");
-        Image stoneImg = AssetManager.get("stone"); // Đồng bộ tên key ảnh map cũ
+        Image stoneImg = AssetManager.get("stone");
 
-        // --- GIAI ĐOẠN 1: VẼ NỀN ĐỊA HÌNH ---
+        // --- GIAI ĐOẠN 1: VẼ NỀN ĐỊA HÌNH ĐỒNG BỘ ENUM ---
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
                 double dx = x * tileSize;
                 double dy = y * tileSize;
 
-                // THUẬT TOÁN CULLING: Chỉ vẽ ô đất nằm trong vùng nhìn thấy để cứu CPU máy tính
                 double screenX = dx * scale + offsetX;
                 double screenY = dy * scale + offsetY;
                 if (screenX + tileSize * scale < 0 || screenX > canvasWidth ||
@@ -169,12 +146,22 @@ public class MapController {
                 try {
                     core.enviroment.Terrain terrain = worldMap.getTile(x, y);
                     if (terrain != null) {
-                        if (terrain.isGrass() && grassImg != null) {
-                            gc.drawImage(grassImg, dx, dy, tileSize, tileSize);
+                        String terrainName = terrain.name().toUpperCase();
+
+                        if (terrainName.contains("WATER")) {
+                            if (waterImg != null) {
+                                gc.drawImage(waterImg, dx, dy, tileSize, tileSize);
+                                drawn = true;
+                            }
+                        } else if (terrainName.contains("MOUNTAIN")) {
+                            if (grassImg != null) gc.drawImage(grassImg, dx, dy, tileSize, tileSize);
+                            if (stoneImg != null) gc.drawImage(stoneImg, dx, dy, tileSize, tileSize);
                             drawn = true;
-                        } else if (!terrain.isPassable() && waterImg != null) {
-                            gc.drawImage(waterImg, dx, dy, tileSize, tileSize);
-                            drawn = true;
+                        } else {
+                            if (grassImg != null) {
+                                gc.drawImage(grassImg, dx, dy, tileSize, tileSize);
+                                drawn = true;
+                            }
                         }
                     }
                 } catch (Exception e) {}
@@ -185,14 +172,13 @@ public class MapController {
             }
         }
 
-        // --- GIAI ĐOẠN 2: SAO CHÉP SIÊU TỐC VÀ VẼ SINH VẬT ---
+        // --- GIAI ĐOẠN 2: VẼ THỰC THỂ KHÔNG CHẶN ĐIỀU KIỆN ẨN ---
         if (worldMap.chunkMap != null) {
             for (int cy = 0; cy < worldMap.chunkMap.length; cy++) {
                 for (int cx = 0; cx < worldMap.chunkMap[cy].length; cx++) {
                     core.enviroment.Chunk chunk = worldMap.chunkMap[cy][cx];
                     if (chunk == null || chunk.getEntityList() == null) continue;
 
-                    // Chỉ clone mảng cực nhanh rồi nhả khóa ngay lập tức
                     List<entities.base.Entity> safeEntities = null;
                     synchronized (chunk.getEntityList()) {
                         if (!chunk.getEntityList().isEmpty()) {
@@ -213,7 +199,6 @@ public class MapController {
                         double edx = ex * tileSize;
                         double edy = ey * tileSize;
 
-                        // Culling sinh vật
                         double entityScreenX = edx * scale + offsetX;
                         double entityScreenY = edy * scale + offsetY;
                         if (entityScreenX + tileSize * scale < 0 || entityScreenX > canvasWidth ||
@@ -222,7 +207,7 @@ public class MapController {
                         }
 
                         Image entitySprite = null;
-                        String typeName = entity.getClass().getSimpleName().toLowerCase();
+                        String typeName = entity.getClass().getSimpleName().toLowerCase().trim();
 
                         switch (typeName) {
                             case "trees": case "tree":
@@ -249,11 +234,17 @@ public class MapController {
                             case "tiger":
                                 entitySprite = AssetManager.get("animal_tiger");
                                 break;
-                            case "duck":
-                                entitySprite = AssetManager.get("animal_duck");
-                                break;
                             case "elephant":
                                 entitySprite = AssetManager.get("animal_elephant");
+                                break;
+                            case "bear":
+                                entitySprite = AssetManager.get("animal_bear");
+                                break;
+                            case "fish":
+                                entitySprite = AssetManager.get("animal_fish");
+                                break;
+                            case "duck":
+                                entitySprite = AssetManager.get("animal_duck");
                                 break;
                         }
 
