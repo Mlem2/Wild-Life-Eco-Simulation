@@ -16,7 +16,7 @@ public class EntityMap {
     );
 
     private final Map<String, Integer> forestSpawns = Map.of(
-            "wolf", 1,
+            "wolf", 3,
             "rabbit", 5,
             "tree", 200,
             "bush", 30
@@ -65,6 +65,7 @@ public class EntityMap {
     private void spawnByTypeName(String type, int x, int y) {
         switch (type) {
             case "rabbit" -> AddEntity(Rabbit::new, x, y);
+            case "tiger" -> AddEntity(Tiger::new, x, y);
             case "wolf" -> AddEntity(Wolf::new, x, y);
             case "fish" -> AddEntity(Fish::new, x, y);
             case "elephant" -> AddEntity(Elephant::new, x, y);

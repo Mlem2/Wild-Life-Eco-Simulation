@@ -178,7 +178,7 @@ public abstract class Animals extends Entity {
         if(breedingSeason.contains(TimeSystem.season)){
             return this.defaultMatingCooldown;
         }
-        return this.defaultMatingCooldown * 3;
+        return this.defaultMatingCooldown * 2;
     }
 
     public int getMatingCooldown() { return matingCooldown; }

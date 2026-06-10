@@ -66,19 +66,7 @@ public class SimulationManager {
 
     private void updateTimeSystem() {
         try {
-            TimeSystem.updateMinute();
-            if(TimeSystem.getMinute() >= 60){
-                TimeSystem.updateHours();
-                if(TimeSystem.getHours() >= 24){
-                    TimeSystem.updateDays();
-                    if(TimeSystem.getDays() >= TimeSystem.getLimit()){
-                        TimeSystem.updateMonths();
-                        if(TimeSystem.getMonths() > 12){
-                            TimeSystem.updateYears();
-                        }
-                    }
-                }
-            }
+            TimeSystem.updateHours();
         } catch (Exception ignored) {}
     }
 

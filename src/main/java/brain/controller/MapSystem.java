@@ -119,13 +119,13 @@ public class MapSystem {
         if (other == owner || !other.checkAlive()) return false;
         if (other.getState() == allEnum.State.HIDING) return false;
         if (!(other instanceof entities.attributes.Carnivore)) return false;
+        if (owner instanceof entities.attributes.Carnivore) {
+            return other.getSize().ordinal() > owner.getSize().ordinal();
+        }
+
 
         // Elephants are not threatened by anyone in this simulation context
         if (owner instanceof entities.Elephant) return false;
-
-        if (owner instanceof entities.attributes.Carnivore) {
-            return other.getAttackDamage() > owner.getAttackDamage();
-        }
 
         return true;
     }

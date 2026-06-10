@@ -436,15 +436,12 @@ public class MapViewer extends Application {
     private void updateTimeInformation() {
         if (sharedSimulationManager == null) return;
         try {
-            int year = (int) core.TimeSystem.class.getDeclaredField("year").get(null);
-            int month = (int) core.TimeSystem.class.getDeclaredField("month").get(null);
-            int day = (int) core.TimeSystem.class.getDeclaredField("day").get(null);
-            int hour = (int) core.TimeSystem.class.getDeclaredField("hour").get(null);
-            int minute = (int) core.TimeSystem.class.getDeclaredField("minute").get(null);
-            String season = (String) core.TimeSystem.class.getDeclaredField("season").get(null);
-            String partOfDay = (String) core.TimeSystem.class.getDeclaredField("partOfDay").get(null);
+            int day = TimeSystem.day;
+            int hour = TimeSystem.hour;
+            String season = TimeSystem.season;
+            String partOfDay = TimeSystem.partOfDay;
 
-            lblClock.setText(String.format("Time: %02d:%02d (Day %02d/%02d/%d)", hour, minute, day, month, year));
+            lblClock.setText(String.format("Time: %02d:00 (Day %d)", hour, day));
             lblSeason.setText("Current Season: " + season);
             lblPartOfDay.setText("Light Cycle: " + partOfDay);
 

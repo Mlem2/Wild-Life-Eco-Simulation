@@ -112,7 +112,7 @@ public class ActionManager {
 
     public void eatGrass() {
         int hungerGain = 10;
-        int thirstGain = 2;
+        int thirstGain = 3;
 
         try {
             Position pos = owner.getPosition();
@@ -157,11 +157,12 @@ public class ActionManager {
         // Implement hunting success chance: 50%
         if (new java.util.Random().nextBoolean()) {
             // Success: act normally (eat the prey)
+            owner.setMatingCooldown(owner.getMatingCooldown() - 500);
             eat(prey);
         } else {
             // Failure: prey slips away, predator is stunned for 40 ticks
             owner.lockTargetEntity(null);
-            owner.setCurrentMoveCooldown(40);
+            owner.setCurrentMoveCooldown(20);
         }
     }
 

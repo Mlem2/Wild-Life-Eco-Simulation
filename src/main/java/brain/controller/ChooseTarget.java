@@ -115,7 +115,7 @@ public class ChooseTarget {
         }
 
         if ((owner instanceof entities.attributes.Carnivore)
-                && owner.getHungerPercentage() < 80
+                && owner.getHungerPercentage() < 60
                 && mapSystem.hasPreyAround(owner)) {
             changeStrategy(hunterStrategy);
             return;
@@ -123,13 +123,6 @@ public class ChooseTarget {
 
         if (owner.getHungerPercentage() < 60 && owner instanceof entities.attributes.Herbivore) {
             changeStrategy(eatingStrategy);
-            return;
-        }
-
-        if ((owner instanceof entities.attributes.Carnivore)
-            && owner.getHungerPercentage() < 50
-            && mapSystem.hasPreyAround(owner)) {
-            changeStrategy(aggressiveStrategy); 
             return;
         }
 
