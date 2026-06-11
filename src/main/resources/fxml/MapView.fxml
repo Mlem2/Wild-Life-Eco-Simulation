@@ -3,12 +3,11 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.canvas.*?>
 
-<StackPane xmlns="http://javafx.com/javafx"
-           xmlns:fx="http://javafx.com/fxml"
-           fx:controller="view.graphic.ui.controller.MapController"
-           onMouseClicked="#onMapClicked"
-           styleClass="map-pane">
+<Pane xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="view.graphic.ui.controller.MapController"
+      styleClass="map-pane">
 
-    <Canvas fx:id="mapCanvas" width="500" height="500"/>
+    <Canvas fx:id="mapCanvas" width="500" height="500" onMouseClicked="#onMapClicked"/>
 
-</StackPane>
+</Pane>

@@ -32,7 +32,8 @@ public class MapController {
     private final double MAX_SCALE = 10.0;
 
     private long lastUpdateTime = 0;
-    private final long RENDER_DELAY_NS = 16_666_666L; // 🌟 Tối ưu lên ~60 FPS chuẩn game thay vì bị delay dài
+    // Đồng bộ chu kỳ vẽ chuẩn game: 16.6ms (~60 FPS) giúp máy cực kỳ mượt
+    private final long RENDER_DELAY_NS = 16_666_666L;
 
     private AnimationTimer renderLoop;
 
@@ -45,6 +46,14 @@ public class MapController {
             mapCanvas.setOnScroll(this::handleScroll);
             mapCanvas.setOnMousePressed(this::handleMousePressed);
             mapCanvas.setOnMouseDragged(this::handleMouseDragged);
+
+            // Tự động điều chỉnh kích thước Canvas khít với khung hiển thị được phân bổ ban đầu
+            javafx.application.Platform.runLater(() -> {
+                if (mapCanvas.getParent() instanceof javafx.scene.layout.Pane parent) {
+                    mapCanvas.setWidth(parent.getWidth() > 0 ? parent.getWidth() : 500);
+                    mapCanvas.setHeight(parent.getHeight() > 0 ? parent.getHeight() : 500);
+                }
+            });
         }
 
         renderLoop = new AnimationTimer() {
@@ -60,19 +69,29 @@ public class MapController {
         renderLoop.start();
     }
 
+    // =========================================================================
+    // 🎯 SỰ KIỆN CLICK CHUỘT CHUẨN XÁC TUYỆT ĐỐI KHÔNG LỆCH - KHÔNG LAG
+    // =========================================================================
     @FXML
     void onMapClicked(MouseEvent event) {
-        if (event.isStillSincePress() == false) return;
+        if (!event.isStillSincePress()) return;
         if (!isContextSet || worldMap == null) return;
 
         final double tileSize = 32.0;
 
-        double worldX = (event.getX() - offsetX) / scale;
-        double worldY = (event.getY() - offsetY) / scale;
+        // Lấy tọa độ click chuột thực tế tương quan với góc Canvas nội bộ (khử sai lệch scale giao diện)
+        double mouseX = event.getX();
+        double mouseY = event.getY();
 
+        // Thuật toán đảo ngược ma trận: Biến đổi tọa độ Màn hình -> Tọa độ Thế giới Game
+        double worldX = (mouseX - offsetX) / scale;
+        double worldY = (mouseY - offsetY) / scale;
+
+        // Định vị chính xác ô lưới nguyên
         int gridX = (int) Math.floor(worldX / tileSize);
         int gridY = (int) Math.floor(worldY / tileSize);
 
+        // Chặn biên bảo vệ mảng an toàn
         if (gridX < 0 || gridX >= gridSize || gridY < 0 || gridY >= gridSize) {
             return;
         }
@@ -80,6 +99,8 @@ public class MapController {
         if (SELECTED_TOOL == null || SELECTED_TOOL.equals("NONE")) {
             return;
         }
+
+        System.out.println("🎯 [Tọa độ Ô]: Đặt " + SELECTED_TOOL + " tại ô: [" + gridX + ", " + gridY + "]");
 
         entities.base.Entity newEntity = null;
 
@@ -126,7 +147,7 @@ public class MapController {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("❌ Lỗi sinh thực thể: " + e.getMessage());
+                System.err.println("❌ Lỗi sinh vật: " + e.getMessage());
             }
         }
     }
@@ -165,6 +186,11 @@ public class MapController {
 
         if (mapCanvas != null) {
             this.gc = mapCanvas.getGraphicsContext2D();
+            // Lấy lại chiều rộng/cao chuẩn từ Pane cha để không đè lên thanh công cụ
+            if (mapCanvas.getParent() instanceof javafx.scene.layout.Pane parent) {
+                if (parent.getWidth() > 0) mapCanvas.setWidth(parent.getWidth());
+                if (parent.getHeight() > 0) mapCanvas.setHeight(parent.getHeight());
+            }
         }
 
         AssetManager.loadAssets();
@@ -197,6 +223,7 @@ public class MapController {
 
         gc.clearRect(0, 0, canvasWidth, canvasHeight);
         gc.save();
+
         gc.translate(offsetX, offsetY);
         gc.scale(scale, scale);
 
@@ -208,7 +235,7 @@ public class MapController {
         Image dirtImg = AssetManager.get("tile_dirt");
         Image forestImg = AssetManager.get("forest");
 
-        // 🌟 BƯỚC CẢI TIẾN 1: Vẽ nền địa hình bản đồ (Giữ nguyên tối ưu quét biên màn hình)
+        // 1. Vẽ gạch nền (Terrain) có tính năng Culling mượt mà
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
                 double dx = x * tileSize;
@@ -259,7 +286,7 @@ public class MapController {
             }
         }
 
-        // 🌟 BƯỚC CẢI TIẾN 2: Vẽ thực thể (Khử hoàn toàn Reflection để chống lag)
+        // 2. Vẽ các sinh vật và cây cối từ Chunk (Tối ưu hóa thuật toán lưu trữ chuỗi nguyên bản chống lag)
         if (worldMap.chunkMap != null) {
             for (int cy = 0; cy < worldMap.chunkMap.length; cy++) {
                 for (int cx = 0; cx < worldMap.chunkMap[cy].length; cx++) {
@@ -275,8 +302,7 @@ public class MapController {
 
                     if (safeEntities == null) continue;
 
-                    // Duyệt nhanh qua danh sách để ghi nhận các vị trí có Bụi cây (Bush) xuất hiện trong Chunk này
-                    // Việc dùng toán học so sánh primitive tọa độ này chạy siêu nhanh, không tốn tí tài nguyên CPU nào
+                    // Ghi nhớ tọa độ có bụi cỏ cực nhanh
                     List<String> bushCoordinates = new ArrayList<>();
                     for (entities.base.Entity entity : safeEntities) {
                         if (entity != null && entity.getClass().getSimpleName().equalsIgnoreCase("Bush")) {
@@ -304,10 +330,10 @@ public class MapController {
 
                         String typeName = entity.getClass().getSimpleName().toLowerCase().trim();
 
-                        // 🌟 TỐI ƯU HÓA YÊU CẦU 1: Nếu thực thể là Thỏ và tọa độ trùng khít với 1 Bụi cây -> Ẩn luôn không vẽ!
+                        // [Yêu cầu 1]: Thỏ ẩn nấp trong bụi cỏ thì ẩn sprite
                         if (typeName.equals("rabbit")) {
                             if (bushCoordinates.contains(ex + "," + ey)) {
-                                continue; // Bỏ qua không vẽ hình thỏ, bụi cây bên dưới sẽ đè lên tự nhiên!
+                                continue;
                             }
                         }
 
