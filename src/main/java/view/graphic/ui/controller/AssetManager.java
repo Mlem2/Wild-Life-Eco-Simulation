@@ -52,7 +52,7 @@ public class AssetManager {
             // Các asset sơ cua chống sập
             loadSingleAsset("stone", "/image/terrains/rock/rock.png", "tree_small");
             loadSingleAsset("tile_stone", "/image/terrains/rock/rock.png", "tree_small");
-            loadSingleAsset("tile_dirt", "/image/terrains/grass/Grass.png", "tile_grass");
+            loadSingleAsset("tile_dirt", "/image/terrains/grass/dirt.png", "tile_grass");
 
             // =========================================================
             // 3. NẠP SINH VẬT ĐƠN LẺ
