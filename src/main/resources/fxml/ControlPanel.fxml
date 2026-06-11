@@ -35,20 +35,22 @@
             <ToggleGroup fx:id="toolGroup"/>
         </fx:define>
 
-        <RadioButton fx:id="rbNone"     text="🚫 Không chọn"   toggleGroup="$toolGroup"
+        <RadioButton fx:id="rbNone"     text="Không chọn"   toggleGroup="$toolGroup"
                      onAction="#onToolNone"      selected="true" styleClass="tool-radio"/>
-        <RadioButton fx:id="rbGrass"    text="🟩 Gieo cỏ"       toggleGroup="$toolGroup"
+        <RadioButton fx:id="rbGrass"    text="Gieo cỏ"       toggleGroup="$toolGroup"
                      onAction="#onToolGrass"     styleClass="tool-radio"/>
-        <RadioButton fx:id="rbRabbit"   text="⚪ Thêm Thỏ"      toggleGroup="$toolGroup"
+        <RadioButton fx:id="rbRabbit"   text="Thêm Thỏ"      toggleGroup="$toolGroup"
                      onAction="#onToolRabbit"    styleClass="tool-radio"/>
-        <RadioButton fx:id="rbWolf"     text="🔘 Thêm Sói"      toggleGroup="$toolGroup"
+        <RadioButton fx:id="rbWolf"     text="Thêm Sói"      toggleGroup="$toolGroup"
                      onAction="#onToolWolf"      styleClass="tool-radio"/>
-        <RadioButton fx:id="rbTiger"    text="🟠 Thêm Hổ"       toggleGroup="$toolGroup"
+        <RadioButton fx:id="rbTiger"    text="Thêm Hổ"       toggleGroup="$toolGroup"
                      onAction="#onToolTiger"     styleClass="tool-radio"/>
-        <RadioButton fx:id="rbElephant" text="🔵 Thêm Voi"      toggleGroup="$toolGroup"
+        <RadioButton fx:id="rbElephant" text="Thêm Voi"      toggleGroup="$toolGroup"
                      onAction="#onToolElephant"  styleClass="tool-radio"/>
-        <RadioButton fx:id="rbRock"     text="⬛ Đặt Đá"        toggleGroup="$toolGroup"
+        <RadioButton fx:id="rbRock"     text="Đặt Đá"        toggleGroup="$toolGroup"
                      onAction="#onToolRock"      styleClass="tool-radio"/>
+        <RadioButton fx:id="rbTree"     text="Đặt Cây To"        toggleGroup="$toolGroup"
+                     onAction="#onToolTree"      styleClass="tool-radio"/>
     </VBox>
 
     <Separator/>

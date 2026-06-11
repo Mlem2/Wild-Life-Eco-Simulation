@@ -233,7 +233,6 @@ public class MapController {
         Image waterImg = AssetManager.get("tile_water");
         Image stoneImg = AssetManager.get("stone");
         Image dirtImg = AssetManager.get("tile_dirt");
-        Image forestImg = AssetManager.get("forest");
 
         // 1. Vẽ gạch nền (Terrain) có tính năng Culling mượt mà
         for (int x = 0; x < gridSize; x++) {
@@ -266,10 +265,6 @@ public class MapController {
                         } else if (terrainName.contains("MUD")) {
                             if (grassImg != null) gc.drawImage(grassImg, dx, dy, tileSize, tileSize);
                             if (dirtImg != null) gc.drawImage(dirtImg, dx, dy, tileSize, tileSize);
-                            drawn = true;
-                        } else if (terrainName.contains("FOREST")) {
-                            if (grassImg != null) gc.drawImage(grassImg, dx, dy, tileSize, tileSize);
-                            if (forestImg != null) gc.drawImage(forestImg, dx, dy, tileSize, tileSize);
                             drawn = true;
                         } else {
                             if (grassImg != null) {
