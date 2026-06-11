@@ -1,11 +1,13 @@
 package entities.base;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import allEnum.Size;
 import allEnum.State;
 import brain.strategy.MoveStrategy;
+import core.TimeSystem;
 
 public abstract class Animals extends Entity {
     protected double hunger = 100;
@@ -15,15 +17,18 @@ public abstract class Animals extends Entity {
     protected MoveStrategy moveStrategy;
     protected int defaultMoveCooldown; // thời gian hồi method di chuyển (chỉ để lưu)
     protected int currentMoveCooldown;// thời gian hồi method di chuyển (chỉ để tính toán sau mỗi chu kì clock)
+    protected int defaultMatingCooldown; // default mating cooldown
     protected static Random random = new Random();
     protected double foodEfficiency; // hệ số hiệu quả tiêu thụ thức ăn
     protected double waterEfficiency; // hệ số hiệu quả tiêu thụ nước
     protected int hungerRecoveryAmount = 10;
     protected int thirstRecoveryAmount = 10;
+    protected int matingCooldown;
     // Brain related helpers
     protected Object lockedTargetEntity = null;
     protected Position lastLockedTargetPos = null;
     protected boolean speedUp = false;
+    protected ArrayList<String> breedingSeason = new ArrayList<>();
 
     public Animals(int x, int y){
         super(x,y);
@@ -68,9 +73,9 @@ public abstract class Animals extends Entity {
 
     public int getOwnMaxSpeedCooldown() {
         // Return a personal cooldown for speed-up actions
-        // If it's a Hunter, it should be 1.5 times faster: defaultMoveCooldown / 1.5
+        // If it's a Hunter, it should be 1.2 times faster: defaultMoveCooldown / 1.2
         if (this.getMoveStrategyName().equals("HunterStrategy")) {
-            return Math.max(1, (int) Math.round(defaultMoveCooldown / 1.5));
+            return Math.max(1, (int) Math.round(defaultMoveCooldown / 1.2));
         }
         // Fallback to 2x speed for other speed-up cases (like ScaredStrategy)
         return Math.max(1, defaultMoveCooldown / 2);
@@ -107,6 +112,7 @@ public abstract class Animals extends Entity {
         currentMoveCooldown--;
         updateHungerThirst();
         age--;
+        if (matingCooldown > 0) matingCooldown--;
         if(age <= 0 || hunger <= 0 || thirst <= 0){
             this.isAlive = false;
         }
@@ -137,6 +143,10 @@ public abstract class Animals extends Entity {
         return size;
     }
 
+    public State getState() {
+        return state;
+    }
+
     public void setState(State state) {
         this.state = state;
     }
@@ -164,4 +174,14 @@ public abstract class Animals extends Entity {
 
     // Expose default cooldown so external controllers (ActionManager) can use it
     public int getDefaultMoveCooldown() { return this.defaultMoveCooldown; }
+    public int getDefaultMatingCooldown() {
+        if(breedingSeason.contains(TimeSystem.season)){
+            return this.defaultMatingCooldown;
+        }
+        return this.defaultMatingCooldown * 3;
+    }
+
+    public int getMatingCooldown() { return matingCooldown; }
+    public void setMatingCooldown(int matingCooldown) { this.matingCooldown = matingCooldown; }
+    public boolean isReadyToMate() { return matingCooldown <= 0 && age > 1000; }
 }

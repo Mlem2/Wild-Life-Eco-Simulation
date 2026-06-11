@@ -13,8 +13,6 @@ import entities.base.Entity;
 import entities.base.Position;
 
 public class AnimalBrainUpdate {
-    private static final int CONSUME_RADIUS = 1;
-
     private final Animals owner;
     private final ChooseTarget targetSelector;
     private final Pathfinder pathFinder;
@@ -44,13 +42,8 @@ public class AnimalBrainUpdate {
     }
 
     public void update() {
-        // 1. Ưu tiên hành động ăn/đánh ngay lập tức nếu có mục tiêu gần, kể cả khi đang trong cooldown di chuyển.
-//        if (consumeNearbyTarget()) {
-//            currentPath.clear();
-//            return;
-//        }
 
-        // 2. Kiểm tra Cooldown di chuyển/hành động từ ActionManager
+        // 1. Kiểm tra Cooldown di chuyển/hành động từ ActionManager
         if (!actionManager.isAvailable()) return;
 
         // 2. Hỏi bộ não ChooseTarget xem mục tiêu (điểm neo) hiện tại là ở đâu
@@ -73,6 +66,23 @@ public class AnimalBrainUpdate {
 
         // 3. Nếu đã đứng ngay cạnh mục tiêu lock-in (Thức ăn, Nước, Con mồi) -> Thực hiện Hành động
         if (owner.getPosition().equals(anchorTarget)) {
+            // Check if small animal reached a bush while being scared and if it's not occupied
+            if (owner.getSize() == allEnum.Size.SMALL && "ScaredStrategy".equals(currentStrategyName)) {
+                List<Entity> entitiesAtPos = actionManager.getMapSystem().getEntitiesWithinRadius(owner.getPosition(), 0);
+                boolean inBush = false;
+                for (Entity e : entitiesAtPos) {
+                    if (e instanceof entities.Bush) {
+                        inBush = true;
+                        break;
+                    }
+                }
+                if (inBush && !actionManager.getMapSystem().isBushOccupied(owner.getPosition())) {
+                    owner.setState(allEnum.State.HIDING);
+                    currentPath.clear();
+                    return;
+                }
+            }
+
             Object targetEntity = owner.getLockedTargetEntity();
             if (targetEntity instanceof Position positionTarget) {
                 Entity entityAtTarget = actionManager.getMapSystem().getEntityAt(positionTarget);
@@ -89,8 +99,12 @@ public class AnimalBrainUpdate {
                 actionManager.eat(food);
             } else if (targetEntity instanceof Water) {
                 actionManager.drink((Water) targetEntity);
-            } else if (targetEntity instanceof Animals) {
-                actionManager.eat((Animals) targetEntity); // Ăn mồi ngay lập tức, không dùng cơ chế HP/attack
+            } else if (targetEntity instanceof Animals other) {
+                if (actionManager.getMapSystem().isPotentialMate(owner, other)) {
+                    actionManager.mate(other);
+                } else {
+                    actionManager.attack(other); // CẬP NHẬT: Sử dụng attack() thay vì eat() để có tỉ lệ thành công
+                }
             } else {
                 // Check if it's grass terrain
                 core.enviroment.Terrain terrain = actionManager.getMapSystem().getTerrainAt(owner.getPosition());
@@ -105,7 +119,7 @@ public class AnimalBrainUpdate {
         // 4. Nếu chưa đến đích -> Cập nhật đường đi và bắt ActionManager di chuyển
         // Nếu đường đi trống hoặc thực thể đích di chuyển (đối với con mồi chạy trốn)
         if (currentPath.isEmpty() || owner.hasLockedTargetMoved()) {
-            pathFinder.calculatePath(new Point(owner.getPosition().getX(), owner.getPosition().getY()), new Point(anchorTarget.getX(), anchorTarget.getY()), rawPath);
+            pathFinder.calculatePath(new Point(owner.getPosition().getX(), owner.getPosition().getY()), new Point(anchorTarget.getX(), anchorTarget.getY()), rawPath, owner);
             currentPath.clear();
             for (Point p : rawPath) currentPath.add(Position.of(p.x, p.y));
             // If path includes current position as first element, drop it so the animal advances
@@ -131,6 +145,7 @@ public class AnimalBrainUpdate {
         Entity foodTarget = null;
         Entity waterTarget = null;
         Entity preyTarget = null;
+        Entity mateTarget = null;
 
         for (Entity entity : currentTileEntities) {
             if (entity == null || entity == owner) continue;
@@ -150,93 +165,18 @@ public class AnimalBrainUpdate {
                 waterTarget = entity;
             }
             if (entity instanceof Animals && entity != owner) {
-                // Use MapSystem.isPrey for consistency
-                if (mapSystem.isPrey(owner, (Animals) entity)) {
+                if (mapSystem.isPotentialMate(owner, (Animals) entity)) {
+                    mateTarget = entity;
+                } else if (mapSystem.isPrey(owner, (Animals) entity)) {
                     preyTarget = entity;
                 }
             }
         }
 
+        if (mateTarget != null) return mateTarget;
         if (foodTarget != null) return foodTarget;
         if (waterTarget != null) return waterTarget;
         return preyTarget;
-    }
-
-    private boolean consumeNearbyTarget() {
-        MapSystem mapSystem = actionManager.getMapSystem();
-        if (mapSystem == null) return false;
-
-        List<Entity> nearbyEntities = mapSystem.getEntitiesWithinRadius(owner.getPosition(), CONSUME_RADIUS);
-
-        Entity foodTarget = findNearestTarget(nearbyEntities, entity -> {
-            if (entity instanceof Food && !(entity instanceof Water)) {
-                if (entity instanceof entities.Trees || entity instanceof entities.Bush) {
-                    return owner instanceof entities.Elephant;
-                }
-                return true;
-            }
-            return false;
-        }, false);
-
-        if (foodTarget instanceof Food food) {
-            actionManager.eat(food);
-            return true;
-        }
-
-        // Herbivores eat grass if on a grass tile
-        if (owner instanceof entities.attributes.Herbivore) {
-            core.enviroment.Terrain terrain = mapSystem.getTerrainAt(owner.getPosition());
-            if (terrain != null && terrain.isGrass()) {
-                actionManager.eatGrass();
-                return true;
-            }
-        }
-
-        Entity waterTarget = findNearestTarget(nearbyEntities, entity -> entity instanceof Water, false);
-        if (waterTarget instanceof Water water) {
-            actionManager.drink(water);
-            return true;
-        }
-
-        List<Position> nearbyWaterTiles = mapSystem.getWaterPositionsWithinRadius(owner.getPosition(), CONSUME_RADIUS);
-        nearbyWaterTiles.removeIf(pos -> owner.getPosition().equals(pos));
-        if (!nearbyWaterTiles.isEmpty()) {
-            actionManager.drink();
-            return true;
-        }
-
-        if (owner instanceof entities.attributes.Carnivore) {
-            Entity preyTarget = findNearestTarget(nearbyEntities, entity -> {
-                if (entity instanceof Animals other) {
-                    return mapSystem.isPrey(owner, other);
-                }
-                return false;
-            }, true);
-            if (preyTarget instanceof Animals prey) {
-                actionManager.eat(prey);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private Entity findNearestTarget(List<Entity> entities, java.util.function.Predicate<Entity> predicate, boolean allowCurrentTile) {
-        Entity nearest = null;
-        int bestDistance = Integer.MAX_VALUE;
-
-        for (Entity entity : entities) {
-            if (entity == null || !predicate.test(entity)) continue;
-
-            int distance = Math.abs(owner.getX() - entity.getX()) + Math.abs(owner.getY() - entity.getY());
-            if (!allowCurrentTile && distance == 0) continue;
-            if (distance <= CONSUME_RADIUS && distance < bestDistance) {
-                nearest = entity;
-                bestDistance = distance;
-            }
-        }
-
-        return nearest;
     }
 
 }

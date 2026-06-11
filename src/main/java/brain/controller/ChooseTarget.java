@@ -1,10 +1,13 @@
 package brain.controller;
 
+import allEnum.State;
 import brain.strategy.AggressiveStrategy;
+import brain.strategy.DrinkingStrategy;
+import brain.strategy.EatingStrategy;
 import brain.strategy.HunterStrategy;
+import brain.strategy.MateStrategy;
 import brain.strategy.MoveStrategy;
 import brain.strategy.PassiveStrategy;
-import brain.strategy.PriorityStrategy;
 import brain.strategy.ScaredStrategy;
 import entities.base.Animals;
 import entities.base.Position;
@@ -15,9 +18,11 @@ public class ChooseTarget {
 
     private final MoveStrategy scaredStrategy = new ScaredStrategy();
     private final MoveStrategy aggressiveStrategy = new AggressiveStrategy();
-    private final MoveStrategy priorityStrategy = new PriorityStrategy();
+    private final MoveStrategy drinkingStrategy = new DrinkingStrategy();
+    private final MoveStrategy eatingStrategy = new EatingStrategy();
     private final MoveStrategy passiveStrategy = new PassiveStrategy();
     private final MoveStrategy hunterStrategy = new HunterStrategy();
+    private final MoveStrategy mateStrategy = new MateStrategy();
 
     private MoveStrategy currentStrategy;
     private Position currentTargetPos = null;
@@ -28,10 +33,23 @@ public class ChooseTarget {
         this.owner = owner;
         this.mapSystem = mapSystem;
         this.currentStrategy = passiveStrategy;
+        this.owner.setState(State.PASSIVE);
     }
 
     // Được gọi bởi AnimalBrainUpdate mỗi tick để lấy vị trí mục tiêu hiện tại. Nếu cần thiết sẽ tự động cập nhật lại mục tiêu dựa trên chiến thuật hiện tại.
     public Position getOrUpdateTarget() {
+        if (owner.getState() == allEnum.State.HIDING) {
+            if (owner.getHungerPercentage() < 30) {
+                owner.setState(State.EATING);
+            } else if (owner.getThirstPercentage() < 30) {
+                owner.setState(State.DRINKING);
+            } else if (mapSystem.hasEnemyNearby(owner)) {
+                return owner.getPosition(); // Stay hiding
+            } else {
+                owner.setState(State.PASSIVE); // Safe now
+            }
+        }
+
         long currentTime = System.currentTimeMillis();
 
         evaluateStrategy();
@@ -64,28 +82,47 @@ public class ChooseTarget {
     }
 
     private void evaluateStrategy() {
-        // 1. Kiểm tra thiên địch xung quanh toàn bộ tầm nhìn (3x3 chunks)
-        // ScaredStrategy has the highest priority for herbivores
-        if (owner instanceof entities.attributes.Herbivore &&
-            mapSystem.hasEnemyAround(owner) && mapSystem.hasEnemyNearby(owner)) {
-            // Ngẫu nhiên có phát hiện kẻ địch hay không (60%)
-            if (Math.random() < 0.6) {
-                changeStrategy(scaredStrategy);
-                return;
-            }
-        }
-
-        // 2. Nếu đói hoặc khát nhưng không có mục tiêu săn đuổi ngay lập tức -> Dùng Priority để mò đồ ăn/nước
-        if (owner.getHungerPercentage() < 60 || owner.getThirstPercentage() < 80) {
-            changeStrategy(priorityStrategy);
+        // 1. Kiểm tra trạng thái thèm ăn/thèm uống
+        if ((owner.getHungerPercentage() < 50 || owner.getThirstPercentage() < 50) && owner instanceof entities.attributes.Herbivore) {
+            changeStrategy(aggressiveStrategy);
             return;
         }
 
-        // 3. Nếu an toàn và là thú săn mồi đang đói + thấy con mồi -> Kích hoạt Hunter/Aggressive
+        // 2. Kiểm tra thiên địch xung quanh toàn bộ tầm nhìn (3x3 chunks)
+        // ScaredStrategy has the highest priority for herbivores
+        if (owner instanceof entities.attributes.Herbivore &&
+            mapSystem.hasEnemyAround(owner)
+        ) {
+            // Ngẫu nhiên có phát hiện kẻ địch hay không (80%)
+            if (getCurrentStrategyName().equals("ScaredStrategy")) {
+                return;
+            } else if (Math.random() < 0.2) {
+                changeStrategy(scaredStrategy);
+            }
+            return;
+        }
+
+        // 3. Mating strategy
+        if (owner.isReadyToMate() && mapSystem.hasMateAround(owner)) {
+            changeStrategy(mateStrategy);
+            return;
+        }
+
+        // 4. Nếu đói hoặc khát nhưng không có mục tiêu săn đuổi ngay lập tức -> Dùng Priority để mò đồ ăn/nước
+        if (owner.getThirstPercentage() < 50) {
+            changeStrategy(drinkingStrategy);
+            return;
+        }
+
         if ((owner instanceof entities.attributes.Carnivore)
                 && owner.getHungerPercentage() < 80
                 && mapSystem.hasPreyAround(owner)) {
             changeStrategy(hunterStrategy);
+            return;
+        }
+
+        if (owner.getHungerPercentage() < 60 && owner instanceof entities.attributes.Herbivore) {
+            changeStrategy(eatingStrategy);
             return;
         }
 
@@ -96,7 +133,7 @@ public class ChooseTarget {
             return;
         }
 
-        // 4. Mọi thứ ổn định -> Thư giãn
+        // 5. Mọi thứ ổn định -> Thư giãn
         changeStrategy(passiveStrategy);
     }
 
@@ -104,6 +141,15 @@ public class ChooseTarget {
         if (this.currentStrategy != newStrategy) {
             this.currentStrategy = newStrategy;
             owner.setSpeedUp(false);      // Reset trạng thái speed về mặc định trước khi strategy mới tính toán
+            
+            if (newStrategy == scaredStrategy) owner.setState(allEnum.State.SCARED);
+            else if (newStrategy == aggressiveStrategy) owner.setState(allEnum.State.AGGRESSIVE);
+            else if (newStrategy == drinkingStrategy) owner.setState(allEnum.State.DRINKING);
+            else if (newStrategy == eatingStrategy) owner.setState(allEnum.State.EATING);
+            else if (newStrategy == hunterStrategy) owner.setState(allEnum.State.HUNT);
+            else if (newStrategy == mateStrategy) owner.setState(allEnum.State.MATE);
+            else if (newStrategy == passiveStrategy) owner.setState(allEnum.State.PASSIVE);
+
             this.currentTargetPos = newStrategy.getTarget(owner, mapSystem); 
             targetSetTime = System.currentTimeMillis();
         }

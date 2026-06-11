@@ -30,6 +30,19 @@ public class ActionManager {
     public void move(Position nextStep) {
         if (!mapSystem.isWalkable(nextStep)) return;
 
+        // Fish constraint: only water. Others: everything but water (mostly)
+        // Actually, land animals CAN go to water if they want to (Hunter/Priority drink),
+        // but the previous requirement was specifically for PassiveStrategy to avoid water.
+        // However, THIS requirement says "fishes can't go on land". This sounds like a hard constraint.
+        core.enviroment.Terrain targetTerrain = mapSystem.getTerrainAt(nextStep);
+        if (owner instanceof entities.Fish) {
+            if (targetTerrain != null && !targetTerrain.isWater()) return;
+        } else {
+            // If we want to strictly prevent land animals from entering water AT ALL (not just passive), we'd put it here.
+            // But the previous task only asked for Passive strategy. 
+            // The current task is "fishes can't go on land", which I'll enforce here.
+        }
+
         // Update chunk membership: compute old/new chunks, move the entity between them if needed
         Chunk oldChunk = null;
         Chunk newChunk = null;
@@ -68,6 +81,10 @@ public class ActionManager {
         return mapSystem;
     }
 
+    public static void setCooldown(Animals animal, int cooldown) {
+        animal.setCurrentMoveCooldown(cooldown);
+    }
+
     public void eat(Food food) {
         if (food == null) return;
 
@@ -94,8 +111,30 @@ public class ActionManager {
     }
 
     public void eatGrass() {
-        owner.increaseHunger(10);
-        owner.increaseHydration(5);
+        int hungerGain = 10;
+        int thirstGain = 2;
+
+        try {
+            Position pos = owner.getPosition();
+            if (pos != null) {
+                Chunk currentChunk = mapSystem.getChunkAt(pos);
+                if (currentChunk != null) {
+                    int herbivoresInChunk = currentChunk.getEntitiesCountByType(entities.attributes.Herbivore.class);
+                    // Each herbivore in the chunk reduces the grass nutrition available
+                    // Formula: gain = base / (1 + (herbivores-1) * 0.1)
+                    // We use (herbivores-1) because the owner is also a herbivore and should be counted,
+                    // but 1 herbivore should get full nutrition.
+                    if (herbivoresInChunk > 1) {
+                        double population = (herbivoresInChunk - 1) * 0.5;
+                        hungerGain = (int) Math.round(hungerGain - population);
+                        thirstGain = (int) Math.round(thirstGain - population);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        owner.increaseHunger(hungerGain);
+        owner.increaseHydration(thirstGain);
         owner.setCurrentMoveCooldown(1);
     }
 
@@ -113,6 +152,38 @@ public class ActionManager {
     }
 
     public void attack(Animals prey) {
-        eat(prey);
+        if (prey == null) return;
+
+        // Implement hunting success chance: 50%
+        if (new java.util.Random().nextBoolean()) {
+            // Success: act normally (eat the prey)
+            eat(prey);
+        } else {
+            // Failure: prey slips away, predator is stunned for 40 ticks
+            owner.lockTargetEntity(null);
+            owner.setCurrentMoveCooldown(40);
+        }
+    }
+
+    public void mate(Animals partner) {
+        if (partner == null) return;
+        // Basic check, in case someone else already mated with them or they are not ready anymore
+        if (!owner.isReadyToMate() || !partner.isReadyToMate()) return;
+
+        try {
+            // New animal is born at owner's position
+            Animals offspring = owner.getClass().getConstructor(int.class, int.class)
+                    .newInstance(owner.getX(), owner.getY());
+            mapSystem.addEntity(offspring);
+
+            // Reset mating urge and set cooldown for both parents
+            owner.setMatingCooldown(owner.getDefaultMatingCooldown());
+            partner.setMatingCooldown(partner.getDefaultMatingCooldown());
+
+            owner.lockTargetEntity(null);
+            owner.setCurrentMoveCooldown(10); // Mating takes some time
+        } catch (Exception e) {
+            // Error during mating
+        }
     }
 }
