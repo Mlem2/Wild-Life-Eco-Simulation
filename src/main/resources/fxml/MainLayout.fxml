@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="view.graphic.ui.controller.MainController"
-            stylesheets="@../css/Style.css"
-            prefWidth="950" prefHeight="680">
+<BorderPane prefHeight="680" prefWidth="950" stylesheets="@../css/Style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.graphic.ui.controller.MainController">
 
     <top>
-        <HBox styleClass="top-bar" spacing="12" alignment="CENTER_LEFT">
-            <Label text="🌿 Wild Ecosystem Simulation" styleClass="app-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="🏠 Menu Chính" onAction="#onBackToMenuClicked" styleClass="mode-badge" style="-fx-cursor: hand;"/>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="top-bar">
+            <Label styleClass="app-title" text="🌿 Wild Ecosystem Simulation" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button onAction="#onBackToMenuClicked" style="-fx-cursor: hand;" styleClass="mode-badge" text="🏠 Menu Chính" />
         </HBox>
     </top>
 
     <center>
-        <StackPane styleClass="map-container">
-            <fx:include fx:id="map" source="MapView.fxml"/>
+        <StackPane minWidth="0.0" styleClass="map-container">
+            <fx:include fx:id="map" source="MapView.fxml" />
         </StackPane>
     </center>
 
     <right>
-        <ScrollPane fitToWidth="true" styleClass="control-scroll" prefWidth="210">
-            <fx:include fx:id="controlPanel" source="ControlPanel.fxml"/>
+        <ScrollPane fitToWidth="true" maxWidth="210.0" minWidth="210.0" prefWidth="210" styleClass="control-scroll">
+            <fx:include fx:id="controlPanel" source="ControlPanel.fxml" />
         </ScrollPane>
     </right>
 
     <bottom>
-        <HBox styleClass="status-bar" spacing="15" alignment="CENTER_LEFT">
-            <Label text="🖱 Scroll = Zoom  |  Kéo = Di chuyển  |  Chọn công cụ rồi Click = Đặt thực thể"
-                   styleClass="status-hint"/>
+        <HBox alignment="CENTER_LEFT" spacing="15" styleClass="status-bar">
+            <Label styleClass="status-hint" text="🖱 Scroll = Zoom  |  Kéo = Di chuyển  |  Chọn công cụ rồi Click = Đặt thực thể" />
         </HBox>
     </bottom>
 
