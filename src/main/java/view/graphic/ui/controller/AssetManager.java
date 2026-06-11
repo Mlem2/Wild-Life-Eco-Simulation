@@ -42,9 +42,9 @@ public class AssetManager {
             // =========================================================
             // 2. NẠP CÁC THÀNH PHẦN ĐỊA HÌNH KHÁC
             // =========================================================
-            loadSingleAsset("tree_medium", "/image/terrains/tree/tree.png", "tile_grass");
+            loadSingleAsset("tree_medium", "/image/terrains/tree/tree001.png", "tile_grass");
             loadSingleAsset("tree_small", "/image/terrains/bush/bush.png", "tile_grass");
-            loadSingleAsset("tree_big", "/image/terrains/tree/tree.png", "tile_grass");
+            loadSingleAsset("tree_big", "/image/terrains/tree/tree001.png", "tile_grass");
 
             // Nạp ảnh nước thật
             loadSingleAsset("tile_water", "/image/terrains/water/water.png", "tile_grass");
