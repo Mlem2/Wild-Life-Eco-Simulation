@@ -1,7 +1,6 @@
 package entities.base;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import allEnum.Size;
@@ -45,8 +44,7 @@ public abstract class Animals extends Entity {
 
     public void lockTargetEntity(Object target) {
         this.lockedTargetEntity = target;
-        if (target instanceof Animals) {
-            Animals a = (Animals) target;
+        if (target instanceof Animals a) {
             this.lastLockedTargetPos = a.getPosition();
         } else if (target instanceof Position) {
             this.lastLockedTargetPos = (Position) target;
@@ -57,8 +55,7 @@ public abstract class Animals extends Entity {
 
 
     public boolean hasLockedTargetMoved() {
-        if (lockedTargetEntity instanceof Animals) {
-            Animals a = (Animals) lockedTargetEntity;
+        if (lockedTargetEntity instanceof Animals a) {
             Position p = a.getPosition();
             if (lastLockedTargetPos == null) return true;
             boolean moved = !lastLockedTargetPos.equals(p);
@@ -98,28 +95,13 @@ public abstract class Animals extends Entity {
     public void increaseHunger(double amount) { hunger = Math.min(100, hunger + amount); }
     public void increaseHydration(double amount) { thirst = Math.min(100, thirst + amount); }
 
-    // Basic combat/health helpers
-    protected int health = 100;
-
-    public void takeDamage(int d) {
-        health -= d;
-        if (health <= 0) isAlive = false;
-    }
-
-    public int getAttackDamage() { return Math.max(1, size.ordinal() + 1); }
-
-    public void updateMoveCooldown(Entity[][] animalCoordinates, List<Entity> allEntities){
+    public void updateMoveCooldown(){
         currentMoveCooldown--;
         updateHungerThirst();
         age--;
         if (matingCooldown > 0) matingCooldown--;
         if(age <= 0 || hunger <= 0 || thirst <= 0){
             this.isAlive = false;
-        }
-        else{
-            if(currentMoveCooldown == 0){
-               
-            }
         }
     }
 
@@ -131,14 +113,6 @@ public abstract class Animals extends Entity {
 
     public abstract void makeSound();
 
-    public double getHunger() {
-        return hunger;
-    }
-
-    public double getThirst() {
-        return thirst;
-    }
-
     public Size getSize() {
         return size;
     }
@@ -149,14 +123,6 @@ public abstract class Animals extends Entity {
 
     public void setState(State state) {
         this.state = state;
-    }
-
-    public void setMoveStrategy(MoveStrategy moveStrategy) {
-        this.moveStrategy = moveStrategy;
-    }
-
-    public MoveStrategy getMoveStrategy() {
-        return this.moveStrategy;
     }
 
     public String getMoveStrategyName() {
@@ -174,11 +140,12 @@ public abstract class Animals extends Entity {
 
     // Expose default cooldown so external controllers (ActionManager) can use it
     public int getDefaultMoveCooldown() { return this.defaultMoveCooldown; }
+
     public int getDefaultMatingCooldown() {
         if(breedingSeason.contains(TimeSystem.season)){
             return this.defaultMatingCooldown;
         }
-        return this.defaultMatingCooldown * 3;
+        return this.defaultMatingCooldown * 2;
     }
 
     public int getMatingCooldown() { return matingCooldown; }

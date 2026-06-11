@@ -5,13 +5,10 @@ import core.TimeSystem;
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
 import entities.Bush;
-import entities.Food;
 import entities.Trees;
 import entities.base.Animals;
 import entities.base.Entity;
-import entities.base.ResourceEntity;
-import entities.base.Tree;
-import entities.base.Position;
+import entities.base.Plant;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -59,40 +56,21 @@ public class SimulationManager {
         }
     }
 
-    public void stop() {
-        running = false;
-        scheduler.shutdown();
-    }
-
     private void updateTimeSystem() {
         try {
-            TimeSystem.updateMinute();
-            if(TimeSystem.getMinute() >= 60){
-                TimeSystem.updateHours();
-                if(TimeSystem.getHours() >= 24){
-                    TimeSystem.updateDays();
-                    if(TimeSystem.getDays() >= TimeSystem.getLimit()){
-                        TimeSystem.updateMonths();
-                        if(TimeSystem.getMonths() > 12){
-                            TimeSystem.updateYears();
-                        }
-                    }
-                }
-            }
+            TimeSystem.updateHours();
         } catch (Exception ignored) {}
     }
 
     private void updateSimulationLogic() {
         try {
             Chunk[][] chunkMap = worldMap.chunkMap;
-            if (chunkMap == null) return;
 
             Entity[][] animalCoordinates = new Entity[gridSize][gridSize];
             List<Entity> allEntities = new ArrayList<>();
 
-            for (int cy = 0; cy < chunkMap.length; cy++) {
-                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
-                    Chunk chunk = chunkMap[cy][cx];
+            for (Chunk[] chunks : chunkMap) {
+                for (Chunk chunk : chunks) {
                     if (chunk == null) continue;
                     synchronized (chunk.getEntityList()) {
                         for (Entity entity : chunk.getEntityList()) {
@@ -120,16 +98,12 @@ public class SimulationManager {
                             Entity entity = entityList.get(i);
                             if (entity == null || !entity.checkAlive() || entitiesToRemove.contains(entity)) continue;
 
-                            if (entity instanceof Tree tree) {
-                                tree.checkCD(animalCoordinates, allEntities);
-                            }
-
-                            if (entity instanceof ResourceEntity resource) {
-                                resource.updateResourceState();
+                            if (entity instanceof Plant plant) {
+                                plant.checkCD(animalCoordinates, allEntities);
                             }
 
                             if (entity instanceof Animals animal) {
-                                animal.updateMoveCooldown(animalCoordinates, allEntities);
+                                animal.updateMoveCooldown();
                                 if (tickCount % 25 == 0) {
                                     try {
                                         Field fieldAge = Entity.class.getDeclaredField("age");
@@ -185,19 +159,6 @@ public class SimulationManager {
                                                     nextX = Math.max(0, Math.min(gridSize - 1, nextX));
                                                     nextY = Math.max(0, Math.min(gridSize - 1, nextY));
 
-                                                    try {
-                                                        var nextTile = worldMap.getTile(nextX, nextY);
-                                                        String tName = (nextTile != null && nextTile.getName() != null) ? nextTile.getName().toLowerCase() : "";
-                                                        boolean water = tName.contains("water") || tName.contains("nuoc");
-                                                        boolean stone = tName.contains("stone") || tName.contains("da") || tName.contains("mountain");
-
-                                                        if (!(animal instanceof entities.Fish)) {
-                                                            if (water || stone) { nextX = curX; nextY = curY; }
-                                                        } else {
-                                                            if (!water) { nextX = curX; nextY = curY; }
-                                                        }
-                                                    } catch (Exception ignored) {}
-
                                                     fieldX.set(animal, nextX);
                                                     fieldY.set(animal, nextY);
                                                 }
@@ -221,7 +182,7 @@ public class SimulationManager {
                                             }
                                         } else if (animal instanceof entities.attributes.Herbivore) {
                                             // Non-elephant herbivores no longer eat trees and bushes
-                                            if (target instanceof Food && !(target instanceof Bush || target instanceof Trees)) {
+                                            if (target instanceof Plant && !(target instanceof Bush || target instanceof Trees)) {
                                                 canEat = true;
                                             }
                                         }
@@ -247,7 +208,7 @@ public class SimulationManager {
 
                                 // Herbivore grass eating logic (only from terrain, not from entities like Bush/Trees), also need to in Scared Strategy.
                                 // Elephants doesn't tend to eat grass, they eat Bush/Trees instead, so they are not affected by this logic.
-                                if ((animal instanceof entities.attributes.Herbivore && !(animal instanceof entities.attributes.Apex)) && (animal.getHungerPercentage() < 80.0) && (animal.getCurrentMoveCooldown() <= 1) && (animal.isSpeedUp() == false)) {
+                                if ((animal instanceof entities.attributes.Herbivore && !(animal instanceof entities.attributes.Apex)) && (animal.getHungerPercentage() < 80.0) && (animal.getCurrentMoveCooldown() <= 1) && (!animal.isSpeedUp())) {
                                     try {
                                         var currentTile = worldMap.getTile(animal.getX(), animal.getY());
                                         if (currentTile != null && currentTile.isGrass()) {
@@ -320,10 +281,25 @@ public class SimulationManager {
         }
     }
 
+    private static boolean isCanEat(Animals animal, Entity target) {
+        boolean canEat = false;
+        if (animal instanceof entities.Elephant) {
+            if (target instanceof Bush || target instanceof Trees) {
+                canEat = true;
+            }
+        } else if (animal instanceof entities.attributes.Herbivore) {
+            // Non-elephant herbivores no longer eat trees and bushes
+            if (target instanceof Plant && !(target instanceof Bush || target instanceof Trees)) {
+                canEat = true;
+            }
+        }
+        return canEat;
+    }
+
     private void registerAllBrains() {
         try {
             Chunk[][] chunkMap = worldMap.chunkMap;
-            if (chunkMap == null) return;
+
             for (Chunk[] row : chunkMap) {
                 for (Chunk chunk : row) {
                     if (chunk == null) continue;
@@ -336,7 +312,7 @@ public class SimulationManager {
     }
 
     public void registerBrainForEntity(Entity e) {
-        if (e == null || !(e instanceof Animals a)) return;
+        if (!(e instanceof Animals a)) return;
         if (brainMap.containsKey(a)) return;
 
         MapSystem ms = new MapSystem(worldMap);

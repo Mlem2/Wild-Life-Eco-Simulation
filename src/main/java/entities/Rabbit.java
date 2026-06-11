@@ -13,13 +13,11 @@ public class Rabbit extends Animals implements Herbivore {
         this.age = (random.nextInt(3) + 2) * 21600;
         this.foodEfficiency = 0.6; // Rabbits are moderately efficient at using food
         this.waterEfficiency = 0.9; // Rabbits have some water needs
-        this.defaultMatingCooldown = 3000;
+        this.defaultMatingCooldown = 1500;
         this.hungerRecoveryAmount = 50; // Rabbits are small, so they don't provide much nutrition
         this.thirstRecoveryAmount = 0; // Rabbits have low thirst recovery
         this.breedingSeason.add("Spring"); // mùa sinh sản
         this.breedingSeason.add("Summer");
-        this.breedingSeason.add("Autumn");
-        this.breedingSeason.add("Winter");
     }
 
     @Override

@@ -377,7 +377,7 @@ public class MapViewer extends Application {
         javafx.scene.control.RadioButton rbSpawnElephant = new javafx.scene.control.RadioButton("🐘 Spawn Elephant (Gray)");
         javafx.scene.control.RadioButton rbSpawnFish = new javafx.scene.control.RadioButton("🐟 Spawn Fish (Aquamarine)");
         javafx.scene.control.RadioButton rbSpawnBush = new javafx.scene.control.RadioButton("🌿 Plant Bush");
-        javafx.scene.control.RadioButton rbSpawnTree = new javafx.scene.control.RadioButton("🌳 Plant Tree");
+        javafx.scene.control.RadioButton rbSpawnTree = new javafx.scene.control.RadioButton("🌳 Plant Plant");
 
         rbView.setToggleGroup(actionGroup); rbView.setSelected(true); rbView.setTextFill(Color.WHITE);
         rbSpawnRabbit.setToggleGroup(actionGroup); rbSpawnRabbit.setTextFill(Color.WHITE);
@@ -436,15 +436,12 @@ public class MapViewer extends Application {
     private void updateTimeInformation() {
         if (sharedSimulationManager == null) return;
         try {
-            int year = (int) core.TimeSystem.class.getDeclaredField("year").get(null);
-            int month = (int) core.TimeSystem.class.getDeclaredField("month").get(null);
-            int day = (int) core.TimeSystem.class.getDeclaredField("day").get(null);
-            int hour = (int) core.TimeSystem.class.getDeclaredField("hour").get(null);
-            int minute = (int) core.TimeSystem.class.getDeclaredField("minute").get(null);
-            String season = (String) core.TimeSystem.class.getDeclaredField("season").get(null);
-            String partOfDay = (String) core.TimeSystem.class.getDeclaredField("partOfDay").get(null);
+            int day = TimeSystem.day;
+            int hour = TimeSystem.hour;
+            String season = TimeSystem.season;
+            String partOfDay = TimeSystem.partOfDay;
 
-            lblClock.setText(String.format("Time: %02d:%02d (Day %02d/%02d/%d)", hour, minute, day, month, year));
+            lblClock.setText(String.format("Time: %02d:00 (Day %d)", hour, day));
             lblSeason.setText("Current Season: " + season);
             lblPartOfDay.setText("Light Cycle: " + partOfDay);
 
@@ -552,7 +549,7 @@ public class MapViewer extends Application {
         content.append("Type: ").append(selectedAnimal.getClass().getSimpleName()).append("\n");
         content.append("Position: (").append(selectedAnimal.getX()).append(", ").append(selectedAnimal.getY()).append(")\n");
         content.append("Chunk: [").append(selectedAnimal.getX() / WorldMap.CHUNK_SIZE).append(", ").append(selectedAnimal.getY() / WorldMap.CHUNK_SIZE).append("]\n");
-        content.append("Hunger: ").append(String.format("%.1f", selectedAnimal.getHunger())).append(" / Thirst: ").append(String.format("%.1f", selectedAnimal.getThirst())).append("\n");
+        content.append("Hunger: ").append(String.format("%.1f", selectedAnimal.getHungerPercentage())).append(" / Thirst: ").append(String.format("%.1f", selectedAnimal.getThirstPercentage())).append("\n");
         content.append("Cooldown: ").append(selectedAnimal.getCurrentMoveCooldown()).append("\n");
         content.append("Strategy: ").append(strategyName).append("\n");
         content.append("Current target: ").append(target == null ? "None" : "(" + target.getX() + ", " + target.getY() + ")").append("\n");

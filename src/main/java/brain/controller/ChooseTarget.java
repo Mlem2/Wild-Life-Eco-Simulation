@@ -27,7 +27,6 @@ public class ChooseTarget {
     private MoveStrategy currentStrategy;
     private Position currentTargetPos = null;
     private long targetSetTime = 0;
-    private final long TARGET_TIMEOUT_MS = 10000; // 10 giây không cập nhật lại mục tiêu sẽ ép tính toán lại
 
     public ChooseTarget(Animals owner, MapSystem mapSystem) {
         this.owner = owner;
@@ -43,7 +42,7 @@ public class ChooseTarget {
                 owner.setState(State.EATING);
             } else if (owner.getThirstPercentage() < 30) {
                 owner.setState(State.DRINKING);
-            } else if (mapSystem.hasEnemyNearby(owner)) {
+            } else if (mapSystem.hasEnemyAround(owner)) {
                 return owner.getPosition(); // Stay hiding
             } else {
                 owner.setState(State.PASSIVE); // Safe now
@@ -56,6 +55,8 @@ public class ChooseTarget {
 
         // Always call getTarget to ensure speedUp state is updated by the strategy if it depends on the strategy being active
         // However, we only WANT to change the target position if needed.
+        // 10 giây không cập nhật lại mục tiêu sẽ ép tính toán lại
+        long TARGET_TIMEOUT_MS = 10000;
         if (currentTargetPos == null ||
             owner.getPosition().equals(currentTargetPos) ||
             (currentTime - targetSetTime > TARGET_TIMEOUT_MS)) {
@@ -90,7 +91,7 @@ public class ChooseTarget {
 
         // 2. Kiểm tra thiên địch xung quanh toàn bộ tầm nhìn (3x3 chunks)
         // ScaredStrategy has the highest priority for herbivores
-        if (owner instanceof entities.attributes.Herbivore &&
+        if (!(owner instanceof entities.attributes.Apex) && !(owner instanceof entities.attributes.Aquatic) &&
             mapSystem.hasEnemyAround(owner)
         ) {
             // Ngẫu nhiên có phát hiện kẻ địch hay không (80%)
@@ -115,7 +116,7 @@ public class ChooseTarget {
         }
 
         if ((owner instanceof entities.attributes.Carnivore)
-                && owner.getHungerPercentage() < 80
+                && owner.getHungerPercentage() < 60
                 && mapSystem.hasPreyAround(owner)) {
             changeStrategy(hunterStrategy);
             return;
@@ -123,13 +124,6 @@ public class ChooseTarget {
 
         if (owner.getHungerPercentage() < 60 && owner instanceof entities.attributes.Herbivore) {
             changeStrategy(eatingStrategy);
-            return;
-        }
-
-        if ((owner instanceof entities.attributes.Carnivore)
-            && owner.getHungerPercentage() < 50
-            && mapSystem.hasPreyAround(owner)) {
-            changeStrategy(aggressiveStrategy); 
             return;
         }
 
