@@ -27,7 +27,7 @@ public class AssetManager {
                 WritableImage croppedGrass = new WritableImage(
                         fullGrassImg.getPixelReader(),
                         48, 0,   // Góc trên bên trái vùng cỏ thuần
-                        48, 48   // Kích thước vuông vắn 48x48 pixel
+                        32, 32   // Kích thước vuông vắn 48x48 pixel
                 );
 
                 // Đưa ảnh cỏ đã cắt sạch sẽ vào quản lý
