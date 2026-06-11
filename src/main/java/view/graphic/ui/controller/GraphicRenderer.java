@@ -42,10 +42,9 @@ public class GraphicRenderer {
     public void setSelectedAnimal(Animals selectedAnimal) { this.selectedAnimal = selectedAnimal; }
 
     public void renderEntities(Canvas canvas, double scale, double offsetX, double offsetY) {
+    	System.out.println("renderEntities() called");
+
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        double tileW = scale;
-        double tileH = scale;
-        
         Chunk[][] chunkMap = worldMap.getChunkMap();
         if (chunkMap == null) return;
 
@@ -56,26 +55,15 @@ public class GraphicRenderer {
                     for (Entity entity : chunk.getEntityList()) {
                         if (entity == null || !entity.checkAlive()) continue;
 
-                        double screenX = offsetX + (entity.getX() * tileW);
-                        double screenY = offsetY + (entity.getY() * tileH);
+                        double screenX = offsetX + (entity.getX() * scale);
+                        double screenY = offsetY + (entity.getY() * scale);
                         
-                        // 1. Vẽ con vật (Sử dụng AssetManager như cũ)
-                        drawEntitySprite(gc, entity, screenX, screenY, tileW);
+                        // 1. Vẽ con vật
+                        drawEntitySprite(gc, entity, screenX, screenY, scale);
 
-                        // 2. VẼ THANH ĐÓI KHÁT (Đã tích hợp từ BasicRenderer)
-                        if (entity instanceof Animals && fieldHunger != null && fieldThirst != null) {
-                            try {
-                                Animals animal = (Animals) entity;
-                                double h = (double) fieldHunger.get(animal);
-                                double t = (double) fieldThirst.get(animal);
-                                double bH = Math.max(1.5, tileW * 0.15);
-
-                                gc.setFill(h > 40.0 ? Color.GREEN : Color.RED);
-                                gc.fillRect(screenX, screenY - (bH * 2) - 2.0, tileW * (h / 100.0), bH);
-
-                                gc.setFill(t > 30.0 ? Color.BLUE : Color.RED);
-                                gc.fillRect(screenX, screenY - bH - 1.0, tileW * (t / 100.0), bH);
-                            } catch (Exception e) { /* Bỏ qua lỗi */ }
+                        // 2. Vẽ thanh trạng thái (Chỉ vẽ 1 lần duy nhất)
+                        if (entity instanceof Animals) {
+                            drawStatusBar(gc, (Animals) entity, screenX, screenY, scale);
                         }
                     }
                 }
@@ -84,27 +72,34 @@ public class GraphicRenderer {
     }
 
     private void drawStatusBar(GraphicsContext gc, Animals animal, double x, double y, double size) {
-        double barWidth = size;
-        double barHeight = 4.0; // Độ dày cố định để dễ nhìn
-        double padding = 2.0;
+        // Kích thước cố định, không phụ thuộc scale quá nhiều
+        double barWidth = 16.0; 
+        double barHeight = 3.0;
 
-        // Lấy giá trị (Đảm bảo giá trị trả về nằm trong khoảng 0-100)
+        // Căn giữa thanh trên đầu con vật
+        double drawX = x + (size - barWidth) / 2;
+        double drawY = y - 4;
+
         double h = Math.max(0, Math.min(100, animal.getHunger()));
         double t = Math.max(0, Math.min(100, animal.getThirst()));
 
-        // Vẽ khung nền đen (Outline) để chắc chắn thấy được vị trí
+        // Viền đen để nổi bật
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1.0);
-        gc.strokeRect(x, y - 15, barWidth, barHeight * 2 + 2);
+        gc.strokeRect(drawX - 1, drawY - 1, barWidth + 2, barHeight * 2 + 4);
 
-        // Vẽ thanh Hunger (Xanh lá)
-        gc.setFill(Color.GREEN);
-        gc.fillRect(x, y - 15, barWidth * (h / 100.0), barHeight);
+        // Thanh Hunger
+        gc.setFill(h > 40 ? Color.GREEN : Color.RED);
+        gc.fillRect(drawX, drawY, barWidth * (h / 100.0), barHeight);
 
-        // Vẽ thanh Thirst (Xanh dương)
-        gc.setFill(Color.BLUE);
-        gc.fillRect(x, y - 10, barWidth * (t / 100.0), barHeight);
+        // Thanh Thirst
+        gc.setFill(t > 30 ? Color.BLUE : Color.RED);
+        gc.fillRect(drawX, drawY + barHeight + 2, barWidth * (t / 100.0), barHeight);
+        
+        System.out.println("Drawing bar for " + animal.getClass().getSimpleName());
+
     }
+
 
     private void drawEntitySprite(GraphicsContext gc, Entity e, double x, double y, double size) {
         String key = "animal_rabbit"; // Default
@@ -117,4 +112,11 @@ public class GraphicRenderer {
         var img = AssetManager.get(key);
         if (img != null) gc.drawImage(img, x, y, size, size);
     }
+    
+    public void render(Canvas canvas, double scale, double offsetX, double offsetY) {
+        //clearCanvas(canvas);
+        //renderTerrain(canvas);
+        renderEntities(canvas, scale, offsetX, offsetY);
+    }
+
 }

@@ -6,15 +6,20 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import core.enviroment.WorldMap;
+import entities.base.Animals;
+//import view.graphic.ui.controller.GraphicRenderer;
 
 public class MapController {
 
     @FXML
     private Canvas mapCanvas;
+    
+    //private GraphicRenderer graphicRenderer;
 
     private GraphicsContext gc;
     private WorldMap worldMap;
@@ -130,6 +135,13 @@ public class MapController {
                 newEntity = new entities.Elephant(gridX, gridY);
                 break;
         }
+        /*
+        if (newEntity instanceof Animals) {
+            double screenX = offsetX + (gridX * scale * 32.0);
+            double screenY = offsetY + (gridY * scale * 32.0);
+            drawStatusBar(gc, (Animals) newEntity, screenX, screenY, scale);
+        }
+        */
 
         if (newEntity != null) {
             try {
@@ -368,6 +380,10 @@ public class MapController {
                         if (entitySprite != null) {
                             gc.drawImage(entitySprite, edx, edy, tileSize, tileSize);
                         }
+                        
+                        if (entity instanceof Animals) {
+                            drawStatusBar(gc, (Animals) entity, edx, edy, tileSize);
+                        }
                     }
                 }
             }
@@ -381,5 +397,29 @@ public class MapController {
         double screenY = dy * scale + offsetY;
         return (screenX + tileSize * scale < 0 || screenX > mapCanvas.getWidth() ||
                 screenY + tileSize * scale < 0 || screenY > mapCanvas.getHeight());
+    }
+    
+    private void drawStatusBar(GraphicsContext gc, Animals animal, double x, double y, double size) {
+        // Kích thước cố định, không phụ thuộc scale quá nhiều
+        double barWidth = 16.0; 
+        double barHeight = 3.0;
+
+        // Căn giữa thanh trên đầu con vật
+        double drawX = x + (size - barWidth) / 2;
+        double drawY = y - 4;
+
+        double h = Math.max(0, Math.min(100, animal.getHunger()));
+        double t = Math.max(0, Math.min(100, animal.getThirst()));
+
+        // Thanh Hunger
+        gc.setFill(h > 40 ? Color.GREEN : Color.RED);
+        gc.fillRect(drawX, drawY, barWidth * (h / 100.0), barHeight);
+
+        // Thanh Thirst
+        gc.setFill(t > 30 ? Color.BLUE : Color.RED);
+        gc.fillRect(drawX, drawY + barHeight + 2, barWidth * (t / 100.0), barHeight);
+        
+        System.out.println("Drawing bar for " + animal.getClass().getSimpleName());
+
     }
 }

@@ -161,5 +161,10 @@ public class WorldMap {
     public Chunk[][] getChunkMap() {
         return chunkMap;
     }
+    
+    public int getSize() {
+        return SIZE;
+    }
+
 
 }
