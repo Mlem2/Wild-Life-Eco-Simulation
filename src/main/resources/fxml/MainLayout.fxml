@@ -19,7 +19,7 @@
     </top>
 
     <center>
-        <StackPane minWidth="0.0" styleClass="map-container">
+        <StackPane minWidth="0.0" styleClass="map-container" alignment="TOP_LEFT">
             <fx:include fx:id="map" source="MapView.fxml" />
         </StackPane>
     </center>

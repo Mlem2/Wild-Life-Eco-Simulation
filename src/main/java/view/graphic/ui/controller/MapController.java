@@ -37,6 +37,8 @@ public class MapController {
     private AnimationTimer renderLoop;
 
     public static String SELECTED_TOOL = "NONE";
+    
+    private boolean isDragging = false;
 
     @FXML
     public void initialize() {
@@ -205,6 +207,11 @@ public class MapController {
 
     public void shutdownTimeline() {
         this.isContextSet = false;
+        
+        if (renderLoop != null) {
+            renderLoop.stop();
+        }
+        
         this.worldMap = null;
         if (gc != null && mapCanvas != null) {
             gc.save();
@@ -213,7 +220,7 @@ public class MapController {
             gc.restore();
         }
     }
-
+    
     private void renderMap() {
         if (mapCanvas == null || gc == null || worldMap == null) return;
 
@@ -238,12 +245,7 @@ public class MapController {
                 double dx = x * tileSize;
                 double dy = y * tileSize;
 
-                double screenX = dx * scale + offsetX;
-                double screenY = dy * scale + offsetY;
-                if (screenX + tileSize * scale < 0 || screenX > canvasWidth ||
-                        screenY + tileSize * scale < 0 || screenY > canvasHeight) {
-                    continue;
-                }
+                if (isOutsideView(dx, dy, tileSize)) continue;
 
                 boolean drawn = false;
                 try {
@@ -304,8 +306,8 @@ public class MapController {
                     for (entities.base.Entity entity : safeEntities) {
                         if (entity == null) continue;
 
-                        int ex = entity.getX();
-                        int ey = entity.getY();
+                        final int ex = entity.getX(); //thêm final
+                        final int ey = entity.getY();
 
                         if (ex < 0 || ex >= gridSize || ey < 0 || ey >= gridSize) continue;
 
@@ -372,5 +374,12 @@ public class MapController {
         }
 
         gc.restore();
+    }
+    
+    private boolean isOutsideView(double dx, double dy, double tileSize) {
+        double screenX = dx * scale + offsetX;
+        double screenY = dy * scale + offsetY;
+        return (screenX + tileSize * scale < 0 || screenX > mapCanvas.getWidth() ||
+                screenY + tileSize * scale < 0 || screenY > mapCanvas.getHeight());
     }
 }
