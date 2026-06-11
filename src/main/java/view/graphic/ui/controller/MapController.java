@@ -418,8 +418,5 @@ public class MapController {
         // Thanh Thirst
         gc.setFill(t > 30 ? Color.BLUE : Color.RED);
         gc.fillRect(drawX, drawY + barHeight + 2, barWidth * (t / 100.0), barHeight);
-        
-        System.out.println("Drawing bar for " + animal.getClass().getSimpleName());
-
     }
 }
