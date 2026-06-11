@@ -27,7 +27,7 @@ public class AssetManager {
                 WritableImage croppedGrass = new WritableImage(
                         fullGrassImg.getPixelReader(),
                         48, 0,   // Góc trên bên trái vùng cỏ thuần
-                        48, 48   // Kích thước vuông vắn 48x48 pixel
+                        16, 16   // Kích thước vuông vắn 48x48 pixel
                 );
 
                 // Đưa ảnh cỏ đã cắt sạch sẽ vào quản lý
@@ -50,6 +50,7 @@ public class AssetManager {
             loadSingleAsset("tile_water", "/image/terrains/water/water.png", "tile_grass");
 
             // Các asset sơ cua chống sập
+            loadSingleAsset("forest", "/image/terrains/forest/forest.png", "tile_grass");
             loadSingleAsset("stone", "/image/terrains/rock/rock.png", "tree_small");
             loadSingleAsset("tile_stone", "/image/terrains/rock/rock.png", "tree_small");
             loadSingleAsset("tile_dirt", "/image/terrains/grass/dirt.png", "tile_grass");
