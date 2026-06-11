@@ -279,6 +279,8 @@ public class MapController {
             }
         }
 
+        // 2. VẼ CÁC THỰC THỂ TỪ CHUNK (ĐÃ FIX: CHIA LỚP ĐỂ BỤI CỎ ĐÈ LÊN ĐỘNG VẬT)
+        // =========================================================================
         if (worldMap.chunkMap != null) {
             for (int cy = 0; cy < worldMap.chunkMap.length; cy++) {
                 for (int cx = 0; cx < worldMap.chunkMap[cy].length; cx++) {
@@ -294,79 +296,144 @@ public class MapController {
 
                     if (safeEntities == null) continue;
 
-                    List<String> bushCoordinates = new ArrayList<>();
-                    for (entities.base.Entity entity : safeEntities) {
-                        if (entity != null && entity.getClass().getSimpleName().equalsIgnoreCase("Bush")) {
-                            bushCoordinates.add(entity.getX() + "," + entity.getY());
-                        }
-                    }
-
+                    // -----------------------------------------------------------------
+                    // LƯỢT 1: CHỈ VẼ ĐỘNG VẬT (LỚP NỀN DƯỚI)
+                    // -----------------------------------------------------------------
                     for (entities.base.Entity entity : safeEntities) {
                         if (entity == null) continue;
 
-                        int ex = entity.getX();
-                        int ey = entity.getY();
+                        // Chỉ vẽ nếu thực thể là Động vật
+                        if (entity instanceof entities.base.Animals) {
+                            int ex = entity.getX();
+                            int ey = entity.getY();
+                            if (ex < 0 || ex >= gridSize || ey < 0 || ey >= gridSize) continue;
 
-                        if (ex < 0 || ex >= gridSize || ey < 0 || ey >= gridSize) continue;
+                            entities.base.Animals animal = (entities.base.Animals) entity;
+                            animal.updateAnimation(); // Cập nhật chuyển động mượt
 
-                        double edx = ex * tileSize;
-                        double edy = ey * tileSize;
+                            double edx = animal.getRenderX();
+                            double edy = animal.getRenderY();
 
-                        double entityScreenX = edx * scale + offsetX;
-                        double entityScreenY = edy * scale + offsetY;
-                        if (entityScreenX + tileSize * scale < 0 || entityScreenX > canvasWidth ||
-                                entityScreenY + tileSize * scale < 0 || entityScreenY > canvasHeight) {
-                            continue;
-                        }
+                            // Thuật toán culling tối ưu hiệu năng màn hình
+                            double entityScreenX = edx * scale + offsetX;
+                            double entityScreenY = edy * scale + offsetY;
+                            // SỬA THÀNH THẾ NÀY ĐỂ KHÔNG BỊ NUỐT CÂY KHI DI CHUYỂN CAMERA:
+                            if (entityScreenX + (tileSize * 4) * scale < 0 || entityScreenX > canvasWidth + (tileSize * 4) * scale ||
+                                    entityScreenY + (tileSize * 4) * scale < 0 || entityScreenY > canvasHeight + (tileSize * 4) * scale) {
+                                continue;
+                            }
+                            String typeName = entity.getClass().getSimpleName().toLowerCase().trim(); //
+                            Image entitySprite = null; //
 
-                        String typeName = entity.getClass().getSimpleName().toLowerCase().trim();
+                            // 1. Lấy hướng đi hiện tại ("up", "down", "left", "right") từ con vật
+                            String dir = animal.getCurrentDirection();
 
-                        if (typeName.equals("rabbit") && bushCoordinates.contains(ex + "," + ey)) {
-                            continue;
-                        }
+                            // 2. Lấy số thứ tự ô ảnh bước chân hiện tại (0, 1, 2, 3)
+                            int frame = animal.getCurrentAnimationFrame();
 
-                        Image entitySprite = null;
+                            // 3. Kiểm tra xem con vật có đang chạy/đi bộ không
+                            if (animal.isMoving()) {
+                                // Nếu đang di chuyển, tự động ghép chuỗi để lấy đúng khung hình trong lưới dải ảnh
+                                // Ví dụ: khi typeName là "rabbit", nó sẽ tìm key "rabbit_walk_right_2" trong AssetManager
+                                entitySprite = AssetManager.get(typeName + "_walk_" + dir + "_" + frame);
+                            }
 
-                        switch (typeName) {
-                            case "trees": case "tree":
-                                entitySprite = AssetManager.get("tree_medium");
-                                break;
-                            case "bush":
-                                entitySprite = AssetManager.get("tree_small");
-                                break;
-                            case "stone": case "rock":
-                                entitySprite = AssetManager.get("stone");
-                                break;
-                            case "food":
-                                entitySprite = AssetManager.get("tree_small");
-                                break;
-                            case "rabbit":
-                                entitySprite = AssetManager.get("animal_rabbit");
-                                break;
-                            case "wolf":
-                                entitySprite = AssetManager.get("animal_wolf");
-                                break;
-                            case "tiger":
-                                entitySprite = AssetManager.get("animal_tiger");
-                                break;
-                            case "elephant":
-                                entitySprite = AssetManager.get("animal_elephant");
-                                break;
-                            case "bear":
-                                entitySprite = AssetManager.get("animal_bear");
-                                break;
-                            case "fish":
-                                entitySprite = AssetManager.get("animal_fish");
-                                break;
-                            case "duck":
-                                entitySprite = AssetManager.get("animal_duck");
-                                break;
-                        }
+                            // 4. Nếu con vật đang đứng im hoặc không tìm thấy ảnh động, quay về lấy ảnh đứng yên mặc định
+                            if (entitySprite == null) {
+                                entitySprite = AssetManager.get("animal_" + typeName);
+                            }
 
-                        if (entitySprite != null) {
-                            gc.drawImage(entitySprite, edx, edy, tileSize, tileSize);
+                            // Tiến hành vẽ hình ảnh lên màn hình đồ họa Canvas
+                            if (entitySprite != null) { //
+                                gc.drawImage(entitySprite, edx, edy, tileSize, tileSize); //
+                            }
                         }
                     }
+
+                    // -----------------------------------------------------------------
+                    // LƯỢT 2: CHỈ VẼ VẬT CẢN / THẢO MỘC (LỚP ĐÈ TRÊN - CÂY, BỤI CỎ, ĐÁ)
+                    // -----------------------------------------------------------------
+                    for (entities.base.Entity entity : safeEntities) {
+                        if (entity == null) continue;
+
+                        // Chỉ vẽ nếu KHÔNG PHẢI là động vật (tức là Cây, Bụi, Đá...)
+                        if (!(entity instanceof entities.base.Animals)) {
+                            int ex = entity.getX();
+                            int ey = entity.getY();
+                            if (ex < 0 || ex >= gridSize || ey < 0 || ey >= gridSize) continue;
+
+                            // Vật thể tĩnh đứng im cố định theo ô lưới
+                            double edx = ex * tileSize;
+                            double edy = ey * tileSize;
+
+                            double entityScreenX = edx * scale + offsetX;
+                            double entityScreenY = edy * scale + offsetY;
+                            if (entityScreenX + tileSize * scale < 0 || entityScreenX > canvasWidth ||
+                                    entityScreenY + tileSize * scale < 0 || entityScreenY > canvasHeight)
+                            {
+                                continue;
+                            }
+
+                            String typeName = entity.getClass().getSimpleName().toLowerCase().trim();
+                            Image entitySprite = null;
+
+                            // Mặc định kích thước vẽ bằng 1 ô đất (Hệ 48x48)
+                            double renderWidth = tileSize;
+                            double renderHeight = tileSize;
+
+                            // Biến bù trừ tọa độ để kéo gốc cây về đúng vị trí
+                            double offsetXTree = 0;
+                            double offsetYTree = 0;
+
+                            switch (typeName) {
+                                case "tree":
+                                case "trees":
+                                    entitySprite = AssetManager.get("tree_medium");
+                                    if (entitySprite != null) {
+                                        // Cây vừa chiếm 2 ô lưới (96x96px trong hệ lưới 48)
+                                        renderWidth = tileSize * 2;
+                                        renderHeight = tileSize * 2;
+
+                                        // Dịch sang trái nửa ô và đẩy ngược lên 1 ô để gốc cắm đúng vị trí ô lưới logic
+                                        offsetXTree = -tileSize / 2.0;
+                                        offsetYTree = -tileSize;
+                                    }
+                                    break;
+
+                                case "tree_big":
+                                case "bigtree": // Đề phòng sau này cậu có Class cây to
+                                    entitySprite = AssetManager.get("tree_big");
+                                    if (entitySprite != null) {
+                                        // Cây to chiếm 3 ô lưới (144x144px trong hệ lưới 48)
+                                        renderWidth = tileSize * 3;
+                                        renderHeight = tileSize * 3;
+
+                                        // Dịch sang trái 1 ô và đẩy ngược lên 2 ô
+                                        offsetXTree = -tileSize;
+                                        offsetYTree = -tileSize * 2;
+                                    }
+                                    break;
+
+                                case "bush":
+                                    entitySprite = AssetManager.get("tree_small");
+                                    break;
+
+                                case "stone": case "rock":
+                                    entitySprite = AssetManager.get("stone");
+                                    break;
+                            }
+
+                            // Tiến hành vẽ ảnh lên Canvas sau khi đã khớp từ khóa và tính toán offset
+                            if (entitySprite != null) {
+                                gc.drawImage(entitySprite,
+                                        edx + offsetXTree,
+                                        edy + offsetYTree,
+                                        renderWidth,
+                                        renderHeight);
+                            }
+                        }
+                    }
+
                 }
             }
         }
