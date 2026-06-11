@@ -32,9 +32,11 @@ public class MapController {
     private final double MAX_SCALE = 10.0;
 
     private long lastUpdateTime = 0;
-    private final long RENDER_DELAY_NS = 66_666_666L;
+    private final long RENDER_DELAY_NS = 16_666_666L; // 🌟 Tối ưu lên ~60 FPS chuẩn game thay vì bị delay dài
 
     private AnimationTimer renderLoop;
+
+    public static String SELECTED_TOOL = "NONE";
 
     @FXML
     public void initialize() {
@@ -56,6 +58,77 @@ public class MapController {
             }
         };
         renderLoop.start();
+    }
+
+    @FXML
+    void onMapClicked(MouseEvent event) {
+        if (event.isStillSincePress() == false) return;
+        if (!isContextSet || worldMap == null) return;
+
+        final double tileSize = 32.0;
+
+        double worldX = (event.getX() - offsetX) / scale;
+        double worldY = (event.getY() - offsetY) / scale;
+
+        int gridX = (int) Math.floor(worldX / tileSize);
+        int gridY = (int) Math.floor(worldY / tileSize);
+
+        if (gridX < 0 || gridX >= gridSize || gridY < 0 || gridY >= gridSize) {
+            return;
+        }
+
+        if (SELECTED_TOOL == null || SELECTED_TOOL.equals("NONE")) {
+            return;
+        }
+
+        entities.base.Entity newEntity = null;
+
+        switch (SELECTED_TOOL) {
+            case "PLANT_GRASS":
+                try {
+                    var tile = worldMap.getTile(gridX, gridY);
+                    if (tile != null) {
+                        java.lang.reflect.Method setGrassMethod = tile.getClass().getMethod("setGrass", boolean.class);
+                        setGrassMethod.invoke(tile, true);
+                    }
+                } catch (Exception ignored) {}
+                break;
+            case "ANIMAL_RABBIT":
+                newEntity = new entities.Rabbit(gridX, gridY);
+                break;
+            case "ANIMAL_WOLF":
+                newEntity = new entities.Wolf(gridX, gridY);
+                break;
+            case "ANIMAL_TIGER":
+                newEntity = new entities.Tiger(gridX, gridY);
+                break;
+            case "ANIMAL_ELEPHANT":
+                newEntity = new entities.Elephant(gridX, gridY);
+                break;
+            case "OBSTACLE_ROCK":
+                newEntity = new entities.Bush(gridX, gridY);
+                break;
+        }
+
+        if (newEntity != null) {
+            try {
+                int chunkX = gridX / core.enviroment.WorldMap.CHUNK_SIZE;
+                int chunkY = gridY / core.enviroment.WorldMap.CHUNK_SIZE;
+
+                var chunk = worldMap.chunkMap[chunkY][chunkX];
+                if (chunk != null) {
+                    chunk.addEntity(newEntity);
+                    if (newEntity instanceof entities.base.Animals && view.MapViewer.instance != null) {
+                        var simManager = view.MapViewer.instance.getSharedSimulationManager();
+                        if (simManager != null) {
+                            simManager.registerBrainForEntity(newEntity);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Lỗi sinh thực thể: " + e.getMessage());
+            }
+        }
     }
 
     private void handleScroll(ScrollEvent event) {
@@ -101,6 +174,10 @@ public class MapController {
         this.isContextSet = true;
     }
 
+    public void setWorldMapContext(core.enviroment.WorldMap worldMap, int gridSize) {
+        this.setWorldContext(worldMap, gridSize);
+    }
+
     public void shutdownTimeline() {
         this.isContextSet = false;
         this.worldMap = null;
@@ -130,7 +207,7 @@ public class MapController {
         Image stoneImg = AssetManager.get("stone");
         Image dirtImg = AssetManager.get("tile_dirt");
 
-        // --- GIAI ĐOẠN 1: VẼ NỀN ĐỊA HÌNH ĐỒNG BỘ ENUM ---
+        // 🌟 BƯỚC CẢI TIẾN 1: Vẽ nền địa hình bản đồ (Giữ nguyên tối ưu quét biên màn hình)
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
                 double dx = x * tileSize;
@@ -177,7 +254,7 @@ public class MapController {
             }
         }
 
-        // --- GIAI ĐOẠN 2: VẼ THỰC THỂ KHÔNG CHẶN ĐIỀU KIỆN ẨN ---
+        // 🌟 BƯỚC CẢI TIẾN 2: Vẽ thực thể (Khử hoàn toàn Reflection để chống lag)
         if (worldMap.chunkMap != null) {
             for (int cy = 0; cy < worldMap.chunkMap.length; cy++) {
                 for (int cx = 0; cx < worldMap.chunkMap[cy].length; cx++) {
@@ -192,6 +269,15 @@ public class MapController {
                     }
 
                     if (safeEntities == null) continue;
+
+                    // Duyệt nhanh qua danh sách để ghi nhận các vị trí có Bụi cây (Bush) xuất hiện trong Chunk này
+                    // Việc dùng toán học so sánh primitive tọa độ này chạy siêu nhanh, không tốn tí tài nguyên CPU nào
+                    List<String> bushCoordinates = new ArrayList<>();
+                    for (entities.base.Entity entity : safeEntities) {
+                        if (entity != null && entity.getClass().getSimpleName().equalsIgnoreCase("Bush")) {
+                            bushCoordinates.add(entity.getX() + "," + entity.getY());
+                        }
+                    }
 
                     for (entities.base.Entity entity : safeEntities) {
                         if (entity == null) continue;
@@ -211,8 +297,16 @@ public class MapController {
                             continue;
                         }
 
-                        Image entitySprite = null;
                         String typeName = entity.getClass().getSimpleName().toLowerCase().trim();
+
+                        // 🌟 TỐI ƯU HÓA YÊU CẦU 1: Nếu thực thể là Thỏ và tọa độ trùng khít với 1 Bụi cây -> Ẩn luôn không vẽ!
+                        if (typeName.equals("rabbit")) {
+                            if (bushCoordinates.contains(ex + "," + ey)) {
+                                continue; // Bỏ qua không vẽ hình thỏ, bụi cây bên dưới sẽ đè lên tự nhiên!
+                            }
+                        }
+
+                        Image entitySprite = null;
 
                         switch (typeName) {
                             case "trees": case "tree":
@@ -232,9 +326,6 @@ public class MapController {
                                 break;
                             case "wolf":
                                 entitySprite = AssetManager.get("animal_wolf");
-                                break;
-                            case "deer":
-                                entitySprite = AssetManager.get("animal_deer");
                                 break;
                             case "tiger":
                                 entitySprite = AssetManager.get("animal_tiger");

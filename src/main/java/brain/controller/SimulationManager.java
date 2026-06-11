@@ -26,6 +26,8 @@ public class SimulationManager {
     private final Pathfinder pathfinder;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private boolean running = false;
+    // Thêm biến quản lý hệ số tốc độ (mặc định là 1.0 tức là 1x)
+    private double speedMultiplier = 1.0;
 
     public SimulationManager(WorldMap worldMap, int gridSize) {
         this.worldMap = worldMap;
@@ -45,17 +47,25 @@ public class SimulationManager {
     }
 
     private int tickCount = 0;
+    private double accumulatedTicks = 0.0; // Biến tích lũy chu kỳ dư
 
     private void tick() {
         if (!running) return;
-        
-        updateSimulationLogic();
-        
-        tickCount++;
-        // Update time system once per second (every 25 ticks) or at some other frequency
-        // For now, let's keep it consistent with the user's request
-        if (tickCount % 25 == 0) {
-            updateTimeSystem();
+
+        // Tính toán số chu kỳ logic cần chạy trong 40ms dựa theo tốc độ multiplier
+        accumulatedTicks += speedMultiplier;
+
+        // Chạy vòng lặp để cập nhật logic (Ví dụ: Tốc độ 2x thì sẽ gọi updateSimulationLogic 2 lần trong 40ms)
+        while (accumulatedTicks >= 1.0) {
+            if (!running) break;
+            updateSimulationLogic();
+
+            tickCount++;
+            if (tickCount % 25 == 0) {
+                updateTimeSystem();
+            }
+
+            accumulatedTicks -= 1.0;
         }
     }
 
@@ -349,6 +359,39 @@ public class SimulationManager {
     public void stopSimulation() {
         this.running = false;
         System.out.println(" Simulation thread has been requested to STOP.");
+    }
+    // --- THÊM CÁC HÀM PHỤC VỤ TÍNH NĂNG PAUSE/RESUME CHO ĐỒ HỌA ---
+
+    /**
+     * Tạm dừng tính toán logic của các con vật nhưng không hủy luồng ngầm
+     */
+    public void pauseSimulation() {
+        this.running = false;
+        System.out.println("⏸ [Backend] Đã tạm dừng di chuyển của các sinh vật.");
+    }
+
+    /**
+     * Tiếp tục chạy giả lập logic
+     */
+    public void resumeSimulation() {
+        this.running = true;
+        System.out.println("▶ [Backend] Đã tiếp tục luồng sinh thái động.");
+    }
+
+    /**
+     * Kiểm tra xem luồng logic có đang chạy hay không
+     */
+    public boolean isSimulationRunning() {
+        return this.running;
+    }
+    /**
+     * Cập nhật hệ số tốc độ mô phỏng từ giao diện truyền vào (1.0, 1.25, 1.5, 2.0, ...)
+     */
+    public void setSpeedMultiplier(double multiplier) {
+        if (multiplier > 0) {
+            this.speedMultiplier = multiplier;
+            System.out.println("⚡ [Backend] Đã chuyển đổi tốc độ giả lập sang mốc: " + multiplier + "x");
+        }
     }
 
     public Map<Animals, AnimalBrainUpdate> getBrainMap() {

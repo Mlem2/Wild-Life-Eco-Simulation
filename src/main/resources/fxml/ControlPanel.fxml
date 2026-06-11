@@ -24,8 +24,7 @@
 
     <Label text="⚡ Tốc Độ" styleClass="panel-section-title"/>
     <VBox styleClass="panel-section" spacing="6">
-        <Label fx:id="labelSpeed" text="Tối đa" styleClass="value-label"/>
-        <Slider fx:id="sliderSpeed"/>
+        <ChoiceBox fx:id="choiceSpeed" maxWidth="Infinity" onAction="#onSpeedChanged"/>
     </VBox>
 
     <Separator/>
@@ -42,8 +41,6 @@
                      onAction="#onToolGrass"     styleClass="tool-radio"/>
         <RadioButton fx:id="rbRabbit"   text="⚪ Thêm Thỏ"      toggleGroup="$toolGroup"
                      onAction="#onToolRabbit"    styleClass="tool-radio"/>
-        <RadioButton fx:id="rbDeer"     text="🟤 Thêm Hươu"     toggleGroup="$toolGroup"
-                     onAction="#onToolDeer"      styleClass="tool-radio"/>
         <RadioButton fx:id="rbWolf"     text="🔘 Thêm Sói"      toggleGroup="$toolGroup"
                      onAction="#onToolWolf"      styleClass="tool-radio"/>
         <RadioButton fx:id="rbTiger"    text="🟠 Thêm Hổ"       toggleGroup="$toolGroup"
