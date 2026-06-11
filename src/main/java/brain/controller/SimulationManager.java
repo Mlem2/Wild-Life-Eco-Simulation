@@ -166,19 +166,6 @@ public class SimulationManager {
                                                     nextX = Math.max(0, Math.min(gridSize - 1, nextX));
                                                     nextY = Math.max(0, Math.min(gridSize - 1, nextY));
 
-                                                    try {
-                                                        var nextTile = worldMap.getTile(nextX, nextY);
-                                                        String tName = (nextTile != null && nextTile.getName() != null) ? nextTile.getName().toLowerCase() : "";
-                                                        boolean water = tName.contains("water") || tName.contains("nuoc");
-                                                        boolean stone = tName.contains("stone") || tName.contains("da") || tName.contains("mountain");
-
-                                                        if (!(animal instanceof entities.Fish)) {
-                                                            if (water || stone) { nextX = curX; nextY = curY; }
-                                                        } else {
-                                                            if (!water) { nextX = curX; nextY = curY; }
-                                                        }
-                                                    } catch (Exception ignored) {}
-
                                                     fieldX.set(animal, nextX);
                                                     fieldY.set(animal, nextY);
                                                 }

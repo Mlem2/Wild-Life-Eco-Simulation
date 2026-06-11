@@ -187,28 +187,6 @@ public class MapSystem {
         return out;
     }
 
-    public List<Position> getFoodInChunks(List<Chunk> chunks, Animals owner) {
-        List<Position> out = new ArrayList<>();
-        if (chunks == null) return out;
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            synchronized (c.getEntityList()) {
-                for (Entity e : c.getEntityList()) {
-                    if (e instanceof Tree) {
-                        if (e instanceof entities.Trees || e instanceof entities.Bush) {
-                            if (owner instanceof entities.Elephant) {
-                                out.add(Position.of(e.getX(), e.getY()));
-                            }
-                        } else {
-                            out.add(Position.of(e.getX(), e.getY()));
-                        }
-                    }
-                }
-            }
-        }
-        return out;
-    }
-
     public List<Position> getPlantsInChunks(List<Chunk> chunks) {
         List<Position> out = new ArrayList<>();
         if (chunks == null) return out;
@@ -372,14 +350,6 @@ public class MapSystem {
         return bestChunk;
     }
 
-    public Position getRandomWalkablePosInChunk(Position pos) {
-        if (worldMap == null || pos == null) return pos;
-        Chunk c = getChunkAt(pos);
-        if (c == null) return pos;
-        Position out = getRandomWalkablePosInChunk(c);
-        return out != null ? out : pos;
-    }
-
     public Position getRandomWalkablePosInVisibleChunk(Animals owner) {
         Position pos = owner.getPosition();
         List<Chunk> chunks = getVisibleChunks(pos);
@@ -387,42 +357,6 @@ public class MapSystem {
         Chunk c = chunks.get(rand.nextInt(chunks.size()));
         Position out = getRandomWalkablePosInChunk(c);
         return out != null ? out : pos;
-    }
-
-    /**
-     * Return all chunks within a Manhattan radius (in chunks) around a center position.
-     */
-    public List<Chunk> getNearbyChunks(Position center, int radiusChunks) {
-        List<Chunk> out = new ArrayList<>();
-        if (worldMap == null || center == null) return out;
-        Chunk[][] chunkMap = worldMap.chunkMap;
-        if (chunkMap == null) return out;
-        
-        int cx = center.getX() / WorldMap.CHUNK_SIZE;
-        int cy = center.getY() / WorldMap.CHUNK_SIZE;
-        
-        for (int dx = -radiusChunks; dx <= radiusChunks; dx++) {
-            for (int dy = -radiusChunks; dy <= radiusChunks; dy++) {
-                int nx = cx + dx, ny = cy + dy;
-                if (nx >= 0 && nx < chunkMap[0].length && ny >= 0 && ny < chunkMap.length) {
-                    out.add(chunkMap[ny][nx]);
-                }
-            }
-        }
-        return out;
-    }
-
-    public List<Entity> getEntitiesInNearbyChunks(Position center, int radiusChunks) {
-        List<Entity> out = new ArrayList<>();
-        List<Chunk> chunks = getNearbyChunks(center, radiusChunks);
-        if (chunks == null) return out;
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            List<Entity> list = c.getEntityList();
-            if (list == null) continue;
-            out.addAll(list);
-        }
-        return out;
     }
 
     public List<Entity> getEntitiesWithinRadius(Position center, int radius) {
@@ -444,11 +378,6 @@ public class MapSystem {
     private int distance(Position center, Entity entity) {
         if (center == null || entity == null) return Integer.MAX_VALUE;
         return Math.abs(center.getX() - entity.getX()) + Math.abs(center.getY() - entity.getY());
-    }
-
-    private int distance(Position center, Position target) {
-        if (center == null || target == null) return Integer.MAX_VALUE;
-        return Math.abs(center.getX() - target.getX()) + Math.abs(center.getY() - target.getY());
     }
 
     public Position getRandomWalkablePosInChunk(Chunk chunk) {
