@@ -12,10 +12,7 @@ import entities.base.Tree;
 public class Trees extends Tree {
 
     public Trees(int x, int y) {
-        super(x, y);
-        setRestoreAmount(15);
-        setHungerRecoveryAmount(30);
-        setThirstRecoveryAmount(30);
+        super(x, y, 30, 30);
         this.defaultSeedCooldown = (random.nextInt(6) + 2) * 21600;
         this.currentSeedCooldown = defaultSeedCooldown;
         this.growthTime = (random.nextInt(3) + 2) * 21600;
@@ -23,8 +20,6 @@ public class Trees extends Tree {
     }
 
     public void checkCD(Entity[][] animalCoordinates, List<Entity> allEntities) {
-        updateResourceState();
-
         if (age <= 0) {
             this.isAlive = false;
             return;

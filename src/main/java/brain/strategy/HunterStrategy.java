@@ -23,11 +23,6 @@ public class HunterStrategy implements MoveStrategy {
         List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
 
         // Nếu đói, ưu tiên tìm thức ăn/con mồi gần nhất
-        List<Position> foodSources = mapSystem.getFoodInChunks(visibleChunks, owner);
-        if (foodSources != null && !foodSources.isEmpty()) {
-            return mapSystem.getClosestPosition(owner.getPosition(), foodSources);
-        }
-
         List<Animals> preys = mapSystem.getPreysInChunks(visibleChunks, owner);
         if (preys != null && !preys.isEmpty()) {
             Animals closestPrey = mapSystem.getClosestAnimal(owner.getPosition(), preys);

@@ -1,8 +1,6 @@
 package brain.controller;
 
 import core.enviroment.Chunk;
-import entities.Food;
-import entities.Water;
 import entities.base.Animals;
 import entities.base.Position;
 
@@ -85,19 +83,6 @@ public class ActionManager {
         animal.setCurrentMoveCooldown(cooldown);
     }
 
-    public void eat(Food food) {
-        if (food == null) return;
-
-        int hungerGain = food.getHungerRecoveryAmount();
-        int thirstGain = food.getThirstRecoveryAmount();
-        food.consume(hungerGain);
-        mapSystem.removeEntity(food);
-        owner.lockTargetEntity(null);
-        owner.increaseHunger(hungerGain);
-        owner.increaseHydration(thirstGain);
-        owner.setCurrentMoveCooldown(1); // Ăn uống cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
-    }
-
     public void eat(Animals prey) {
         if (prey == null) return;
 
@@ -136,19 +121,6 @@ public class ActionManager {
         owner.increaseHunger(hungerGain);
         owner.increaseHydration(thirstGain);
         owner.setCurrentMoveCooldown(1);
-    }
-
-    public void drink() {
-        drink(null);
-    }
-
-    public void drink(Water water) {
-        int gained = owner.getThirstRecoveryAmount();
-        if (water != null) {
-            water.consume(gained);
-        }
-        owner.increaseHydration(gained);
-        owner.setCurrentMoveCooldown(1); // Uống nước cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
     }
 
     public void attack(Animals prey) {

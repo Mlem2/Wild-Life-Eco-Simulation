@@ -8,11 +8,10 @@ import java.util.Random;
 import core.enviroment.Chunk;
 import core.enviroment.Terrain;
 import core.enviroment.WorldMap;
-import entities.Food;
-import entities.Water;
 import entities.base.Animals;
 import entities.base.Entity;
 import entities.base.Position;
+import entities.base.Tree;
 
 /**
  * Lightweight MapSystem facade used by brain strategies.
@@ -40,34 +39,12 @@ public class MapSystem {
         return false;
     }
 
-    public boolean hasFoodAround(Animals owner) {
-        List<Chunk> chunks = getVisibleChunks(owner.getPosition());
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            for (Entity e : c.getEntityList()) {
-                if (e instanceof Food) return true;
-            }
-        }
-        return false;
-    }
-
     public boolean hasPreyAround(Animals owner) {
         List<Chunk> chunks = getVisibleChunks(owner.getPosition());
         for (Chunk c : chunks) {
             if (c == null) continue;
             for (Entity e : c.getEntityList()) {
                 if (e instanceof Animals other && isPrey(owner, other)) return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean hasWaterAround(Animals owner) {
-        List<Chunk> chunks = getVisibleChunks(owner.getPosition());
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            for (Entity e : c.getEntityList()) {
-                if (e instanceof Water) return true;
             }
         }
         return false;
@@ -206,15 +183,6 @@ public class MapSystem {
             if (c == null) continue;
             // Use pre-calculated water positions
             out.addAll(c.getWaterPositions());
-            
-            // Also check for Water entities (e.g., spawned ones if any, though usually it's terrain)
-            synchronized (c.getEntityList()) {
-                for (Entity e : c.getEntityList()) {
-                    if (e instanceof Water) {
-                        out.add(Position.of(e.getX(), e.getY()));
-                    }
-                }
-            }
         }
         return out;
     }
@@ -226,7 +194,7 @@ public class MapSystem {
             if (c == null) continue;
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
-                    if (e instanceof Food && !(e instanceof Water)) {
+                    if (e instanceof Tree) {
                         if (e instanceof entities.Trees || e instanceof entities.Bush) {
                             if (owner instanceof entities.Elephant) {
                                 out.add(Position.of(e.getX(), e.getY()));
@@ -241,14 +209,14 @@ public class MapSystem {
         return out;
     }
 
-    public List<Position> getBushesInChunks(List<Chunk> chunks) {
+    public List<Position> getPlantsInChunks(List<Chunk> chunks) {
         List<Position> out = new ArrayList<>();
         if (chunks == null) return out;
         for (Chunk c : chunks) {
             if (c == null) continue;
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
-                    if (e instanceof entities.Bush) {
+                    if (e instanceof Tree) {
                         out.add(Position.of(e.getX(), e.getY()));
                     }
                 }
@@ -469,14 +437,6 @@ public class MapSystem {
                     if (distance(center, e) <= radius) out.add(e);
                 }
             }
-        }
-        return out;
-    }
-
-    public List<Position> getNearbyFoodPositions(Position center, int radiusChunks) {
-        List<Position> out = new ArrayList<>();
-        for (Entity e : getEntitiesInNearbyChunks(center, radiusChunks)) {
-            if (e instanceof Food) out.add(Position.of(e.getX(), e.getY()));
         }
         return out;
     }

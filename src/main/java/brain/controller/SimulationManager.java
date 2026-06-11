@@ -5,13 +5,10 @@ import core.TimeSystem;
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
 import entities.Bush;
-import entities.Food;
 import entities.Trees;
 import entities.base.Animals;
 import entities.base.Entity;
-import entities.base.ResourceEntity;
 import entities.base.Tree;
-import entities.base.Position;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -112,10 +109,6 @@ public class SimulationManager {
                                 tree.checkCD(animalCoordinates, allEntities);
                             }
 
-                            if (entity instanceof ResourceEntity resource) {
-                                resource.updateResourceState();
-                            }
-
                             if (entity instanceof Animals animal) {
                                 animal.updateMoveCooldown(animalCoordinates, allEntities);
                                 if (tickCount % 25 == 0) {
@@ -209,7 +202,7 @@ public class SimulationManager {
                                             }
                                         } else if (animal instanceof entities.attributes.Herbivore) {
                                             // Non-elephant herbivores no longer eat trees and bushes
-                                            if (target instanceof Food && !(target instanceof Bush || target instanceof Trees)) {
+                                            if (target instanceof Tree && !(target instanceof Bush || target instanceof Trees)) {
                                                 canEat = true;
                                             }
                                         }

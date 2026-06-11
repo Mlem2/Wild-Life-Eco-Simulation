@@ -74,9 +74,7 @@ public class StateController {
             return false;
         }
 
-        boolean hasWaterNearby = TargetScanner.findNearest(animal, visibleEntities, 50, entity -> entity instanceof entities.Water) != null;
-
-        return (hasWaterNearby) && (animal.getThirst() < 70);
+        return (animal.getThirst() < 70);
     }
 
     private boolean shouldEat(Animals animal, List<Entity> visibleEntities) {
@@ -91,7 +89,7 @@ public class StateController {
             if (entity instanceof Tree) {
                 return animal instanceof entities.Elephant;
             }
-            return (entity instanceof entities.Food && !(entity instanceof entities.Water));
+            return false;
         }) != null;
 
         return (hasFoodNearby) && (animal.getHunger() < 70);
