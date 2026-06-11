@@ -1,6 +1,7 @@
 package view.graphic.ui.controller;
 
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import java.util.HashMap;
 
@@ -50,6 +51,7 @@ public class AssetManager {
             loadSingleAsset("tile_water", "/image/terrains/water/water.png", "tile_grass");
 
             // Các asset sơ cua chống sập
+            loadSingleAsset("forest", "/image/terrains/forest/forest.png", "tile_grass");
             loadSingleAsset("stone", "/image/terrains/rock/rock.png", "tree_small");
             loadSingleAsset("tile_stone", "/image/terrains/rock/rock.png", "tree_small");
             loadSingleAsset("tile_dirt", "/image/terrains/grass/dirt.png", "tile_grass");
