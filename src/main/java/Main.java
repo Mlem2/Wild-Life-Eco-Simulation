@@ -1,5 +1,4 @@
 import core.enviroment.WorldMap;
-import entities.base.EntityMap;
 import brain.controller.SimulationManager;
 import view.MapViewer;
 import javafx.application.Application;
@@ -11,8 +10,7 @@ public class Main {
     public static void main(String[] args) {
         entities.base.Position.initializeGrid(SIZE);
         WorldMap worldMap = new WorldMap(SEED, SIZE);
-        EntityMap entityMap = new EntityMap(worldMap, SIZE);
-        worldMap.initializeChunks(entityMap);
+        worldMap.initializeChunks();
 
         SimulationManager simulationManager = new SimulationManager(worldMap, SIZE);
         simulationManager.start();
