@@ -28,15 +28,15 @@ public class AssetManager {
                 WritableImage croppedGrass = new WritableImage(
                         fullGrassImg.getPixelReader(),
                         48, 0,   // Góc trên bên trái vùng cỏ thuần
-                        32, 32   // Kích thước vuông vắn 48x48 pixel
+                        48, 48   // Kích thước vuông vắn 48x48 pixel
                 );
 
                 // Đưa ảnh cỏ đã cắt sạch sẽ vào quản lý
                 sprites.put("tile_grass", croppedGrass);
-                System.out.println("✂️ [AssetManager] Đã cắt thành công bãi cỏ xanh thuần (48x48)!");
+                System.out.println("[AssetManager] Đã cắt thành công bãi cỏ xanh thuần (48x48)!");
 
             } catch (Exception e) {
-                System.err.println("❌ LỖI: Không thể tìm thấy hoặc cắt ảnh Grass.png!");
+                System.err.println("LỖI: Không thể tìm thấy hoặc cắt ảnh Grass.png!");
                 e.printStackTrace();
             }
 
