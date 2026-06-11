@@ -40,20 +40,6 @@ public class MapSystem {
         return false;
     }
 
-    public boolean hasEnemyNearby(Animals owner) {
-        List<Chunk> chunks = getVisibleChunks(owner.getPosition());
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            for (Entity e : c.getEntityList()) {
-                if (e instanceof Animals other && isThreateningEnemy(owner, other)) {
-                    int dist = Math.abs(owner.getX() - e.getX()) + Math.abs(owner.getY() - e.getY());
-                    if (dist <= 5) return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public boolean hasFoodAround(Animals owner) {
         List<Chunk> chunks = getVisibleChunks(owner.getPosition());
         for (Chunk c : chunks) {
@@ -115,7 +101,7 @@ public class MapSystem {
         return other.isReadyToMate();
     }
 
-    boolean isThreateningEnemy(Animals owner, Animals other) {
+    public boolean isThreateningEnemy(Animals owner, Animals other) {
         if (other == owner || !other.checkAlive()) return false;
         if (other.getState() == allEnum.State.HIDING) return false;
         if (!(other instanceof entities.attributes.Carnivore)) return false;
@@ -130,7 +116,7 @@ public class MapSystem {
         return true;
     }
 
-    boolean isPrey(Animals owner, Animals other) {
+    public boolean isPrey(Animals owner, Animals other) {
         if (other == owner || !other.checkAlive()) return false;
         if (other.getState() == allEnum.State.HIDING) return false;
         if (!(owner instanceof entities.attributes.Carnivore)) return false;
@@ -185,20 +171,6 @@ public class MapSystem {
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
                     if (e instanceof Animals other && isPrey(owner, other)) out.add(other);
-                }
-            }
-        }
-        return out;
-    }
-
-    public List<Animals> getEnemiesInChunks(List<Chunk> chunks, Animals owner) {
-        List<Animals> out = new ArrayList<>();
-        if (chunks == null) return out;
-        for (Chunk c : chunks) {
-            if (c == null) continue;
-            synchronized (c.getEntityList()) {
-                for (Entity e : c.getEntityList()) {
-                    if (e instanceof Animals other && isThreateningEnemy(owner, other)) out.add(other);
                 }
             }
         }
@@ -440,7 +412,8 @@ public class MapSystem {
         return out != null ? out : pos;
     }
 
-    public Position getRandomWalkablePosInVisibleChunk(Position pos) {
+    public Position getRandomWalkablePosInVisibleChunk(Animals owner) {
+        Position pos = owner.getPosition();
         List<Chunk> chunks = getVisibleChunks(pos);
         if (chunks.isEmpty()) return pos;
         Chunk c = chunks.get(rand.nextInt(chunks.size()));
@@ -484,15 +457,6 @@ public class MapSystem {
         return out;
     }
 
-    public <T> List<T> getEntitiesOfTypeInNearbyChunks(Position center, int radiusChunks, Class<T> cls) {
-        List<T> out = new ArrayList<>();
-        for (Entity e : getEntitiesInNearbyChunks(center, radiusChunks)) {
-            if (e == null) continue;
-            if (cls.isInstance(e)) out.add(cls.cast(e));
-        }
-        return out;
-    }
-
     public List<Entity> getEntitiesWithinRadius(Position center, int radius) {
         List<Entity> out = new ArrayList<>();
         if (center == null) return out;
@@ -509,31 +473,10 @@ public class MapSystem {
         return out;
     }
 
-    public List<Position> getWaterPositionsWithinRadius(Position center, int radius) {
-        List<Position> out = new ArrayList<>();
-        if (center == null) return out;
-
-        for (Position pos : getWaterInChunks(getVisibleChunks(center))) {
-            if (distance(center, pos) <= radius) out.add(pos);
-        }
-        return out;
-    }
-
     public List<Position> getNearbyFoodPositions(Position center, int radiusChunks) {
         List<Position> out = new ArrayList<>();
         for (Entity e : getEntitiesInNearbyChunks(center, radiusChunks)) {
             if (e instanceof Food) out.add(Position.of(e.getX(), e.getY()));
-        }
-        return out;
-    }
-
-    public List<Animals> getNearbyEnemyAnimals(Position center, int radiusChunks, Animals owner) {
-        List<Animals> out = new ArrayList<>();
-        for (Entity e : getEntitiesInNearbyChunks(center, radiusChunks)) {
-            if (e instanceof Animals) {
-                Animals a = (Animals) e;
-                if (owner == null || a != owner) out.add(a);
-            }
         }
         return out;
     }
@@ -547,6 +490,7 @@ public class MapSystem {
         if (center == null || target == null) return Integer.MAX_VALUE;
         return Math.abs(center.getX() - target.getX()) + Math.abs(center.getY() - target.getY());
     }
+
     public Position getRandomWalkablePosInChunk(Chunk chunk) {
         if (chunk == null || worldMap == null) return null;
         try {

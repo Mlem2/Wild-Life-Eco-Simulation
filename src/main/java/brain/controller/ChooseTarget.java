@@ -43,7 +43,7 @@ public class ChooseTarget {
                 owner.setState(State.EATING);
             } else if (owner.getThirstPercentage() < 30) {
                 owner.setState(State.DRINKING);
-            } else if (mapSystem.hasEnemyNearby(owner)) {
+            } else if (mapSystem.hasEnemyAround(owner)) {
                 return owner.getPosition(); // Stay hiding
             } else {
                 owner.setState(State.PASSIVE); // Safe now
@@ -90,7 +90,7 @@ public class ChooseTarget {
 
         // 2. Kiểm tra thiên địch xung quanh toàn bộ tầm nhìn (3x3 chunks)
         // ScaredStrategy has the highest priority for herbivores
-        if (owner instanceof entities.attributes.Herbivore &&
+        if (!(owner instanceof entities.attributes.Apex) && !(owner instanceof entities.attributes.Aquatic) &&
             mapSystem.hasEnemyAround(owner)
         ) {
             // Ngẫu nhiên có phát hiện kẻ địch hay không (80%)
