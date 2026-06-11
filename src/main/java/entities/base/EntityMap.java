@@ -104,7 +104,7 @@ public class EntityMap {
             System.out.println("toa do da co thuc the");
             return;
         }
-        Entity tmp = EntityFactory.<T>CreateEntity(recipe, x, y);
+        Entity tmp = EntityFactory.CreateEntity(recipe, x, y);
         entityMap[x][y] = tmp;
     }
 

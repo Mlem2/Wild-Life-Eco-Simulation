@@ -1,7 +1,6 @@
 package entities.base;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import allEnum.Size;
@@ -45,8 +44,7 @@ public abstract class Animals extends Entity {
 
     public void lockTargetEntity(Object target) {
         this.lockedTargetEntity = target;
-        if (target instanceof Animals) {
-            Animals a = (Animals) target;
+        if (target instanceof Animals a) {
             this.lastLockedTargetPos = a.getPosition();
         } else if (target instanceof Position) {
             this.lastLockedTargetPos = (Position) target;
@@ -57,8 +55,7 @@ public abstract class Animals extends Entity {
 
 
     public boolean hasLockedTargetMoved() {
-        if (lockedTargetEntity instanceof Animals) {
-            Animals a = (Animals) lockedTargetEntity;
+        if (lockedTargetEntity instanceof Animals a) {
             Position p = a.getPosition();
             if (lastLockedTargetPos == null) return true;
             boolean moved = !lastLockedTargetPos.equals(p);
@@ -105,11 +102,6 @@ public abstract class Animals extends Entity {
         if (matingCooldown > 0) matingCooldown--;
         if(age <= 0 || hunger <= 0 || thirst <= 0){
             this.isAlive = false;
-        }
-        else{
-            if(currentMoveCooldown == 0){
-               
-            }
         }
     }
 

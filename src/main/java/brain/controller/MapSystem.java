@@ -12,7 +12,6 @@ import entities.base.*;
 
 /**
  * Lightweight MapSystem facade used by brain strategies.
- *
  * NOTE: This is a minimal, local implementation to provide the methods
  * the brain package expects. It intentionally returns safe defaults
  * when a full world/registry isn't provided yet.
@@ -85,9 +84,7 @@ public class MapSystem {
 
 
         // Elephants are not threatened by anyone in this simulation context
-        if (owner instanceof entities.Elephant) return false;
-
-        return true;
+        return !(owner instanceof entities.Elephant);
     }
 
     public boolean isPrey(Animals owner, Animals other) {
@@ -112,7 +109,6 @@ public class MapSystem {
         if (worldMap == null || pos == null) return out;
 
         Chunk[][] chunkMap = worldMap.chunkMap;
-        if (chunkMap == null) return out;
 
         int cx = pos.getX() / WorldMap.CHUNK_SIZE;
         int cy = pos.getY() / WorldMap.CHUNK_SIZE;

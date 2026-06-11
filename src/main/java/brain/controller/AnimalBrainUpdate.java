@@ -91,9 +91,11 @@ public class AnimalBrainUpdate {
                     targetEntity = entityAtTarget;
                 }
             }
+
             if (targetEntity == null) {
                 targetEntity = findConsumableAtCurrentTile();
-            } else if (targetEntity instanceof Animals other) {
+            }
+            if (targetEntity instanceof Animals other) {
                 if (actionManager.getMapSystem().isPotentialMate(owner, other)) {
                     actionManager.mate(other);
                 } else {
@@ -149,7 +151,7 @@ public class AnimalBrainUpdate {
                     }
                     continue;
             }
-            if (entity instanceof Animals && entity != owner) {
+            if (entity instanceof Animals) {
                 if (mapSystem.isPotentialMate(owner, (Animals) entity)) {
                     mateTarget = entity;
                 } else if (mapSystem.isPrey(owner, (Animals) entity)) {

@@ -1,6 +1,5 @@
 package entities.base;
 
-import core.enviroment.WorldMap;
 import java.util.Objects;
 
 public class Position {

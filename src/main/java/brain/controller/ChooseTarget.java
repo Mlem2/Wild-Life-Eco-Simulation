@@ -27,7 +27,6 @@ public class ChooseTarget {
     private MoveStrategy currentStrategy;
     private Position currentTargetPos = null;
     private long targetSetTime = 0;
-    private final long TARGET_TIMEOUT_MS = 10000; // 10 giây không cập nhật lại mục tiêu sẽ ép tính toán lại
 
     public ChooseTarget(Animals owner, MapSystem mapSystem) {
         this.owner = owner;
@@ -56,6 +55,8 @@ public class ChooseTarget {
 
         // Always call getTarget to ensure speedUp state is updated by the strategy if it depends on the strategy being active
         // However, we only WANT to change the target position if needed.
+        // 10 giây không cập nhật lại mục tiêu sẽ ép tính toán lại
+        long TARGET_TIMEOUT_MS = 10000;
         if (currentTargetPos == null ||
             owner.getPosition().equals(currentTargetPos) ||
             (currentTime - targetSetTime > TARGET_TIMEOUT_MS)) {

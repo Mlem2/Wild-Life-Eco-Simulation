@@ -56,11 +56,6 @@ public class SimulationManager {
         }
     }
 
-    public void stop() {
-        running = false;
-        scheduler.shutdown();
-    }
-
     private void updateTimeSystem() {
         try {
             TimeSystem.updateHours();
@@ -70,14 +65,12 @@ public class SimulationManager {
     private void updateSimulationLogic() {
         try {
             Chunk[][] chunkMap = worldMap.chunkMap;
-            if (chunkMap == null) return;
 
             Entity[][] animalCoordinates = new Entity[gridSize][gridSize];
             List<Entity> allEntities = new ArrayList<>();
 
-            for (int cy = 0; cy < chunkMap.length; cy++) {
-                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
-                    Chunk chunk = chunkMap[cy][cx];
+            for (Chunk[] chunks : chunkMap) {
+                for (Chunk chunk : chunks) {
                     if (chunk == null) continue;
                     synchronized (chunk.getEntityList()) {
                         for (Entity entity : chunk.getEntityList()) {
@@ -215,7 +208,7 @@ public class SimulationManager {
 
                                 // Herbivore grass eating logic (only from terrain, not from entities like Bush/Trees), also need to in Scared Strategy.
                                 // Elephants doesn't tend to eat grass, they eat Bush/Trees instead, so they are not affected by this logic.
-                                if ((animal instanceof entities.attributes.Herbivore && !(animal instanceof entities.attributes.Apex)) && (animal.getHungerPercentage() < 80.0) && (animal.getCurrentMoveCooldown() <= 1) && (animal.isSpeedUp() == false)) {
+                                if ((animal instanceof entities.attributes.Herbivore && !(animal instanceof entities.attributes.Apex)) && (animal.getHungerPercentage() < 80.0) && (animal.getCurrentMoveCooldown() <= 1) && (!animal.isSpeedUp())) {
                                     try {
                                         var currentTile = worldMap.getTile(animal.getX(), animal.getY());
                                         if (currentTile != null && currentTile.isGrass()) {
@@ -288,10 +281,25 @@ public class SimulationManager {
         }
     }
 
+    private static boolean isCanEat(Animals animal, Entity target) {
+        boolean canEat = false;
+        if (animal instanceof entities.Elephant) {
+            if (target instanceof Bush || target instanceof Trees) {
+                canEat = true;
+            }
+        } else if (animal instanceof entities.attributes.Herbivore) {
+            // Non-elephant herbivores no longer eat trees and bushes
+            if (target instanceof Plant && !(target instanceof Bush || target instanceof Trees)) {
+                canEat = true;
+            }
+        }
+        return canEat;
+    }
+
     private void registerAllBrains() {
         try {
             Chunk[][] chunkMap = worldMap.chunkMap;
-            if (chunkMap == null) return;
+
             for (Chunk[] row : chunkMap) {
                 for (Chunk chunk : row) {
                     if (chunk == null) continue;
@@ -304,7 +312,7 @@ public class SimulationManager {
     }
 
     public void registerBrainForEntity(Entity e) {
-        if (e == null || !(e instanceof Animals a)) return;
+        if (!(e instanceof Animals a)) return;
         if (brainMap.containsKey(a)) return;
 
         MapSystem ms = new MapSystem(worldMap);

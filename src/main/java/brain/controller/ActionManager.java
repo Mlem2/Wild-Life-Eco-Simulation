@@ -35,10 +35,6 @@ public class ActionManager {
         core.enviroment.Terrain targetTerrain = mapSystem.getTerrainAt(nextStep);
         if (owner instanceof entities.Fish) {
             if (targetTerrain != null && !targetTerrain.isWater()) return;
-        } else {
-            // If we want to strictly prevent land animals from entering water AT ALL (not just passive), we'd put it here.
-            // But the previous task only asked for Passive strategy. 
-            // The current task is "fishes can't go on land", which I'll enforce here.
         }
 
         // Update chunk membership: compute old/new chunks, move the entity between them if needed
