@@ -9,7 +9,7 @@ import brain.pathfinder.Pathfinder;
 import entities.base.Animals;
 import entities.base.Entity;
 import entities.base.Position;
-import entities.base.Tree;
+import entities.base.Plant;
 
 public class AnimalBrainUpdate {
     private final Animals owner;
@@ -142,7 +142,7 @@ public class AnimalBrainUpdate {
 
         for (Entity entity : currentTileEntities) {
             if (entity == null || entity == owner) continue;
-            if (entity instanceof Tree) {
+            if (entity instanceof Plant) {
                     if (owner instanceof entities.Elephant) {
                         foodTarget = entity;
                         break;

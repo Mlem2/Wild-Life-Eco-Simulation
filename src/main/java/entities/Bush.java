@@ -1,15 +1,11 @@
 package entities;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import allEnum.Direction;
 import entities.base.Entity;
-import entities.base.EntityFactory;
-import entities.base.Tree;
+import entities.base.Plant;
 
-public class Bush extends Tree {
+public class Bush extends Plant {
     public Bush(int x, int y){
         super(x, y, 20, 20);
         this.defaultSeedCooldown = (random.nextInt(2) + 5) * 10800;

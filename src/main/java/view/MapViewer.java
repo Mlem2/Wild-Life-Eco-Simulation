@@ -377,7 +377,7 @@ public class MapViewer extends Application {
         javafx.scene.control.RadioButton rbSpawnElephant = new javafx.scene.control.RadioButton("🐘 Spawn Elephant (Gray)");
         javafx.scene.control.RadioButton rbSpawnFish = new javafx.scene.control.RadioButton("🐟 Spawn Fish (Aquamarine)");
         javafx.scene.control.RadioButton rbSpawnBush = new javafx.scene.control.RadioButton("🌿 Plant Bush");
-        javafx.scene.control.RadioButton rbSpawnTree = new javafx.scene.control.RadioButton("🌳 Plant Tree");
+        javafx.scene.control.RadioButton rbSpawnTree = new javafx.scene.control.RadioButton("🌳 Plant Plant");
 
         rbView.setToggleGroup(actionGroup); rbView.setSelected(true); rbView.setTextFill(Color.WHITE);
         rbSpawnRabbit.setToggleGroup(actionGroup); rbSpawnRabbit.setTextFill(Color.WHITE);
@@ -549,7 +549,7 @@ public class MapViewer extends Application {
         content.append("Type: ").append(selectedAnimal.getClass().getSimpleName()).append("\n");
         content.append("Position: (").append(selectedAnimal.getX()).append(", ").append(selectedAnimal.getY()).append(")\n");
         content.append("Chunk: [").append(selectedAnimal.getX() / WorldMap.CHUNK_SIZE).append(", ").append(selectedAnimal.getY() / WorldMap.CHUNK_SIZE).append("]\n");
-        content.append("Hunger: ").append(String.format("%.1f", selectedAnimal.getHunger())).append(" / Thirst: ").append(String.format("%.1f", selectedAnimal.getThirst())).append("\n");
+        content.append("Hunger: ").append(String.format("%.1f", selectedAnimal.getHungerPercentage())).append(" / Thirst: ").append(String.format("%.1f", selectedAnimal.getThirstPercentage())).append("\n");
         content.append("Cooldown: ").append(selectedAnimal.getCurrentMoveCooldown()).append("\n");
         content.append("Strategy: ").append(strategyName).append("\n");
         content.append("Current target: ").append(target == null ? "None" : "(" + target.getX() + ", " + target.getY() + ")").append("\n");

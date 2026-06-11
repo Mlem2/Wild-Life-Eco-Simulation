@@ -98,17 +98,7 @@ public abstract class Animals extends Entity {
     public void increaseHunger(double amount) { hunger = Math.min(100, hunger + amount); }
     public void increaseHydration(double amount) { thirst = Math.min(100, thirst + amount); }
 
-    // Basic combat/health helpers
-    protected int health = 100;
-
-    public void takeDamage(int d) {
-        health -= d;
-        if (health <= 0) isAlive = false;
-    }
-
-    public int getAttackDamage() { return Math.max(1, size.ordinal() + 1); }
-
-    public void updateMoveCooldown(Entity[][] animalCoordinates, List<Entity> allEntities){
+    public void updateMoveCooldown(){
         currentMoveCooldown--;
         updateHungerThirst();
         age--;
@@ -131,14 +121,6 @@ public abstract class Animals extends Entity {
 
     public abstract void makeSound();
 
-    public double getHunger() {
-        return hunger;
-    }
-
-    public double getThirst() {
-        return thirst;
-    }
-
     public Size getSize() {
         return size;
     }
@@ -149,14 +131,6 @@ public abstract class Animals extends Entity {
 
     public void setState(State state) {
         this.state = state;
-    }
-
-    public void setMoveStrategy(MoveStrategy moveStrategy) {
-        this.moveStrategy = moveStrategy;
-    }
-
-    public MoveStrategy getMoveStrategy() {
-        return this.moveStrategy;
     }
 
     public String getMoveStrategyName() {
@@ -174,6 +148,7 @@ public abstract class Animals extends Entity {
 
     // Expose default cooldown so external controllers (ActionManager) can use it
     public int getDefaultMoveCooldown() { return this.defaultMoveCooldown; }
+
     public int getDefaultMatingCooldown() {
         if(breedingSeason.contains(TimeSystem.season)){
             return this.defaultMatingCooldown;

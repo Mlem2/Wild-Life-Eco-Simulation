@@ -8,7 +8,7 @@ import entities.Bush;
 import entities.Trees;
 import entities.base.Animals;
 import entities.base.Entity;
-import entities.base.Tree;
+import entities.base.Plant;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -105,12 +105,12 @@ public class SimulationManager {
                             Entity entity = entityList.get(i);
                             if (entity == null || !entity.checkAlive() || entitiesToRemove.contains(entity)) continue;
 
-                            if (entity instanceof Tree tree) {
-                                tree.checkCD(animalCoordinates, allEntities);
+                            if (entity instanceof Plant plant) {
+                                plant.checkCD(animalCoordinates, allEntities);
                             }
 
                             if (entity instanceof Animals animal) {
-                                animal.updateMoveCooldown(animalCoordinates, allEntities);
+                                animal.updateMoveCooldown();
                                 if (tickCount % 25 == 0) {
                                     try {
                                         Field fieldAge = Entity.class.getDeclaredField("age");
@@ -189,7 +189,7 @@ public class SimulationManager {
                                             }
                                         } else if (animal instanceof entities.attributes.Herbivore) {
                                             // Non-elephant herbivores no longer eat trees and bushes
-                                            if (target instanceof Tree && !(target instanceof Bush || target instanceof Trees)) {
+                                            if (target instanceof Plant && !(target instanceof Bush || target instanceof Trees)) {
                                                 canEat = true;
                                             }
                                         }

@@ -1,15 +1,11 @@
 package entities;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import allEnum.Direction;
 import entities.base.Entity;
-import entities.base.EntityFactory;
-import entities.base.Tree;
+import entities.base.Plant;
 
-public class Trees extends Tree {
+public class Trees extends Plant {
 
     public Trees(int x, int y) {
         super(x, y, 30, 30);

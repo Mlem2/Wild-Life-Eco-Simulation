@@ -8,10 +8,7 @@ import java.util.Random;
 import core.enviroment.Chunk;
 import core.enviroment.Terrain;
 import core.enviroment.WorldMap;
-import entities.base.Animals;
-import entities.base.Entity;
-import entities.base.Position;
-import entities.base.Tree;
+import entities.base.*;
 
 /**
  * Lightweight MapSystem facade used by brain strategies.
@@ -194,7 +191,7 @@ public class MapSystem {
             if (c == null) continue;
             synchronized (c.getEntityList()) {
                 for (Entity e : c.getEntityList()) {
-                    if (e instanceof Tree) {
+                    if (e instanceof Plant) {
                         out.add(Position.of(e.getX(), e.getY()));
                     }
                 }
