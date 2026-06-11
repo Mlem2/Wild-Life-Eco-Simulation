@@ -401,12 +401,12 @@ public class MapController {
     
     private void drawStatusBar(GraphicsContext gc, Animals animal, double x, double y, double size) {
         // Kích thước cố định, không phụ thuộc scale quá nhiều
-        double barWidth = 16.0; 
-        double barHeight = 3.0;
+        double barWidth = 20.0; 
+        double barHeight = 2.0;
 
         // Căn giữa thanh trên đầu con vật
         double drawX = x + (size - barWidth) / 2;
-        double drawY = y - 4;
+        double drawY = y - 8;
 
         double h = Math.max(0, Math.min(100, animal.getHunger()));
         double t = Math.max(0, Math.min(100, animal.getThirst()));
