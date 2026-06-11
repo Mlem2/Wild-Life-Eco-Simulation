@@ -17,6 +17,8 @@ public class Fish extends Animals implements Aquatic {
         this.defaultMatingCooldown = 5400;
         this.hungerRecoveryAmount = 30;
         this.thirstRecoveryAmount = 30;
+        this.breedingSeason.add("Autumn");
+        this.matingCooldown = this.getDefaultMatingCooldown();
     }
 
     @Override

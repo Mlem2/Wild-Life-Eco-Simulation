@@ -1,92 +1,77 @@
-package view.graphic.ui.controller; // 1. Đã cập nhật đúng package mới của cậu
+package view.graphic.ui.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
-import javafx.event.ActionEvent; // 2. Thêm import ActionEvent để đồng bộ với sự kiện từ file FXML
+import javafx.event.ActionEvent;
 
 public class ControlPanel {
 
     @FXML
-    private Button btnPause; //
+    private javafx.scene.control.ChoiceBox<String> choiceSpeed;
+    @FXML
+    private Button btnPause;
+    @FXML
+    private Label labelSpeed;
+    @FXML
+    private ToggleGroup toolGroup;
 
     @FXML
-    private Label labelSpeed; //
-
-    @FXML
-    private Slider sliderSpeed; //
-
-    @FXML
-    private ToggleGroup toolGroup; //
-
-    // 3. Sửa đổi: Đã thêm tham số (ActionEvent event) vào tất cả các hàm xử lý nút bấm để tránh lỗi đứt gãy liên kết UI
-    @FXML
-    
-    void onPauseClicked(ActionEvent event)
-    {
-        System.out.println("Bấm tạm dừng"); //
+    public void initialize() {
+        if (choiceSpeed != null) {
+            choiceSpeed.getItems().addAll("1x", "1.25x", "1.5x", "2x", "3x", "4x");
+            choiceSpeed.setValue("1x");
+        }
     }
 
     @FXML
-    void onResetZoomClicked(ActionEvent event)
-    {
-        System.out.println("Reset Zoom"); //
-    }
-
-    public String activeTool = "NONE";
-    
-    public String getActiveTool() {
-        return this.activeTool;
-    }
-    
-    @FXML
-    void onToolNone(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Không chọn");
-    }
-
-    @FXML
-    void onToolGrass(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Gieo cỏ");
+    void onSpeedChanged(ActionEvent event) {
+        if (choiceSpeed == null || view.MapViewer.instance == null) return;
+        String selectedSpeed = choiceSpeed.getValue();
+        if (selectedSpeed == null) return;
+        try {
+            String numericPart = selectedSpeed.replace("x", "");
+            double multiplier = Double.parseDouble(numericPart);
+            brain.controller.SimulationManager manager = view.MapViewer.instance.getSharedSimulationManager();
+            if (manager != null) {
+                manager.setSpeedMultiplier(multiplier);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi chuyển đổi mốc tốc độ: " + e.getMessage());
+        }
     }
 
     @FXML
-    void onToolRabbit(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Thêm Thỏ");
-        activeTool = "ANIMAL_RABBIT";
+    void onPauseClicked(ActionEvent event) {
+        if (view.MapViewer.instance != null) {
+            brain.controller.SimulationManager manager = view.MapViewer.instance.getSharedSimulationManager();
+            if (manager != null) {
+                if (manager.isSimulationRunning()) {
+                    manager.pauseSimulation();
+                    btnPause.setText("▶ Resume");
+                    btnPause.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                } else {
+                    manager.resumeSimulation();
+                    btnPause.setText("⏸ Pause");
+                    btnPause.setStyle("");
+                }
+            }
+        }
     }
 
     @FXML
-    void onToolDeer(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Thêm Hươu");
+    void onResetZoomClicked(ActionEvent event) {
+        System.out.println("Reset Zoom");
     }
 
-    @FXML
-    void onToolWolf(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Thêm Sói");
-    }
-
-    @FXML
-    void onToolTiger(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Thêm Hổ");
-    }
-
-    @FXML
-    void onToolElephant(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Thêm Voi");
-    }
-
-    @FXML
-    void onToolRock(ActionEvent event)
-    {
-        System.out.println("Chọn công cụ: Đặt Đá");
-    }
+    // --- ĐỒNG BỘ CHUỖI CÔNG CỤ CHUẨN KHÍT VỚI MAPCONTROLLER ---
+    @FXML void onToolNone(ActionEvent event)     { view.graphic.ui.controller.MapController.SELECTED_TOOL = "NONE"; }
+    @FXML void onToolBush(ActionEvent event)    { view.graphic.ui.controller.MapController.SELECTED_TOOL = "BUSH"; }     // Gieo bụi cỏ
+    @FXML void onToolRabbit(ActionEvent event)   { view.graphic.ui.controller.MapController.SELECTED_TOOL = "RABBIT"; }   // Thêm thỏ
+    @FXML void onToolWolf(ActionEvent event)     { view.graphic.ui.controller.MapController.SELECTED_TOOL = "WOLF"; }     // Thêm sói
+    @FXML void onToolTiger(ActionEvent event)    { view.graphic.ui.controller.MapController.SELECTED_TOOL = "TIGER"; }    // Thêm hổ
+    @FXML void onToolElephant(ActionEvent event) { view.graphic.ui.controller.MapController.SELECTED_TOOL = "ELEPHANT"; } // Thêm voi
+    @FXML void onToolRock(ActionEvent event)     { view.graphic.ui.controller.MapController.SELECTED_TOOL = "ROCK"; }     // Đặt đá
+    @FXML void onToolTree(ActionEvent event)     { view.graphic.ui.controller.MapController.SELECTED_TOOL = "TREE"; }     // Đặt cây to
 }
