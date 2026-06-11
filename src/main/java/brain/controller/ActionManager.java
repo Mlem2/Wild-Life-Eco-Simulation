@@ -107,8 +107,8 @@ public class ActionManager {
                     // but 1 herbivore should get full nutrition.
                     if (herbivoresInChunk > 1) {
                         double population = (herbivoresInChunk - 1) * 0.5;
-                        hungerGain = (int) Math.round(hungerGain - population);
-                        thirstGain = (int) Math.round(thirstGain - population);
+                        hungerGain = (int) Math.max(0, (Math.round(hungerGain - population)));
+                        thirstGain = (int) Math.max(0, (Math.round(thirstGain - population)));
                     }
                 }
             }
