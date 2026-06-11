@@ -128,6 +128,7 @@ public class MapController {
         Image grassImg = AssetManager.get("tile_grass");
         Image waterImg = AssetManager.get("tile_water");
         Image stoneImg = AssetManager.get("stone");
+        Image dirtImg = AssetManager.get("tile_dirt");
 
         // --- GIAI ĐOẠN 1: VẼ NỀN ĐỊA HÌNH ĐỒNG BỘ ENUM ---
         for (int x = 0; x < gridSize; x++) {
@@ -156,6 +157,10 @@ public class MapController {
                         } else if (terrainName.contains("MOUNTAIN")) {
                             if (grassImg != null) gc.drawImage(grassImg, dx, dy, tileSize, tileSize);
                             if (stoneImg != null) gc.drawImage(stoneImg, dx, dy, tileSize, tileSize);
+                            drawn = true;
+                        } else if (terrainName.contains("MUD")) {
+                            if (grassImg != null) gc.drawImage(grassImg, dx, dy, tileSize, tileSize);
+                            if (dirtImg != null) gc.drawImage(dirtImg, dx, dy, tileSize, tileSize);
                             drawn = true;
                         } else {
                             if (grassImg != null) {
