@@ -196,7 +196,7 @@ public class AssetManager {
                 "/assets/terrains/new_terrains/MapSpringSummer.png",
                 "/assets/terrains/new_terrains/MapAutumn.png",
                 "/assets/terrains/new_terrains/MapWinter.png"
-        }, 600, 84, 48, 48);
+        }, 600, 72, 48, 48);
 
         loadSeasonalTerrain("water", new String[]{
                 "/assets/terrains/new_terrains/water.png",
@@ -216,7 +216,7 @@ public class AssetManager {
                 "/assets/terrains/new_terrains/MapSpringSummer.png",
                 "/assets/terrains/new_terrains/MapSpringSummer.png",
                 "/assets/terrains/new_terrains/MapAutumn.png",
-                "/assets/terrains/new_terrains/MapWinter.png"
+                "/assets/terrains/new_terrains/MapAutumn.png"
         }, 504, 216, 48, 48);
     }
 

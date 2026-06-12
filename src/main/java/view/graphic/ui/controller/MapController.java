@@ -34,7 +34,9 @@ public class MapController {
     private final double MAX_SCALE = 10.0;
 
     private long lastUpdateTime = 0;
+    private long lastStatusRefreshTime = 0;
     private final long RENDER_DELAY_NS = 16_666_666L; // ~60 FPS
+    private final long STATUS_REFRESH_DELAY_NS = 100_000_000L; // ~10 updates per second
 
     private AnimationTimer renderLoop;
     private view.graphic.ui.controller.ControlPanel controlPanel;
@@ -74,6 +76,10 @@ public class MapController {
                 if (now - lastUpdateTime >= RENDER_DELAY_NS) {
                     renderMap();
                     lastUpdateTime = now;
+                }
+                if (now - lastStatusRefreshTime >= STATUS_REFRESH_DELAY_NS) {
+                    updateControlPanelTime();
+                    lastStatusRefreshTime = now;
                 }
             }
         };
@@ -253,6 +259,12 @@ public class MapController {
 
     public void setControlPanel(view.graphic.ui.controller.ControlPanel controlPanel) {
         this.controlPanel = controlPanel;
+    }
+
+    private void updateControlPanelTime() {
+        if (controlPanel != null) {
+            controlPanel.refreshTimeStatus();
+        }
     }
 
     public void setMainController(MainController mainController) {

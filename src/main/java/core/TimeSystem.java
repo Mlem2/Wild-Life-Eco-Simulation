@@ -75,19 +75,11 @@ public class TimeSystem {
         int targetMonth;
 
         switch (season.toLowerCase()) {
-            case "spring" -> {
-                targetYear = year - 1;
-                targetMonth = 12;
-            }
-            case "summer" -> targetMonth = 3;
-            case "autumn" -> targetMonth = 6;
-            case "winter" -> targetMonth = 9;
+            case "spring" -> targetMonth = 3;
+            case "summer" -> targetMonth = 6;
+            case "autumn" -> targetMonth = 9;
+            case "winter" -> targetMonth = 12;
             default -> targetMonth = month;
-        }
-
-        if (targetMonth <= 0) {
-            targetMonth = 12;
-            targetYear = Math.max(1, targetYear - 1);
         }
 
         int targetDay = getDaysInMonth(targetYear, targetMonth);
