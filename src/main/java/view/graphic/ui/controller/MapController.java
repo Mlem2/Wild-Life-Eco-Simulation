@@ -7,6 +7,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.media.Media;          // Thêm import này
+import javafx.scene.media.MediaPlayer;    // Thêm import này
 import java.util.ArrayList;
 import java.util.List;
 import core.enviroment.WorldMap;
@@ -33,6 +35,8 @@ public class MapController {
 
     private long lastUpdateTime = 0;
     private final long RENDER_DELAY_NS = 16_666_666L; // ~60 FPS
+
+    private MediaPlayer backgroundNoisePlayer;
 
     private AnimationTimer renderLoop;
 
@@ -197,6 +201,35 @@ public class MapController {
         this.offsetX = 0.0;
         this.offsetY = 0.0;
         this.isContextSet = true;
+
+        startBackgroundNoise("/sound/nature_ambient.mp3");
+    }
+
+    private void startBackgroundNoise(String path) {
+        try {
+            java.net.URL resource = getClass().getResource(path);
+            if (resource != null) {
+                // Nếu đang có tiếng cũ chạy, tắt hẳn đi trước khi đổi map
+                if (backgroundNoisePlayer != null) {
+                    backgroundNoisePlayer.stop();
+                }
+
+                Media media = new Media(resource.toExternalForm());
+                backgroundNoisePlayer = new MediaPlayer(media);
+
+                // Thiết lập vòng lặp vô tận cho âm thanh nền
+                backgroundNoisePlayer.setCycleCount(MediaPlayer.INDEFINITE);
+
+                backgroundNoisePlayer.setVolume(2);
+
+                backgroundNoisePlayer.play();
+                System.out.println("🔊 [Audio] Đã kích hoạt tiếng ồn nền vòng lặp thành công!");
+            } else {
+                System.err.println("⚠️ Không tìm thấy file âm thanh nền tại: " + path);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khởi tạo hệ thống âm thanh nền: " + e.getMessage());
+        }
     }
 
     public void setWorldMapContext(core.enviroment.WorldMap worldMap, int gridSize) {
