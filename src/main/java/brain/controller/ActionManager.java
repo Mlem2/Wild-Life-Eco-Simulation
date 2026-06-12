@@ -1,6 +1,8 @@
 package brain.controller;
 
 import core.enviroment.Chunk;
+import entities.Food;
+import entities.Water;
 import entities.base.Animals;
 import entities.base.Position;
 
@@ -35,6 +37,10 @@ public class ActionManager {
         core.enviroment.Terrain targetTerrain = mapSystem.getTerrainAt(nextStep);
         if (owner instanceof entities.Fish) {
             if (targetTerrain != null && !targetTerrain.isWater()) return;
+        } else {
+            // If we want to strictly prevent land animals from entering water AT ALL (not just passive), we'd put it here.
+            // But the previous task only asked for Passive strategy. 
+            // The current task is "fishes can't go on land", which I'll enforce here.
         }
 
         // Update chunk membership: compute old/new chunks, move the entity between them if needed
@@ -79,6 +85,19 @@ public class ActionManager {
         animal.setCurrentMoveCooldown(cooldown);
     }
 
+    public void eat(Food food) {
+        if (food == null) return;
+
+        int hungerGain = food.getHungerRecoveryAmount();
+        int thirstGain = food.getThirstRecoveryAmount();
+        food.consume(hungerGain);
+        mapSystem.removeEntity(food);
+        owner.lockTargetEntity(null);
+        owner.increaseHunger(hungerGain);
+        owner.increaseHydration(thirstGain);
+        owner.setCurrentMoveCooldown(1); // Ăn uống cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
+    }
+
     public void eat(Animals prey) {
         if (prey == null) return;
 
@@ -93,7 +112,7 @@ public class ActionManager {
 
     public void eatGrass() {
         int hungerGain = 10;
-        int thirstGain = 3;
+        int thirstGain = 2;
 
         try {
             Position pos = owner.getPosition();
@@ -107,8 +126,8 @@ public class ActionManager {
                     // but 1 herbivore should get full nutrition.
                     if (herbivoresInChunk > 1) {
                         double population = (herbivoresInChunk - 1) * 0.5;
-                        hungerGain = (int) Math.max(0, (Math.round(hungerGain - population)));
-                        thirstGain = (int) Math.max(0, (Math.round(thirstGain - population)));
+                        hungerGain = (int) Math.round(hungerGain - population);
+                        thirstGain = (int) Math.round(thirstGain - population);
                     }
                 }
             }
@@ -119,18 +138,30 @@ public class ActionManager {
         owner.setCurrentMoveCooldown(1);
     }
 
+    public void drink() {
+        drink(null);
+    }
+
+    public void drink(Water water) {
+        int gained = owner.getThirstRecoveryAmount();
+        if (water != null) {
+            water.consume(gained);
+        }
+        owner.increaseHydration(gained);
+        owner.setCurrentMoveCooldown(1); // Uống nước cũng tốn CD nhưng rất nhanh để khuyến khích tiêu thụ tài nguyên khi đã tiếp cận được
+    }
+
     public void attack(Animals prey) {
         if (prey == null) return;
 
         // Implement hunting success chance: 50%
         if (new java.util.Random().nextBoolean()) {
             // Success: act normally (eat the prey)
-            owner.setMatingCooldown(owner.getMatingCooldown() - 500);
             eat(prey);
         } else {
             // Failure: prey slips away, predator is stunned for 40 ticks
             owner.lockTargetEntity(null);
-            owner.setCurrentMoveCooldown(20);
+            owner.setCurrentMoveCooldown(40);
         }
     }
 

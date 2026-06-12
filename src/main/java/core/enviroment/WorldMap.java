@@ -1,47 +1,27 @@
 package core.enviroment;
 
 import allEnum.Direction;
-import entities.*;
-import entities.base.Entity;
-import entities.base.EntityFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class WorldMap {
     public static final int CHUNK_SIZE = 25;
     protected static Terrain[][] worldMap;
+    protected static String[][] decorationMap;
     public final Chunk[][] chunkMap;
     public static int SIZE;
     private static float[][] heightNoiseMap;
     private static float[][] moistureNoiseMap;
     private int[][] waterHeatMap;
     private int CHUNK_ARRAY_SIZE;
-    private final Random random = new Random();
-
-    private final Map<String, Integer> waterSpawns = Map.of(
-            "fish", 25
-    );
-
-    private final Map<String, Integer> forestSpawns = Map.of(
-            "wolf", 3,
-            "rabbit", 5,
-            "tree", 200,
-            "bush", 30
-    );
-
-    private final Map<String, Integer> grasslandSpawns = Map.of(
-            "rabbit", 25,
-            "wolf", 0,
-            "elephant", 1,
-            "tree", 10,
-            "bush", 10
-    );
-
 
     //Constructor
     public WorldMap(int seed, int SIZE) {
         WorldMap.SIZE = SIZE;
         worldMap = new Terrain[SIZE][SIZE];
+        decorationMap = new String[SIZE][SIZE];
         this.chunkMap = new Chunk[SIZE / CHUNK_SIZE][SIZE / CHUNK_SIZE];
         for (int y = 0; y < SIZE / CHUNK_SIZE; y++) {
             for (int x = 0; x < SIZE / CHUNK_SIZE; x++) {
@@ -108,15 +88,17 @@ public class WorldMap {
                 }
             }
         }
+
+        populateDecorationMap();
     }
 
-    public void initializeChunks() {
+    public void initializeChunks(entities.base.EntityMap entityMap) {
         CHUNK_ARRAY_SIZE = SIZE / CHUNK_SIZE;
         waterHeatMap = new int[CHUNK_ARRAY_SIZE][CHUNK_ARRAY_SIZE];
 
         generateWaterHeatMap();
         generateChunkDistances();
-        spawnEntities(this, SIZE);
+        addEntitiesToChunks(entityMap);
     }
 
     private void generateWaterHeatMap() {
@@ -126,7 +108,7 @@ public class WorldMap {
 
         for (int y = 0; y < CHUNK_ARRAY_SIZE; y++) {
             for (int x = 0; x < CHUNK_ARRAY_SIZE; x++) {
-                if (!chunkMap[y][x].getWaterPositions().isEmpty()) {
+                if (chunkMap[y][x].getWaterPositions().size() > 0) {
                     waterHeatMap[y][x] = 0;
                     queue.add(new int[]{x, y});
                 }
@@ -167,75 +149,70 @@ public class WorldMap {
         }
     }
 
-    private void spawnEntities(WorldMap worldMap, int SIZE) {
+    private void addEntitiesToChunks(entities.base.EntityMap entityMap) {
         for (int y = 0; y < SIZE; y++) {
             for (int x = 0; x < SIZE; x++) {
-                // 1. Get the current tile type
-                var tileType = worldMap.getTile(x, y);
-
-                // 2. Select the appropriate spawn table based on the tile
-                Map<String, Integer> currentSpawnTable = switch (tileType) {
-                    case WATER -> waterSpawns;
-                    case FOREST -> forestSpawns;
-                    case GRASSLAND -> grasslandSpawns;
-                    default -> null;
-                };
-
-                // 3. Roll the dice and spawn the entity if the tile has spawns defined
-                if (currentSpawnTable != null) {
-                    String chosenEntityType = getWeightedRandom(currentSpawnTable);
-
-                    if (chosenEntityType != null) {
-                        // 4. Match the string type to its specific recipe and spawn it
-                        spawnByTypeName(chosenEntityType, x, y);
-                    }
+                entities.base.Entity entity = entityMap.getEntity(x, y);
+                if (entity != null) {
+                    int yChunk = y / CHUNK_SIZE;
+                    int xChunk = x / CHUNK_SIZE;
+                    chunkMap[yChunk][xChunk].addEntity(entity);
                 }
             }
         }
     }
 
-    private void spawnByTypeName(String type, int x, int y) {
-        switch (type) {
-            case "rabbit" -> AddEntity(Rabbit::new, x, y);
-            case "tiger" -> AddEntity(Tiger::new, x, y);
-            case "wolf" -> AddEntity(Wolf::new, x, y);
-            case "fish" -> AddEntity(Fish::new, x, y);
-            case "elephant" -> AddEntity(Elephant::new, x, y);
-            case "tree" -> AddEntity(Trees::new, x, y);
-            case "bush" -> AddEntity(Bush::new, x, y);
-            default -> System.out.println("Unknown entity type: " + type);
-        }
+    public String getDecoration(int x, int y) {
+        if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) return null;
+        return decorationMap[y][x];
     }
 
-    // Helper method to handle the weighted random math
-    private String getWeightedRandom(Map<String, Integer> spawnTable) {
-        // Keep your maximum pool scale at 5000
-        int totalPool = 5000;
+    private void populateDecorationMap() {
+        // Template decoration generator: cậu có thể chỉnh tỉ lệ, loại decoration cho từng terrain.
+        for (int y = 0; y < SIZE; y++) {
+            for (int x = 0; x < SIZE; x++) {
+                Terrain terrain = worldMap[y][x];
+                if (terrain == null) continue;
 
-        int roll = random.nextInt(totalPool);
-        int collectiveWeight = 0;
+                float chance = (float) Math.random();
+                String decorKey = null;
 
-        for (Map.Entry<String, Integer> entry : spawnTable.entrySet()) {
-            collectiveWeight += entry.getValue();
-            if (roll < collectiveWeight) {
-                return entry.getKey();
+                switch (terrain) {
+                    case GRASSLAND -> {
+                        if (chance < 0.08f) {
+                            decorKey = chooseRandomDecoration(new String[]{"decor_grass_clump", "decor_flower_white"});
+                        }
+                    }
+                    case FOREST -> {
+                        if (chance < 0.07f) {
+                            decorKey = chooseRandomDecoration(new String[]{"decor_leaf_pile", "decor_mushroom"});
+                        }
+                    }
+                    case MOUNTAIN -> {
+                        if (chance < 0.03f) {
+                            decorKey = "decor_leaf_pile";
+                        }
+                    }
+                    case MUD -> {
+                        if (chance < 0.03f) {
+                            decorKey = "decor_mushroom";
+                        }
+                    }
+                    default -> {
+                        // default không có overlay
+                    }
+                }
+
+                decorationMap[y][x] = decorKey;
             }
         }
-
-        // If the roll lands anywhere between collectiveWeight and 4999,
-        // it returns null (leaving the tile empty).
-        return null;
     }
 
-    private <T extends Entity> void AddEntity(EntityFactory.FakeConstructor<T, Integer, Integer> recipe, int x, int y) {
-        if (x < 0 || x >= worldMap.length || y < 0 || y >= worldMap[0].length) {
-            return;
-        }
-
-        Entity tmp = EntityFactory.CreateEntity(recipe, x, y);
-        chunkMap[y / CHUNK_SIZE][x / CHUNK_SIZE].addEntity(tmp);
+    private String chooseRandomDecoration(String[] options) {
+        if (options == null || options.length == 0) return null;
+        int index = (int) (Math.random() * options.length);
+        return options[index];
     }
-
 
     public Chunk[][] getChunkMap() {
         return chunkMap;

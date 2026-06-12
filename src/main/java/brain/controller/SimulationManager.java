@@ -1,20 +1,27 @@
 package brain.controller;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import brain.pathfinder.Pathfinder;
 import core.TimeSystem;
 import core.enviroment.Chunk;
 import core.enviroment.WorldMap;
 import entities.Bush;
+import entities.Food;
 import entities.Trees;
 import entities.base.Animals;
 import entities.base.Entity;
-import entities.base.Plant;
-
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import entities.base.ResourceEntity;
+import entities.base.Tree;
 
 public class SimulationManager {
     private final WorldMap worldMap;
@@ -23,6 +30,8 @@ public class SimulationManager {
     private final Pathfinder pathfinder;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private boolean running = false;
+    // Thêm biến quản lý hệ số tốc độ (mặc định là 1.0 tức là 1x)
+    private double speedMultiplier = 1.0;
 
     public SimulationManager(WorldMap worldMap, int gridSize) {
         this.worldMap = worldMap;
@@ -42,35 +51,62 @@ public class SimulationManager {
     }
 
     private int tickCount = 0;
+    private double accumulatedTicks = 0.0; // Biến tích lũy chu kỳ dư
 
     private void tick() {
         if (!running) return;
-        
-        updateSimulationLogic();
-        
-        tickCount++;
-        // Update time system once per second (every 25 ticks) or at some other frequency
-        // For now, let's keep it consistent with the user's request
-        if (tickCount % 25 == 0) {
-            updateTimeSystem();
+
+        // Tính toán số chu kỳ logic cần chạy trong 40ms dựa theo tốc độ multiplier
+        accumulatedTicks += speedMultiplier;
+
+        // Chạy vòng lặp để cập nhật logic (Ví dụ: Tốc độ 2x thì sẽ gọi updateSimulationLogic 2 lần trong 40ms)
+        while (accumulatedTicks >= 1.0) {
+            if (!running) break;
+            updateSimulationLogic();
+
+            tickCount++;
+            if (tickCount % 25 == 0) {
+                updateTimeSystem();
+            }
+
+            accumulatedTicks -= 1.0;
         }
+    }
+
+    public void stop() {
+        running = false;
+        scheduler.shutdown();
     }
 
     private void updateTimeSystem() {
         try {
-            TimeSystem.updateHours();
+            TimeSystem.updateMinute();
+            if(TimeSystem.getMinute() >= 60){
+                TimeSystem.updateHours();
+                if(TimeSystem.getHours() >= 24){
+                    TimeSystem.updateDays();
+                    if(TimeSystem.getDays() >= TimeSystem.getLimit()){
+                        TimeSystem.updateMonths();
+                        if(TimeSystem.getMonths() > 12){
+                            TimeSystem.updateYears();
+                        }
+                    }
+                }
+            }
         } catch (Exception ignored) {}
     }
 
     private void updateSimulationLogic() {
         try {
             Chunk[][] chunkMap = worldMap.chunkMap;
+            if (chunkMap == null) return;
 
             Entity[][] animalCoordinates = new Entity[gridSize][gridSize];
             List<Entity> allEntities = new ArrayList<>();
 
-            for (Chunk[] chunks : chunkMap) {
-                for (Chunk chunk : chunks) {
+            for (int cy = 0; cy < chunkMap.length; cy++) {
+                for (int cx = 0; cx < chunkMap[cy].length; cx++) {
+                    Chunk chunk = chunkMap[cy][cx];
                     if (chunk == null) continue;
                     synchronized (chunk.getEntityList()) {
                         for (Entity entity : chunk.getEntityList()) {
@@ -98,12 +134,16 @@ public class SimulationManager {
                             Entity entity = entityList.get(i);
                             if (entity == null || !entity.checkAlive() || entitiesToRemove.contains(entity)) continue;
 
-                            if (entity instanceof Plant plant) {
-                                plant.checkCD(animalCoordinates, allEntities);
+                            if (entity instanceof Tree tree) {
+                                tree.checkCD(animalCoordinates, allEntities);
+                            }
+
+                            if (entity instanceof ResourceEntity resource) {
+                                resource.updateResourceState();
                             }
 
                             if (entity instanceof Animals animal) {
-                                animal.updateMoveCooldown();
+                                animal.updateMoveCooldown(animalCoordinates, allEntities);
                                 if (tickCount % 25 == 0) {
                                     try {
                                         Field fieldAge = Entity.class.getDeclaredField("age");
@@ -159,6 +199,19 @@ public class SimulationManager {
                                                     nextX = Math.max(0, Math.min(gridSize - 1, nextX));
                                                     nextY = Math.max(0, Math.min(gridSize - 1, nextY));
 
+                                                    try {
+                                                        var nextTile = worldMap.getTile(nextX, nextY);
+                                                        String tName = (nextTile != null && nextTile.getName() != null) ? nextTile.getName().toLowerCase() : "";
+                                                        boolean water = tName.contains("water") || tName.contains("nuoc");
+                                                        boolean stone = tName.contains("stone") || tName.contains("da") || tName.contains("mountain");
+
+                                                        if (!(animal instanceof entities.Fish)) {
+                                                            if (water || stone) { nextX = curX; nextY = curY; }
+                                                        } else {
+                                                            if (!water) { nextX = curX; nextY = curY; }
+                                                        }
+                                                    } catch (Exception ignored) {}
+
                                                     fieldX.set(animal, nextX);
                                                     fieldY.set(animal, nextY);
                                                 }
@@ -177,12 +230,14 @@ public class SimulationManager {
                                     if (target != null && target != animal && target.getX() == animal.getX() && target.getY() == animal.getY()) {
                                         boolean canEat = false;
                                         if (animal instanceof entities.Elephant) {
-                                            if (target instanceof Bush || target instanceof Trees) {
+                                            if (target instanceof Bush) {
                                                 canEat = true;
+                                            } else if (target instanceof Trees treeTarget) {
+                                                canEat = treeTarget.getGrowthStage() == 0;
                                             }
                                         } else if (animal instanceof entities.attributes.Herbivore) {
                                             // Non-elephant herbivores no longer eat trees and bushes
-                                            if (target instanceof Plant && !(target instanceof Bush || target instanceof Trees)) {
+                                            if (target instanceof Food && !(target instanceof Bush || target instanceof Trees)) {
                                                 canEat = true;
                                             }
                                         }
@@ -208,7 +263,7 @@ public class SimulationManager {
 
                                 // Herbivore grass eating logic (only from terrain, not from entities like Bush/Trees), also need to in Scared Strategy.
                                 // Elephants doesn't tend to eat grass, they eat Bush/Trees instead, so they are not affected by this logic.
-                                if ((animal instanceof entities.attributes.Herbivore && !(animal instanceof entities.attributes.Apex)) && (animal.getHungerPercentage() < 80.0) && (animal.getCurrentMoveCooldown() <= 1) && (!animal.isSpeedUp())) {
+                                if ((animal instanceof entities.attributes.Herbivore && !(animal instanceof entities.attributes.Apex)) && (animal.getHungerPercentage() < 80.0) && (animal.getCurrentMoveCooldown() <= 1) && (animal.isSpeedUp() == false)) {
                                     try {
                                         var currentTile = worldMap.getTile(animal.getX(), animal.getY());
                                         if (currentTile != null && currentTile.isGrass()) {
@@ -281,25 +336,10 @@ public class SimulationManager {
         }
     }
 
-    private static boolean isCanEat(Animals animal, Entity target) {
-        boolean canEat = false;
-        if (animal instanceof entities.Elephant) {
-            if (target instanceof Bush || target instanceof Trees) {
-                canEat = true;
-            }
-        } else if (animal instanceof entities.attributes.Herbivore) {
-            // Non-elephant herbivores no longer eat trees and bushes
-            if (target instanceof Plant && !(target instanceof Bush || target instanceof Trees)) {
-                canEat = true;
-            }
-        }
-        return canEat;
-    }
-
     private void registerAllBrains() {
         try {
             Chunk[][] chunkMap = worldMap.chunkMap;
-
+            if (chunkMap == null) return;
             for (Chunk[] row : chunkMap) {
                 for (Chunk chunk : row) {
                     if (chunk == null) continue;
@@ -312,7 +352,7 @@ public class SimulationManager {
     }
 
     public void registerBrainForEntity(Entity e) {
-        if (!(e instanceof Animals a)) return;
+        if (e == null || !(e instanceof Animals a)) return;
         if (brainMap.containsKey(a)) return;
 
         MapSystem ms = new MapSystem(worldMap);
@@ -320,6 +360,44 @@ public class SimulationManager {
         ActionManager am = new ActionManager(a, ms);
         AnimalBrainUpdate abu = new AnimalBrainUpdate(a, ct, pathfinder, am);
         brainMap.put(a, abu);
+    }
+
+    public void stopSimulation() {
+        this.running = false;
+        System.out.println(" Simulation thread has been requested to STOP.");
+    }
+    // --- THÊM CÁC HÀM PHỤC VỤ TÍNH NĂNG PAUSE/RESUME CHO ĐỒ HỌA ---
+
+    /**
+     * Tạm dừng tính toán logic của các con vật nhưng không hủy luồng ngầm
+     */
+    public void pauseSimulation() {
+        this.running = false;
+        System.out.println("⏸ [Backend] Đã tạm dừng di chuyển của các sinh vật.");
+    }
+
+    /**
+     * Tiếp tục chạy giả lập logic
+     */
+    public void resumeSimulation() {
+        this.running = true;
+        System.out.println("▶ [Backend] Đã tiếp tục luồng sinh thái động.");
+    }
+
+    /**
+     * Kiểm tra xem luồng logic có đang chạy hay không
+     */
+    public boolean isSimulationRunning() {
+        return this.running;
+    }
+    /**
+     * Cập nhật hệ số tốc độ mô phỏng từ giao diện truyền vào (1.0, 1.25, 1.5, 2.0, ...)
+     */
+    public void setSpeedMultiplier(double multiplier) {
+        if (multiplier > 0) {
+            this.speedMultiplier = multiplier;
+            System.out.println("⚡ [Backend] Đã chuyển đổi tốc độ giả lập sang mốc: " + multiplier + "x");
+        }
     }
 
     public Map<Animals, AnimalBrainUpdate> getBrainMap() {

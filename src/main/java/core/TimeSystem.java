@@ -1,46 +1,115 @@
 package core;
 
+import allEnum.Month;
+
 public class TimeSystem {
+    public static int year = 2000;
+    public static int month = 1;
     public static int day = 1;
     public static int hour = 0;
+    public static int minute = 0;
     public static String partOfDay = "Night";
     public static String season = "Spring";
 
-    private static final String[] SEASONS = {"Spring", "Summer", "Autumn", "Winter"};
+    public static int getLimit(){
+        Month m = Month.values()[month - 1];
+        int days = m.numberOfDays;
+        if(m.equals(Month.FEB)){
+            if(year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)) return days + 1;
+        }
+        return days;
+    }
 
     public static void updateDays(){
         day++;
-        updateSeason();
+        hour = 0;
     }
-
-    private static void updateSeason() {
-        // Season changes every 7 days.
-        // day 1-7: Spring (index 0)
-        // day 8-14: Summer (index 1)
-        // ...
-        int seasonIndex = ((day - 1) / 7) % 4;
-        season = SEASONS[seasonIndex];
+    public static void updateMonths(){
+        month++;
+        day = 1;
+        updateSeasonFromMonth();
     }
-
+    public static void updateYears(){
+        year++;
+        month = 1;
+        day = 1;
+        updateSeasonFromMonth();
+    }
     public static void updateHours(){
         hour++;
-        if(hour >= 24){
-            hour = 0;
-            updateDays();
-        }
+        minute = 0;
+        updatePartOfDay();
+    }
+    public static void updateMinute(){
+        minute+=30;
+    }
 
-        if(hour > 4 && hour < 18){
-            partOfDay ="Day";
-        }
-        else{
+    private static void updateSeasonFromMonth() {
+        if(month >= 1 && month < 4) season = "Spring";
+        else if(month >= 4 && month < 7) season = "Summer";
+        else if(month >= 7 && month < 10) season = "Autumn";
+        else season = "Winter";
+    }
+
+    private static void updatePartOfDay() {
+        if(hour > 4 && hour < 18) {
+            partOfDay = "Day";
+        } else {
             partOfDay = "Night";
         }
     }
 
+    private static int getDaysInMonth(int year, int month) {
+        Month m = Month.values()[month - 1];
+        int days = m.numberOfDays;
+        if (m.equals(Month.FEB)) {
+            if (year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)) {
+                days += 1;
+            }
+        }
+        return days;
+    }
+
+    public static void jumpToLastDayOfPreviousSeasonAt2330() {
+        int targetYear = year;
+        int targetMonth;
+
+        switch (season.toLowerCase()) {
+            case "spring" -> {
+                targetYear = year - 1;
+                targetMonth = 12;
+            }
+            case "summer" -> targetMonth = 3;
+            case "autumn" -> targetMonth = 6;
+            case "winter" -> targetMonth = 9;
+            default -> targetMonth = month;
+        }
+
+        if (targetMonth <= 0) {
+            targetMonth = 12;
+            targetYear = Math.max(1, targetYear - 1);
+        }
+
+        int targetDay = getDaysInMonth(targetYear, targetMonth);
+        year = targetYear;
+        month = targetMonth;
+        day = targetDay;
+        hour = 23;
+        minute = 30;
+        updateSeasonFromMonth();
+        updatePartOfDay();
+    }
     public static int getHours(){
         return hour;
     }
     public static int getDays(){
         return day;
     }
+    public static int getMonths(){
+        return month;
+    }
+    public static int getMinute(){
+        return minute;
+    }
+
 }

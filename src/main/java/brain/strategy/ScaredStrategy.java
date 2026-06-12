@@ -44,10 +44,11 @@ public class ScaredStrategy implements MoveStrategy {
 
         // Nếu kẻ địch chỉ ở chunk lân cận (chưa vào cùng chunk) -> Tắt Speed up (Chạy vừa phải)
         owner.setSpeedUp(false);
-        boolean hasEnemyAround = mapSystem.hasEnemyAround(owner);
+        List<Chunk> visibleChunks = mapSystem.getVisibleChunks(owner.getPosition());
+        List<Animals> allVisibleEnemies = mapSystem.getEnemiesInChunks(visibleChunks, owner);
 
-        if (!hasEnemyAround) return null;
+        if (allVisibleEnemies == null || allVisibleEnemies.isEmpty()) return null;
 
-        return mapSystem.getRandomWalkablePosInVisibleChunk(owner);
+        return mapSystem.getSafeRandomChunkPosition(visibleChunks, owner);
     }
 }

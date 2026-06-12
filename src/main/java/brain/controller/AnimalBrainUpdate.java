@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Objects;
 
 import brain.pathfinder.Pathfinder;
+import entities.Food;
+import entities.Water;
 import entities.base.Animals;
 import entities.base.Entity;
 import entities.base.Position;
-import entities.base.Plant;
 
 public class AnimalBrainUpdate {
     private final Animals owner;
@@ -91,11 +92,14 @@ public class AnimalBrainUpdate {
                     targetEntity = entityAtTarget;
                 }
             }
-
             if (targetEntity == null) {
                 targetEntity = findConsumableAtCurrentTile();
             }
-            if (targetEntity instanceof Animals other) {
+            if (targetEntity instanceof Food food) {
+                actionManager.eat(food);
+            } else if (targetEntity instanceof Water) {
+                actionManager.drink((Water) targetEntity);
+            } else if (targetEntity instanceof Animals other) {
                 if (actionManager.getMapSystem().isPotentialMate(owner, other)) {
                     actionManager.mate(other);
                 } else {
@@ -139,19 +143,35 @@ public class AnimalBrainUpdate {
 
         List<Entity> currentTileEntities = mapSystem.getEntitiesWithinRadius(owner.getPosition(), 0);
         Entity foodTarget = null;
+        Entity waterTarget = null;
         Entity preyTarget = null;
         Entity mateTarget = null;
 
         for (Entity entity : currentTileEntities) {
             if (entity == null || entity == owner) continue;
-            if (entity instanceof Plant) {
+            if (entity instanceof Food && !(entity instanceof Water)) {
+                // Only elephants eat trees and bushes, and only small trees at that
+                if (entity instanceof entities.Trees treeEntity) {
+                    if (owner instanceof entities.Elephant && treeEntity.getGrowthStage() == 0) {
+                        foodTarget = entity;
+                        break;
+                    }
+                    continue;
+                }
+                if (entity instanceof entities.Bush) {
                     if (owner instanceof entities.Elephant) {
                         foodTarget = entity;
                         break;
                     }
                     continue;
+                }
+                foodTarget = entity;
+                break;
             }
-            if (entity instanceof Animals) {
+            if (entity instanceof Water) {
+                waterTarget = entity;
+            }
+            if (entity instanceof Animals && entity != owner) {
                 if (mapSystem.isPotentialMate(owner, (Animals) entity)) {
                     mateTarget = entity;
                 } else if (mapSystem.isPrey(owner, (Animals) entity)) {
@@ -162,6 +182,7 @@ public class AnimalBrainUpdate {
 
         if (mateTarget != null) return mateTarget;
         if (foodTarget != null) return foodTarget;
+        if (waterTarget != null) return waterTarget;
         return preyTarget;
     }
 
