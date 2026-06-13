@@ -5,34 +5,42 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ui.controller.MainController"
+            fx:controller="view.graphic.ui.controller.MainController"
             stylesheets="@../css/Style.css"
             prefWidth="950" prefHeight="680">
 
-    <!-- TOP: Thanh tiêu đề -->
     <top>
         <HBox styleClass="top-bar" spacing="12" alignment="CENTER_LEFT">
             <Label text="🌿 Wild Ecosystem Simulation" styleClass="app-title"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label text="⬤ Basic Mode" styleClass="mode-badge"/>
+            <Button text="🔄 Basic View" onAction="#onSwitchToBasicModeClicked" styleClass="mode-badge" style="-fx-cursor: hand;"/>
+            <Button text="🏠 Menu Chính" onAction="#onBackToMenuClicked" styleClass="mode-badge" style="-fx-cursor: hand;"/>
         </HBox>
     </top>
 
-    <!-- CENTER: Canvas bản đồ -->
+    <left>
+        <VBox spacing="10" style="-fx-background-color: #222222; -fx-padding: 14; -fx-border-color: #444444; -fx-border-width: 0 1 0 0;">
+            <Label text="SELECTION INSPECTOR" styleClass="panel-section-title"/>
+            <Label text="SELECTED ANIMAL DEBUG" styleClass="panel-subtitle"/>
+            <Label fx:id="lblSelectedAnimalLeft" text="Click an animal or a chunk to inspect it." wrapText="true" style="-fx-text-fill: #eeeeee;"/>
+            <Separator/>
+            <Label text="SELECTED CHUNK DEBUG" styleClass="panel-subtitle"/>
+            <Label fx:id="lblSelectedChunkLeft" text="Selected chunk info will appear here." wrapText="true" style="-fx-text-fill: #eeeeee;"/>
+        </VBox>
+    </left>
+
     <center>
         <StackPane styleClass="map-container">
             <fx:include fx:id="map" source="MapView.fxml"/>
         </StackPane>
     </center>
 
-    <!-- RIGHT: Control Panel -->
     <right>
         <ScrollPane fitToWidth="true" styleClass="control-scroll" prefWidth="210">
             <fx:include fx:id="controlPanel" source="ControlPanel.fxml"/>
         </ScrollPane>
     </right>
 
-    <!-- BOTTOM: Status bar -->
     <bottom>
         <HBox styleClass="status-bar" spacing="15" alignment="CENTER_LEFT">
             <Label text="🖱 Scroll = Zoom  |  Kéo = Di chuyển  |  Chọn công cụ rồi Click = Đặt thực thể"

@@ -10,6 +10,7 @@ import java.util.*;
 public class WorldMap {
     public static final int CHUNK_SIZE = 25;
     protected static Terrain[][] worldMap;
+    protected static String[][] decorationMap;
     public final Chunk[][] chunkMap;
     public static int SIZE;
     private static float[][] heightNoiseMap;
@@ -42,6 +43,7 @@ public class WorldMap {
     public WorldMap(int seed, int SIZE) {
         WorldMap.SIZE = SIZE;
         worldMap = new Terrain[SIZE][SIZE];
+        decorationMap = new String[SIZE][SIZE];
         this.chunkMap = new Chunk[SIZE / CHUNK_SIZE][SIZE / CHUNK_SIZE];
         for (int y = 0; y < SIZE / CHUNK_SIZE; y++) {
             for (int x = 0; x < SIZE / CHUNK_SIZE; x++) {
@@ -108,6 +110,8 @@ public class WorldMap {
                 }
             }
         }
+
+        populateDecorationMap();
     }
 
     public void initializeChunks() {
@@ -236,6 +240,59 @@ public class WorldMap {
         chunkMap[y / CHUNK_SIZE][x / CHUNK_SIZE].addEntity(tmp);
     }
 
+    public String getDecoration(int x, int y) {
+        if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) return null;
+        return decorationMap[y][x];
+    }
+
+
+    private void populateDecorationMap() {
+        // Template decoration generator: cậu có thể chỉnh tỉ lệ, loại decoration cho từng terrain.
+        for (int y = 0; y < SIZE; y++) {
+            for (int x = 0; x < SIZE; x++) {
+                Terrain terrain = worldMap[y][x];
+                if (terrain == null) continue;
+
+                float chance = (float) Math.random();
+                String decorKey = null;
+
+                switch (terrain) {
+                    case GRASSLAND -> {
+                        if (chance < 0.08f) {
+                            decorKey = chooseRandomDecoration(new String[]{"decor_grass_clump", "decor_flower_white"});
+                        }
+                    }
+                    case FOREST -> {
+                        if (chance < 0.07f) {
+                            decorKey = chooseRandomDecoration(new String[]{"decor_leaf_pile", "decor_mushroom"});
+                        }
+                    }
+                    case MOUNTAIN -> {
+                        if (chance < 0.03f) {
+                            decorKey = "decor_leaf_pile";
+                        }
+                    }
+                    case MUD -> {
+                        if (chance < 0.03f) {
+                            decorKey = "decor_mushroom";
+                        }
+                    }
+                    default -> {
+                        // default không có overlay
+                    }
+                }
+
+                decorationMap[y][x] = decorKey;
+            }
+        }
+    }
+
+
+    private String chooseRandomDecoration(String[] options) {
+        if (options == null || options.length == 0) return null;
+        int index = (int) (Math.random() * options.length);
+        return options[index];
+    }
 
     public Chunk[][] getChunkMap() {
         return chunkMap;

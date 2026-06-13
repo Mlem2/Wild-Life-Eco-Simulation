@@ -29,8 +29,32 @@ public abstract class Animals extends Entity {
     protected boolean speedUp = false;
     protected ArrayList<String> breedingSeason = new ArrayList<>();
 
+    // =========================================================================
+    // 🌟 PHẦN BỔ SUNG: TOẠ ĐỘ MƯỢT PHỤC VỤ HIỂN THỊ ĐỒ HỌA CANVAS (60 FPS)
+    // =========================================================================
+    // Sử dụng số thực (double) để tịnh tiến pixel lướt mịn, không bị nhảy ô giật cục
+    protected double renderX = -1;
+    protected double renderY = -1;
+
+    // Tốc độ lướt đuổi theo backend (0.1 là tỉ lệ vàng mượt mà nhất)
+    protected double interpolationSpeed = 0.1;
+
+    protected int animationTick = 0;         // Bộ đếm thời gian nhảy khung hình
+    protected int currentAnimationFrame = 0;   // Chỉ số ô ảnh hiện tại (0, 1, 2)
+    protected boolean isMoving = false;      // Trạng thái kiểm tra xem thú có đang đi không
+    protected String currentDirection = "down"; // Hướng nhìn hiện tại ("down", "left", "right", "up")
+
+    // Các hàm Getter để MapController có thể lấy dữ liệu ra vẽ
+    public boolean isMoving() { return isMoving; }
+    public int getCurrentAnimationFrame() { return currentAnimationFrame; }
+    public String getCurrentDirection() { return currentDirection; }
+
+
+    // Tìm hàm khởi tạo này trong Animals.java của cậu:
     public Animals(int x, int y){
-        super(x,y);
+        super(x,y); // Giữ nguyên dòng gọi lớp cha Entity
+        this.renderX = x * 32.0;
+        this.renderY = y * 32.0;
     }
 
     public Position getPosition() {
@@ -151,4 +175,54 @@ public abstract class Animals extends Entity {
     public int getMatingCooldown() { return matingCooldown; }
     public void setMatingCooldown(int matingCooldown) { this.matingCooldown = matingCooldown; }
     public boolean isReadyToMate() { return matingCooldown <= 0 && age > 1000; }
+
+    public double getRenderX() {
+        // Nếu lúc đầu chưa khởi tạo, gán bằng vị trí pixel lưới gốc (X * 32)
+        if (renderX == -1) renderX = this.getX() * 32.0;
+        return renderX;
+    }
+
+    public double getRenderY() {
+        if (renderY == -1) renderY = this.getY() * 32.0;
+        return renderY;
+    }
+
+    /**
+     * Hàm tính toán tịnh tiến pixel nhỏ: Sẽ được MapController gọi liên tục 60 lần/giây
+     */
+    public void updateAnimation() {
+        double targetX = this.getX() * 32.0;
+        double targetY = this.getY() * 32.0;
+
+        double prevX = renderX;
+        double prevY = renderY;
+
+        renderX += (targetX - renderX) * interpolationSpeed;
+        renderY += (targetY - renderY) * interpolationSpeed;
+
+        double distance = Math.sqrt(Math.pow(renderX - prevX, 2) + Math.pow(renderY - prevY, 2));
+
+        if (distance > 0.4) {
+            isMoving = true;
+            animationTick++;
+
+            //  TỰ ĐỘNG XÁC ĐỊNH HƯỚNG DỰA VÀO VỊ TRÍ ĐÍCH
+            if (Math.abs(targetX - prevX) > Math.abs(targetY - prevY)) {
+                // Thiên về di chuyển ngang
+                currentDirection = (targetX > prevX) ? "right" : "left";
+            } else {
+                // Thiên về di chuyển dọc
+                currentDirection = (targetY > prevY) ? "down" : "up";
+            }
+
+            if (animationTick >= 6) {
+                animationTick = 0;
+                currentAnimationFrame = (currentAnimationFrame + 1) % 3; // Vòng lặp 3 khung hình nằm ngang
+            }
+        } else {
+            isMoving = false;
+            animationTick = 0;
+            currentAnimationFrame = 0; // Đứng im thì dừng ở khung hình số 0
+        }
+    }
 }
